@@ -1,0 +1,12 @@
+name: calcofi_shinyapp
+title:
+username: sael-mna
+account: sael-mna
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10166030
+bundleId: 7931632
+url: https://sael-mna.shinyapps.io/calcofi_shinyapp/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
