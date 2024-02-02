@@ -20,6 +20,7 @@ library(rsconnect)
 
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
+whale$Season <- trimws(whale$Season)
 whale = whale[-1105,]
 station <- read.csv("CalCOFIStationOrder.csv")
 edna <- read.csv("edna.csv")
@@ -92,7 +93,7 @@ ui <- fluidPage(
                                        padding:3px'),
                         
                         selectInput("season", "Filter by Season:",
-                                    choices = c("All", "Spring", "Summer", "Fall", "Winter"), selected = "All"),
+                                    choices = c("spring", "summer", "fall", "winter"), selected = "fall"),
                           
                           selectizeInput("suborder", "Choose cetacean suborder:",
                                          choices = c("All", unique(whale$SubOrder)), selected = "All"),  # Include "All" option
@@ -252,9 +253,9 @@ server <- function(input, output, session) {
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
   obsFilter <- reactive({
     if (input$suborder == "All") {
-      filter(whale, whale$Cruise == input$cruise & whale$SpeciesName %in% input$all_species)
+      filter(whale, whale$Season == input$season & whale$Cruise == input$cruise & whale$SpeciesName %in% input$all_species)
     } else {
-      filter(whale, whale$Cruise == input$cruise & whale$SubOrder == input$suborder & whale$SpeciesName %in% input$species)
+      filter(whale, whale$Season == input$season & whale$Cruise == input$cruise & whale$SubOrder == input$suborder & whale$SpeciesName %in% input$species)
     }
   })
   
