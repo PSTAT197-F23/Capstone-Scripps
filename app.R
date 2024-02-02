@@ -92,8 +92,8 @@ ui <- fluidPage(
                                        background-color: #FF69B4;
                                        padding:3px'),
                         
-                        selectInput("season", "Filter by Season:",
-                                    choices = c("spring", "summer", "fall", "winter"), selected = "fall"),
+                        selectizeInput("season", "Filter by Season:",
+                                    choices = c("All", unique(whale$Season)), selected = "All"),
                           
                           selectizeInput("suborder", "Choose cetacean suborder:",
                                          choices = c("All", unique(whale$SubOrder)), selected = "All"),  # Include "All" option
@@ -213,7 +213,6 @@ server <- function(input, output, session) {
         clearGroup("viz")
     }
   })
-  
 
   # when user selects a suborder from "Choose suborder" dropdown, this observe function will be triggered
   # if suborder == All, then species_choices can be any of them
@@ -252,11 +251,17 @@ server <- function(input, output, session) {
   # create reactivity for obs data
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
   obsFilter <- reactive({
-    if (input$suborder == "All") {
-      filter(whale, whale$Season == input$season & whale$Cruise == input$cruise & whale$SpeciesName %in% input$all_species)
+    
+    if (input$suborder == "All" & input$season == "All") {
+      filter(whale, whale$Cruise == input$cruise & whale$SpeciesName %in% input$all_species)
+    } else if (input$suborder == "All" & input$season != "All"){
+      filter(whale, whale$Cruise == input$cruise & whale$Season == input$season & whale$SpeciesName %in% input$all_species)
+    } else if (input$suborder != "All" & input$season == "All"){
+      filter(whale, whale$Cruise == input$cruise & whale$Suborder == input$suborder & whale$SpeciesName %in% input$all_species)
     } else {
-      filter(whale, whale$Season == input$season & whale$Cruise == input$cruise & whale$SubOrder == input$suborder & whale$SpeciesName %in% input$species)
+      filter(whale, whale$Cruise == input$cruise & whale$SubOrder == input$suborder & whale$Season == input$season & whale$SpeciesName %in% input$species)
     }
+    
   })
   
   # Define the number of colors for observational whale points
