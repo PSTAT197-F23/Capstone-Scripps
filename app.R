@@ -17,6 +17,7 @@ library(RColorBrewer)
 library(viridis)
 library(htmltools)
 library(rsconnect)
+library(RColorBrewer)
 
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
@@ -256,14 +257,49 @@ server <- function(input, output, session) {
   # Define the number of colors for observational whale points
   num_colors = length(unique(whale$SpeciesName))  # there are 33 unique cetacean codes in this dataset
   # Generate the full viridis turbo palette
-  full_palette = viridis(256, option = "turbo")
+  full_palette = rainbow(num_colors)
   # Randomly shuffle the colors
   set.seed(1)  # Set a seed for reproducibility
-  random_colors = sample(full_palette, num_colors)
-  
+  random_colors = sample(full_palette, num_colors, replace = F)
+ 
+  # assign each species with specific color
+  species_to_color <- c(
+    "Short-beaked common dolphin" = "cyan4",
+    "Blue whale" = "cadetblue1",
+    "Unidentified common dolphin" = "yellow",
+    "Unidentified large whale" = "springgreen3",
+    "Fin whale" = "blueviolet",
+    "Cuviers beaked whale" = "chartreuse1",
+    "Unidentified dolphin" = "red1",
+    "Pacific white-sided dolphin" = "deeppink3",
+    "Bairds beaked whale" = "coral1",
+    "Unidentified beaked whale" = "lightpink",
+    "Rissos dolphin" = "darkolivegreen",
+    "Bottlenose dolphin" = "chocolate4",
+    "Sperm whale" = "gold2",
+    "Striped dolphin" = "orchid1",
+    "Long-beaked common dolphin" = "aquamarine1",
+    "Dalls porpoise" = "burlywood1",
+    "Humpback whale" = "azure2",
+    "Harbor porpoise" = "blue1",
+    "Unidentified small cetacean" = "bisque3",
+    "Gray whale" = "grey27",
+    "Northern right whale dolphin" = "darkorange3",
+    "Unidentofied cetacean" = "darkred",
+    "Rough toothed dolphin" = "deepskyblue2",
+    "Minke whale" = "orange",
+    "Unidentified small whale" = "slategray3",
+    "Killer whale" = "violetred1",
+    "Short-finned pilot whale" = "slateblue1",
+    "Unidentified ziphid" = "mistyrose",
+    "False killer whale" = "darkcyan",
+    "Unidentified odontocete" = "green2",
+    "Sei Whale" = "plum4",
+    "Other" = "seagreen1"
+  )
   # observe layer for obs data reactivity
   observe({
-    pal = colorFactor(palette = random_colors, levels = as.factor(unique(whale$SpeciesName)))
+    pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
     values = obsFilter()$SpeciesName
     
     leafletProxy("mymap") %>%
@@ -276,16 +312,16 @@ server <- function(input, output, session) {
                  # radius = 5000,
                  color = ~pal(values),
                  fillColor = ~pal(values),
-                 radius = (log(obsFilter()$Best))*2000,
+                 radius = (log(obsFilter()$Best))*5000,
                  popup = ~paste("Sighting:",as.character(obsFilter()$SpeciesName),
                                 "<br>Group Size Estimate:", as.character(obsFilter()$Best),
                                 "<br>Date (Local):",as.character(obsFilter()$DateTimeLocal),
                                 "<br>Lat:",as.character(obsFilter()$DecLat)," Lon:",as.character(obsFilter()$DecLong)) %>%
                    lapply(htmltools::HTML),
-                 opacity = 0.7,
+                 opacity = 1,
                  fillOpacity = 0.7,
                  group = "sightings",
-                 options = pathOptions(pane = "layer1")
+                 options = pathOptions(pane = "layer1", weight = 1)
       ) %>%
       addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings")
   })
