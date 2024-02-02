@@ -46,6 +46,8 @@ ui <- fluidPage(
                       #create the sidebar that will hold the input functions that we add
                       sidebarLayout(
                         sidebarPanel(
+                          
+                          
                           #create inputs for species and date
                           # add input for observational data
                           # add action button for site markers
@@ -91,6 +93,17 @@ ui <- fluidPage(
                                        background-color: #FF69B4;
                                        padding:3px'),
                           
+                        
+                          actionButton("select_all_suborder_species", "Select All Species", width = '150px',
+                                       style = 'border-color: #007bff; 
+                                       background-color: #007bff; 
+                                       padding:3px'),
+                        
+                          actionButton("clear_all_species", "Clear All Species", width = '150px',
+                                       style = 'border-color: #007bff;
+                                       background-color: #007bff; 
+                                       padding:3px'),
+                          
                           selectizeInput("suborder", "Choose cetacean suborder:",
                                          choices = c("All", unique(whale$SubOrder)), selected = "All"),  # Include "All" option
                           conditionalPanel( # creates a panel that is visible depending on conditional expression 
@@ -103,6 +116,7 @@ ui <- fluidPage(
                             checkboxGroupInput("all_species", "Select All Species:",
                                                choices = NULL, selected = NULL)
                           ),
+                          
                           
                         ),
                         mainPanel(
@@ -150,6 +164,34 @@ ui <- fluidPage(
 
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
 server <- function(input, output, session) {
+  
+  # Observe event for selecting all species in the suborder
+  observeEvent(input$select_all_suborder_species, {
+    if (input$suborder == "All") {
+      all_species_choices <- unique(whale$SpeciesName)
+      updateCheckboxGroupInput(session, "all_species", selected = all_species_choices)
+    } else {
+      species_choices <- unique(whale$SpeciesName[whale$SubOrder == input$suborder])
+      updateCheckboxGroupInput(session, "species", selected = species_choices)
+    }
+    
+  })
+  
+  # Observe event for clearing all selected species
+  observeEvent(input$clear_all_species, {
+    if (input$suborder == "All") {
+      updateCheckboxGroupInput(session, "all_species", selected = character(0))
+    } else {
+      updateCheckboxGroupInput(session, "species", selected = character(0))
+    } # 1 edge case needs to be implemented here because:
+      # "Clear all species" button displays the legends of eDNA 
+      # specifically when selecting all species AND eDNA isn't being displayed.
+      # It is designed so clear all species wouldn't 
+      # clear the legends of eDNA when the eDNA data are being displayed.
+      # Tried multiple conditional statements but it doesn't work. 
+  })
+  
+  
   
   observeEvent(input$sites, { # when the user selects the display sites input button
     leafletProxy("mymap", session) %>% # add a layer to the map
@@ -288,6 +330,28 @@ server <- function(input, output, session) {
                  options = pathOptions(pane = "layer1")
       ) %>%
       addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings")
+    
+    # Check if eDNA legends are currently displayed
+    if (input$edna > 0) {
+      # Add eDNA effort legend if it was displayed
+      leafletProxy("mymap", session) %>%
+        addLegend("bottomleft",
+                  colors = "black",
+                  labels = "eDNA Effort",
+                  opacity = 1,
+                  layerId = "edna_effort_legend"
+        )
+      
+      # Add eDNA detection legend if it was displayed
+      leafletProxy("mymap", session) %>%
+        addLegend("bottomleft",
+                  colors = "blue",
+                  labels = "eDNA Detection",
+                  opacity = 1,
+                  layerId = "edna_detection_legend"
+        ) # This might seem counter intuitive, but it is to 
+          # take care of the edge case where selecting all will clear eDNA legends.
+    }
   })
 
 # filter eDNA data
@@ -315,11 +379,15 @@ server <- function(input, output, session) {
     })
   
 
-    # observe layer for eDNA effort data reactivity
+    # observe event for displaying eDNA data and legends
     observe({
       req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
       leafletProxy("mymap", session) %>%
-        clearGroup("edna") # clear existing edna first
+        clearGroup("edna") %>%
+        clearGroup("edna_detection") %>%
+        removeControl("edna_effort_legend") %>%
+        removeControl("edna_detection_legend") # Remove both legends associated with eDNA data
+      
       if (!is.null(ednaEffortFilter()$longitude)) {
         leafletProxy("mymap", session) %>%
           addCircles(
@@ -337,7 +405,6 @@ server <- function(input, output, session) {
             fillOpacity = 1,
             group = "edna"
           ) %>%
-          clearControls() %>%
           addLegend("bottomleft",
                     colors = "black",
                     labels = "eDNA Effort",
@@ -345,14 +412,8 @@ server <- function(input, output, session) {
                     layerId = "edna_effort_legend"
           )
       }
-    })
-    
-    # observe layer for eDNA detection data reactivity
-    observe({
-      req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
-      leafletProxy("mymap", session) %>%
-        clearGroup("edna_detection") # clear existing edna detection
-      if (!is.null(ednaDetectionFilter()$longitude)){
+      
+      if (!is.null(ednaDetectionFilter()$longitude)) {
         leafletProxy("mymap", session) %>%
           addMarkers(
             lng = as.numeric(ednaDetectionFilter()$longitude),
@@ -372,6 +433,7 @@ server <- function(input, output, session) {
           )
       }
     })
+    
     
     # observe event for clearing eDNA data
     observeEvent(input$clearedna, {
