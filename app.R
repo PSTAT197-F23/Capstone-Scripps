@@ -90,6 +90,9 @@ ui <- fluidPage(
                                        style='border-color: #565655;
                                        background-color: #FF69B4;
                                        padding:3px'),
+                        
+                        selectInput("season", "Filter by Season:",
+                                    choices = c("All", "Spring", "Summer", "Fall", "Winter"), selected = "All"),
                           
                           selectizeInput("suborder", "Choose cetacean suborder:",
                                          choices = c("All", unique(whale$SubOrder)), selected = "All"),  # Include "All" option
@@ -103,6 +106,8 @@ ui <- fluidPage(
                             checkboxGroupInput("all_species", "Select All Species:",
                                                choices = NULL, selected = NULL)
                           ),
+                        
+                        
                           
                         ),
                         mainPanel(
