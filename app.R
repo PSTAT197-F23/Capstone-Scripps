@@ -317,45 +317,42 @@ server <- function(input, output, session) {
 
     # observe layer for eDNA effort data reactivity
     observe({
-      if (input$edna > 0) {
-          leafletProxy("mymap", session) %>%
-          clearGroup("edna") # clear existing edna first
-        if (!is.null(ednaEffortFilter()$longitude)) {
-          leafletProxy("mymap", session) %>%
-            addCircles(
-              lng = as.numeric(ednaEffortFilter()$longitude),
-              lat = as.numeric(ednaEffortFilter()$latitude),
-              radius = 5000,  # Adjust the radius as needed
-              color = "black",  # Border color
-              fillColor = "black",  # Fill color
-              popup = paste("eDNA Effort",
-                            "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
-                            "<br>Line:", as.character(ednaEffortFilter()$line),
-                            "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
-                lapply(htmltools::HTML),
-              opacity = 1,
-              fillOpacity = 1,
-              group = "edna"
-            )
-        }
-      } 
+      req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
+      leafletProxy("mymap", session) %>%
+        clearGroup("edna") # clear existing edna first
+      if (!is.null(ednaEffortFilter()$longitude)) {
+        leafletProxy("mymap", session) %>%
+          addCircles(
+            lng = as.numeric(ednaEffortFilter()$longitude),
+            lat = as.numeric(ednaEffortFilter()$latitude),
+            radius = 5000,  # Adjust the radius as needed
+            color = "black",  # Border color
+            fillColor = "black",  # Fill color
+            popup = paste("eDNA Effort",
+                          "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
+                          "<br>Line:", as.character(ednaEffortFilter()$line),
+                          "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
+              lapply(htmltools::HTML),
+            opacity = 1,
+            fillOpacity = 1,
+            group = "edna"
+          ) %>%
+          clearControls() %>%
+          addLegend("bottomleft",
+                    colors = "black",
+                    labels = "eDNA Effort",
+                    opacity = 1,
+                    layerId = "edna_effort_legend"
+          )
+      }
     })
-      observeEvent(input$clearedna, {
-    if (input$clearedna > 0) {
-      leafletProxy("mymap") %>%
-        clearGroup("edna")
-    }
-  })
     
-# observe layer for eDNA detection data reactivity
-  observe({
-  
-    if (input$edna > 0) {
-     # leafletProxy("mymap", session) %>%
-       # clearGroup("edna") # clear existing edna first
+    # observe layer for eDNA detection data reactivity
+    observe({
+      req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
+      leafletProxy("mymap", session) %>%
+        clearGroup("edna_detection") # clear existing edna detection
       if (!is.null(ednaDetectionFilter()$longitude)){
-        html_legend <- "<img src='http://leafletjs.com/examples/custom-icons/default.png'>eDNA Detection"
-        
         leafletProxy("mymap", session) %>%
           addMarkers(
             lng = as.numeric(ednaDetectionFilter()$longitude),
@@ -365,17 +362,29 @@ server <- function(input, output, session) {
                           "<br>Line:",as.character(ednaDetectionFilter()$line),
                           "<br>Station:",as.character(ednaDetectionFilter()$station)) %>%
               lapply(htmltools::HTML), 
-            group = "edna") #%>%
+            group = "edna_detection"
+          ) %>%
+          addLegend("bottomleft",
+                    colors = "blue",
+                    labels = "eDNA Detection",
+                    opacity = 1,
+                    layerId = "edna_detection_legend"
+          )
       }
-     }
     })
     
-  observeEvent(input$clearedna, {
-    if (input$clearedna > 0) {
-      leafletProxy("mymap") %>%
-        clearGroup("edna")
-    }
-  })
+    # observe event for clearing eDNA data
+    observeEvent(input$clearedna, {
+      req(input$clearedna > 0)  # Require input$clearedna to be greater than 0 to proceed
+      leafletProxy("mymap", session) %>%
+        clearGroup("edna") %>%
+        clearGroup("edna_detection") %>%
+        removeControl("edna_effort_legend") %>%
+        removeControl("edna_detection_legend") # Remove both legends associated with eDNA data
+    })
+    
+    
+    
 
 }
 
