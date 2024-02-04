@@ -18,6 +18,7 @@ library(viridis)
 library(htmltools)
 library(rsconnect)
 library(RColorBrewer)
+library(shinyjs)
 
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
@@ -33,6 +34,24 @@ viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
 # )
 
 #build the app!
+collapsibleCheckboxGroupInput <- function(inputId, label, choices = NULL, selected = NULL) {
+  tagList(
+    tags$button(
+      type = "button",
+      class = "btn btn-primary",
+      `data-toggle` = "collapse",
+      `data-target` = paste("#", inputId, "_content", sep = ""),
+      `aria-expanded` = "false",
+      `aria-controls` = paste(inputId, "_content", sep = ""),
+      "Select Species"
+    ),
+    div(
+      id = paste(inputId, "_content", sep = ""),
+      class = "collapse",
+      checkboxGroupInput(inputId, label, choices = choices, selected = selected)
+    )
+  )
+}
 
 # #Begin with the user interface (ui). This is where we will create the inputs and outputs that the user will be able to interact with.
 ui <- fluidPage(
@@ -92,23 +111,17 @@ ui <- fluidPage(
                                        background-color: #FF69B4;
                                        padding:3px'),
                           
-                          selectizeInput("suborder", "Choose cetacean suborder:",
-                                         choices = c("All", unique(whale$SubOrder)), selected = "All"),  # Include "All" option
-                          conditionalPanel( # creates a panel that is visible depending on conditional expression 
-                            condition = 'input.suborder != "All"',  # Only show when a specific suborder is selected (not equal to "All")
-                            checkboxGroupInput("species", "Select Species within Suborder:",
-                                               choices = NULL, selected = NULL)
-                          ),
-                          conditionalPanel( 
-                            condition = 'input.suborder == "All"',  # Show when "All" is selected
-                            checkboxGroupInput("all_species", "Select All Species:",
-                                               choices = NULL, selected = NULL)
-                          ),
-                          
+                        selectizeInput("suborder", "Choose cetacean suborder:",
+                                       choices = c("All", unique(whale$SubOrder)), selected = "All"),  # Include "All" option
+                        
+                        # Add collapsible checkbox group input for species selection
+                        collapsibleCheckboxGroupInput("species", "Select Species within Suborder:",
+                                                      choices = NULL, selected = NULL)
+
                         ),
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-                          leafletOutput(outputId = "mymap")),
+                          leafletOutput(outputId = "mymap"))
                       )
              ),
              tabPanel("More information",
@@ -142,7 +155,7 @@ ui <- fluidPage(
                       
                       tags$h4("Funding Sources"),
                       tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
-                      tags$h5("Office of Naval Research, US Navy Pacific Fleet"),
+                      tags$h5("Office of Naval Research, US Navy Pacific Fleet")
                       
                
              )
@@ -213,24 +226,44 @@ server <- function(input, output, session) {
   # when user selects a suborder from "Choose suborder" dropdown, this observe function will be triggered
   # if suborder == All, then species_choices can be any of them
   # if suborder == suborder, then it filters suborder choices based on suborder column 
-  observe({
     # Update species choices based on selected suborder
-    if (input$suborder == "All") {
-      species_choices <- unique(whale$SpeciesName)
-    } else {
-      species_choices <- unique(whale$SpeciesName[whale$SubOrder == input$suborder])
-    }
-    
     # update checkbox inputs based on suborder selection
-    if (input$suborder == "All") {
-      updateCheckboxGroupInput(session, "all_species", choices = species_choices, selected = NULL)
-      updateCheckboxGroupInput(session, "species", choices = NULL, selected = NULL)
-    } else {
-      updateCheckboxGroupInput(session, "all_species", choices = NULL, selected = NULL)
-      updateCheckboxGroupInput(session, "species", choices = species_choices, selected = NULL)
+  observe({
+    if (!is.null(input$suborder)) {
+      if (input$suborder == "All") {
+        species_choices <- unique(whale$SpeciesName)
+        selected_species <- input$species
+        updateCheckboxGroupInput(session, "species", choices = species_choices, selected = selected_species)
+        output$species_panel <- renderUI({
+          tags$div(
+            class = "collapsible",
+            tags$input(type = "checkbox", id = "species_checkbox", class = "collapsible-header", value = "species"),
+            tags$div(
+              class = "collapsible-content",
+              checkboxGroupInput("species", "Select Species within Suborder:", choices = species_choices, selected = selected_species)
+            )
+          )
+        })
+      }else if (input$suborder != "All") {
+        selected_species <- input$species
+        species_choices <- unique(whale$SpeciesName[whale$SubOrder == input$suborder])
+        updateCheckboxGroupInput(session, "species", choices = species_choices, selected = selected_species)
+        output$species_panel <- renderUI({
+          tags$div(
+            class = "collapsible",
+            tags$input(type = "checkbox", id = "species_checkbox", class = "collapsible-header", value = "species"),
+            tags$div(
+              class = "collapsible-content",
+              checkboxGroupInput("species", "Select Species within Suborder:", choices = species_choices, selected = selected_species)
+            )
+          )
+        })
+      } 
     }
   })
-  
+
+
+    
   # Update SELECTIZE INPUT
   updateSelectizeInput(session = session, "cruise",
                        choices = unique(whale$Cruise),
@@ -248,19 +281,15 @@ server <- function(input, output, session) {
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
   obsFilter <- reactive({
     if (input$suborder == "All") {
-      filter(whale, whale$Cruise == input$cruise & whale$SpeciesName %in% input$all_species)
+      filter(whale, whale$Cruise == input$cruise & whale$SpeciesName %in% input$species)
     } else {
       filter(whale, whale$Cruise == input$cruise & whale$SubOrder == input$suborder & whale$SpeciesName %in% input$species)
     }
   })
   
+    
   # Define the number of colors for observational whale points
   num_colors = length(unique(whale$SpeciesName))  # there are 33 unique cetacean codes in this dataset
-  # Generate the full viridis turbo palette
-  full_palette = rainbow(num_colors)
-  # Randomly shuffle the colors
-  set.seed(1)  # Set a seed for reproducibility
-  random_colors = sample(full_palette, num_colors, replace = F)
  
   # assign each species with specific color
   species_to_color <- c(
@@ -298,6 +327,7 @@ server <- function(input, output, session) {
     "Other" = "seagreen1"
   )
   # observe layer for obs data reactivity
+  # Update species color palette based on selected species
   observe({
     pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
     values = obsFilter()$SpeciesName
@@ -325,6 +355,7 @@ server <- function(input, output, session) {
       ) %>%
       addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings")
   })
+  
 
 # filter eDNA data
   # ednaFilter <- reactive({
