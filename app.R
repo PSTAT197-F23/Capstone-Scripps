@@ -18,6 +18,63 @@ library(viridis)
 library(htmltools)
 library(rsconnect)
 
+library(shinytreeview)
+
+species_list <- data.frame(
+  Suborder = c(rep('Odontocete',16), rep('Mysticete',6), rep('Unidentified',10)),
+  Family = c('Delphinidae', 
+             'Ziphiidae', 
+             'Delphinidae', 
+             'Ziphiidae',
+             'Delphinidae',
+             'Delphinidae',
+             'Physeteridae',
+             'Delphinidae',
+             'Delphinidae',
+             'Phocoenidae',
+             'Phocoenidae',
+             'Delphinidae',
+             'Delphinidae',
+             'Delphinidae',
+             'Delphinidae',
+             'Delphinidae',
+             rep('All Mysticetes', 6),
+             rep('All Unidentified', 10)
+  ),
+  Species = c('Short-beaked common dolphin',
+              'Cuviers beaked whale',
+              'Pacific white-sided dolphin',
+              'Bairds beaked whale',
+              'Rissos dolphin',
+              'Bottlenose dolphin',
+              'Sperm whale',
+              'Striped dolphin',
+              'Long-beaked common dolphin',
+              'Dalls porpoise',
+              'Harbor porpoise',
+              'Northern right whale dolphin',
+              'Rough toothed dolphin',
+              'Killer whale',
+              'Short-finned pilot whale',
+              'False killer whale',
+              'Blue whale',
+              'Fin whale',
+              'Humpback whale',
+              'Gray whale',
+              'Minke whale',
+              'Sei whale',
+              'Unidentified common dolphin',
+              'Unidentified large whale',
+              'Unidentified dolphin',
+              'Unidentified beaked whale',
+              'Unidentified small cetacean',
+              'Unidentified cetacean',
+              'Unidentified small whale',
+              'Unidentified ziphid',
+              'Unidentified odontocete',
+              'Other')
+)
+
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
 whale = whale[-1105,]
@@ -36,7 +93,7 @@ viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
 # #Begin with the user interface (ui). This is where we will create the inputs and outputs that the user will be able to interact with.
 ui <- fluidPage(
   #choose a CSS theme -- you can also create a custom theme if you know CSS
-  theme = shinytheme("darkly"),
+  theme = shinytheme("cosmo"),
   #create a navigation bar for the top of the app, and give it a main title
   navbarPage("SAEL CalCOFI ShinyApp",
              #add the first tab panel (tab1) and annotate -- the tags$h command adds text at different sizes
@@ -68,7 +125,7 @@ ui <- fluidPage(
                                        background-color: #008080;
                                        padding:3px'),
                           
-                        #  HTML("<br>eDNA processed for cruises CC1402-CC1611"),  # Add your description here
+                          #  HTML("<br>eDNA processed for cruises CC1402-CC1611"),  # Add your description here
                           
                           # add action button to clear site markers
                           actionButton("clearedna", "Clear eDNA Data",
@@ -77,7 +134,7 @@ ui <- fluidPage(
                                        background-color: #008080;
                                        padding:3px'),
                           
-
+                          
                           # add action button for viz markers
                           actionButton("viz", "Display Visual Effort", width = '150px',
                                        style='border-color: #565655;
@@ -91,19 +148,14 @@ ui <- fluidPage(
                                        background-color: #FF69B4;
                                        padding:3px'),
                           
-                          selectizeInput("suborder", "Choose cetacean suborder:",
-                                         choices = c("All", unique(whale$SubOrder)), selected = "All"),  # Include "All" option
-                          conditionalPanel( # creates a panel that is visible depending on conditional expression 
-                            condition = 'input.suborder != "All"',  # Only show when a specific suborder is selected (not equal to "All")
-                            checkboxGroupInput("species", "Select Species within Suborder:",
-                                               choices = NULL, selected = NULL)
+                          # add collapsible checkboxes for suborders and species:
+                          treecheckInput(
+                            inputId = "all_species",
+                            label = "Choose Species:",
+                            choices = make_tree(species_list, c('Suborder', 'Family', 'Species')),
+                            width = '100%',
+                            borders = TRUE
                           ),
-                          conditionalPanel( 
-                            condition = 'input.suborder == "All"',  # Show when "All" is selected
-                            checkboxGroupInput("all_species", "Select All Species:",
-                                               choices = NULL, selected = NULL)
-                          ),
-                          
                         ),
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
@@ -120,7 +172,7 @@ ui <- fluidPage(
                               highlighting how marine mammal visual sightings and eDNA detections are represented through time and space. 
                               Please stay tuned for the addition of acoustic detections in a future release. By integrating visual, acoustic, and genetic sampling methods, 
                               we hope to better understand the detection capabilities of each method for detecting marine mammals in their environment."),
-                       
+                      
                       
                       
                       tags$h3("CalCOFI marine mammal visual survey data"),
@@ -130,7 +182,7 @@ ui <- fluidPage(
                       tags$a(href="https://doi.org/10.1016/j.dsr2.2014.10.008","https://doi.org/10.1016/j.dsr2.2014.10.008", style='color:#FFFFFF'),
                       tags$h5("Per-cruise marine mammal visual survey effort is visible by clicking 'Display Visual Effort'. Additionally, sighting group size estimates are visible by selecting a species from the drop-down menu, 
                               where circle size on the map is proportional to group size. Only cetacean sightings are included in this interactive map. By selecting a sighting on the map, more information will pop up about that specific sighting."),
-                    
+                      
                       tags$h3("CalCOFI marine mammal eDNA data"),
                       tags$h5("The NOAA CalCOFI Genomic Program (NCOG) has collected envrionmental DNA samples (eDNA) since 2014. Here we used metabarcoding assays to 
                               detect cetacean species from water samples collected at 10, 20, or 40 meters. The 'Display eDNA' function will plot eDNA sampling effort as opaque black circles, and eDNA detections as blue flags. By selecting a detection on the map, more information about that specific detection will pop up.  "), 
@@ -143,7 +195,7 @@ ui <- fluidPage(
                       tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
                       tags$h5("Office of Naval Research, US Navy Pacific Fleet"),
                       
-               
+                      
              )
   )
 )
@@ -159,13 +211,13 @@ server <- function(input, output, session) {
         color = 'black',
         stroke = TRUE,
         popup = paste("Line:",station$Line,
-                       "<br>Station:",station$Sta) %>% # popup with information about line + station
+                      "<br>Station:",station$Sta) %>% # popup with information about line + station
           lapply(htmltools::HTML), # read this html code
         radius = 2,
         weight = 1,
         group = "sites"
       )
-    })
+  })
   
   # add layer to clear sites
   observeEvent(input$clearsites, { # when the user clicks the clear sites button
@@ -177,7 +229,7 @@ server <- function(input, output, session) {
   vizFilter <- reactive({
     filter(viz, viz$cruise == input$cruise)
   })
-
+  
   # observe event for vizEffort data reactivity
   observeEvent(input$viz, { # put cruise filtering within vizeffort observe event so that we can display visual effort 
     # per cruise. 
@@ -208,27 +260,11 @@ server <- function(input, output, session) {
     }
   })
   
-
+  
   # when user selects a suborder from "Choose suborder" dropdown, this observe function will be triggered
   # if suborder == All, then species_choices can be any of them
   # if suborder == suborder, then it filters suborder choices based on suborder column 
-  observe({
-    # Update species choices based on selected suborder
-    if (input$suborder == "All") {
-      species_choices <- unique(whale$SpeciesName)
-    } else {
-      species_choices <- unique(whale$SpeciesName[whale$SubOrder == input$suborder])
-    }
-    
-    # update checkbox inputs based on suborder selection
-    if (input$suborder == "All") {
-      updateCheckboxGroupInput(session, "all_species", choices = species_choices, selected = NULL)
-      updateCheckboxGroupInput(session, "species", choices = NULL, selected = NULL)
-    } else {
-      updateCheckboxGroupInput(session, "all_species", choices = NULL, selected = NULL)
-      updateCheckboxGroupInput(session, "species", choices = species_choices, selected = NULL)
-    }
-  })
+  
   
   # Update SELECTIZE INPUT
   updateSelectizeInput(session = session, "cruise",
@@ -245,13 +281,7 @@ server <- function(input, output, session) {
   # OBS DATA
   # create reactivity for obs data
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
-  obsFilter <- reactive({
-    if (input$suborder == "All") {
-      filter(whale, whale$Cruise == input$cruise & whale$SpeciesName %in% input$all_species)
-    } else {
-      filter(whale, whale$Cruise == input$cruise & whale$SubOrder == input$suborder & whale$SpeciesName %in% input$species)
-    }
-  })
+  obsFilter <- reactive({filter(whale, whale$Cruise == input$cruise & whale$SpeciesName %in% input$all_species)})
   
   # Define the number of colors for observational whale points
   num_colors = length(unique(whale$SpeciesName))  # there are 33 unique cetacean codes in this dataset
@@ -289,8 +319,8 @@ server <- function(input, output, session) {
       ) %>%
       addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings")
   })
-
-# filter eDNA data
+  
+  # filter eDNA data
   # ednaFilter <- reactive({
   #   if (input$suborder == "All") {
   #     filter(edna, edna$cruise == input$cruise & edna$SpeciesName %in% input$all_species)
@@ -303,56 +333,56 @@ server <- function(input, output, session) {
   # eDNA effort filter for plotting eDNA effort per cruise. Plot as black circle 
   ednaEffortFilter <- reactive({
     
-      filter(edna, edna$cruise == input$cruise)
+    filter(edna, edna$cruise == input$cruise)
   })
-
+  
   #print(str(ednaEffortFilter()))
   
-    ednaDetectionFilter <- reactive({
-      
-     filter(edna, edna$cruise == input$cruise & edna$SpeciesName!="NA")
-
-    })
+  ednaDetectionFilter <- reactive({
+    
+    filter(edna, edna$cruise == input$cruise & edna$SpeciesName!="NA")
+    
+  })
   
-
-    # observe layer for eDNA effort data reactivity
-    observe({
-      if (input$edna > 0) {
-          leafletProxy("mymap", session) %>%
-          clearGroup("edna") # clear existing edna first
-        if (!is.null(ednaEffortFilter()$longitude)) {
-          leafletProxy("mymap", session) %>%
-            addCircles(
-              lng = as.numeric(ednaEffortFilter()$longitude),
-              lat = as.numeric(ednaEffortFilter()$latitude),
-              radius = 5000,  # Adjust the radius as needed
-              color = "black",  # Border color
-              fillColor = "black",  # Fill color
-              popup = paste("eDNA Effort",
-                            "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
-                            "<br>Line:", as.character(ednaEffortFilter()$line),
-                            "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
-                lapply(htmltools::HTML),
-              opacity = 1,
-              fillOpacity = 1,
-              group = "edna"
-            )
-        }
-      } 
-    })
-      observeEvent(input$clearedna, {
+  
+  # observe layer for eDNA effort data reactivity
+  observe({
+    if (input$edna > 0) {
+      leafletProxy("mymap", session) %>%
+        clearGroup("edna") # clear existing edna first
+      if (!is.null(ednaEffortFilter()$longitude)) {
+        leafletProxy("mymap", session) %>%
+          addCircles(
+            lng = as.numeric(ednaEffortFilter()$longitude),
+            lat = as.numeric(ednaEffortFilter()$latitude),
+            radius = 5000,  # Adjust the radius as needed
+            color = "black",  # Border color
+            fillColor = "black",  # Fill color
+            popup = paste("eDNA Effort",
+                          "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
+                          "<br>Line:", as.character(ednaEffortFilter()$line),
+                          "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
+              lapply(htmltools::HTML),
+            opacity = 1,
+            fillOpacity = 1,
+            group = "edna"
+          )
+      }
+    } 
+  })
+  observeEvent(input$clearedna, {
     if (input$clearedna > 0) {
       leafletProxy("mymap") %>%
         clearGroup("edna")
     }
   })
-    
-# observe layer for eDNA detection data reactivity
-  observe({
   
+  # observe layer for eDNA detection data reactivity
+  observe({
+    
     if (input$edna > 0) {
-     # leafletProxy("mymap", session) %>%
-       # clearGroup("edna") # clear existing edna first
+      # leafletProxy("mymap", session) %>%
+      # clearGroup("edna") # clear existing edna first
       if (!is.null(ednaDetectionFilter()$longitude)){
         html_legend <- "<img src='http://leafletjs.com/examples/custom-icons/default.png'>eDNA Detection"
         
@@ -367,16 +397,16 @@ server <- function(input, output, session) {
               lapply(htmltools::HTML), 
             group = "edna") #%>%
       }
-     }
-    })
-    
+    }
+  })
+  
   observeEvent(input$clearedna, {
     if (input$clearedna > 0) {
       leafletProxy("mymap") %>%
         clearGroup("edna")
     }
   })
-
+  
 }
 
 # #Finally, we tell R to use the user interface and the server together to build our app!
