@@ -170,26 +170,7 @@ ui <- fluidPage(
                                        background-color: #FF69B4;
                                        padding:3px'),
                           
-<<<<<<< Updated upstream
-                          selectInput("season", "Filter by Season:",
-                                      choices = c("All", "spring", "summer", "fall", "winter"), selected = "All"),
-                          
-                          selectizeInput("suborder", "Choose cetacean suborder:",
-                                         choices = c("All", unique(whale$SubOrder)), selected = "All"),  # Include "All" option
-                          conditionalPanel( # creates a panel that is visible depending on conditional expression 
-                            condition = 'input.suborder != "All"',  # Only show when a specific suborder is selected (not equal to "All")
-                            checkboxGroupInput("species", "Select Species within Suborder:",
-                                               choices = NULL, selected = NULL)
-                          ),
-                          conditionalPanel( 
-                            condition = 'input.suborder == "All"',  # Show when "All" is selected
-                            checkboxGroupInput("all_species", "Select All Species:",
-                                               choices = NULL, selected = NULL)
-                          ),
-                          
-                          
-                          
-=======
+
                           # add collapsible checkboxes for suborders and species:
                           treecheckInput(
                             inputId = "all_species",
@@ -198,7 +179,6 @@ ui <- fluidPage(
                             width = '100%',
                             borders = TRUE
                           ),
->>>>>>> Stashed changes
                         ),
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
@@ -269,26 +249,14 @@ server <- function(input, output, session) {
   })
   
   # add reactive filter for visual effort per cruise
-  vizFilter <- reactive({
-<<<<<<< Updated upstream
-    if (input$cruise == "All") {
-      viz  # Return all data if "All" is selected
-    } else {
-      filter(viz, viz$cruise == input$cruise)
-    }
-  })
+  vizFilter <- reactive({filter(viz, viz$cruise %in% input$all_cruises)})
   
-  
-=======
-    filter(viz, viz$cruise %in% input$all_cruises)
-  })
-  
->>>>>>> Stashed changes
+
   # observe event for vizEffort data reactivity
   observeEvent(input$viz, { # put cruise filtering within vizeffort observe event so that we can display visual effort 
     # per cruise. 
     
-    observeEvent(input$cruise, {
+    observeEvent(input$all_cruises, {
       if (input$viz > 0) {
         leafletProxy("mymap", session) %>%
           clearGroup("viz")
@@ -321,15 +289,6 @@ server <- function(input, output, session) {
   
   
   # Update SELECTIZE INPUT
-<<<<<<< Updated upstream
-  updateSelectizeInput(session = session, "cruise",
-                       choices = c("All", unique(whale$Cruise)),
-                       selected = unique(whale$Cruise)[1], server = TRUE)
-=======
-  # updateSelectizeInput(session = session, "cruise",
-  #                      choices = unique(whale$Cruise),
-  #                      selected = unique(whale$Cruise)[1], server = TRUE)
->>>>>>> Stashed changes
   
   # create the base map using leaflet
   output$mymap <- renderLeaflet({
@@ -340,36 +299,9 @@ server <- function(input, output, session) {
   
   # OBS DATA
   # create reactivity for obs data
-<<<<<<< Updated upstream
-  obsFilter <- reactive({
-    if (input$cruise == "All") {
-      if (input$suborder == "All" & input$season == "All") {
-        filter(whale,  whale$SpeciesName %in% input$all_species)
-      } else if (input$suborder == "All" & input$season != "All"){
-        filter(whale,  whale$Season == input$season & whale$SpeciesName %in% input$all_species)
-      } else if (input$suborder != "All" & input$season == "All"){
-        filter(whale,  whale$SubOrder == input$suborder & whale$SpeciesName %in% input$all_species)
-      } else {
-        filter(whale,  whale$SubOrder == input$suborder & whale$Season == input$season & whale$SpeciesName %in% input$species)
-      }
-    } else {
-      if (input$suborder == "All" & input$season == "All") {
-        filter(whale, whale$Cruise == input$cruise & whale$SpeciesName %in% input$all_species)
-      } else if (input$suborder == "All" & input$season != "All"){
-        filter(whale, whale$Cruise == input$cruise & whale$Season == input$season & whale$SpeciesName %in% input$all_species)
-      } else if (input$suborder != "All" & input$season == "All"){
-        filter(whale, whale$Cruise == input$cruise & whale$SubOrder == input$suborder & whale$SpeciesName %in% input$all_species)
-      } else {
-        filter(whale, whale$Cruise == input$cruise & whale$SubOrder == input$suborder & whale$Season == input$season & whale$SpeciesName %in% input$species)
-      }
-    }
-  })
-
-  
-=======
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
   obsFilter <- reactive({filter(whale, whale$Cruise %in% input$all_cruises & whale$SpeciesName %in% input$all_species)})
->>>>>>> Stashed changes
+
   
   # Define the number of colors for observational whale points
   num_colors = length(unique(whale$SpeciesName))  # there are 33 unique cetacean codes in this dataset
@@ -419,27 +351,7 @@ server <- function(input, output, session) {
   # })
   
   # eDNA effort filter for plotting eDNA effort per cruise. Plot as black circle 
-  ednaEffortFilter <- reactive({
-<<<<<<< Updated upstream
-    if (input$cruise == "All") {
-      edna  # Return all data if "All" is selected
-    } else {
-      filter(edna, edna$cruise == input$cruise)
-    }
-  })
-  
-  ednaDetectionFilter <- reactive({
-    if (input$cruise == "All") {
-      edna  # Return all data if "All" is selected
-    } else {
-      filter(edna, edna$cruise == input$cruise & edna$SpeciesName != "NA")
-    }
-  })
-  
-=======
-    
-    filter(edna, edna$cruise == input$cruise)
-  })
+  ednaEffortFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises)})
   
   #print(str(ednaEffortFilter()))
   
@@ -449,8 +361,6 @@ server <- function(input, output, session) {
     
   })
   
-  
->>>>>>> Stashed changes
   # observe layer for eDNA effort data reactivity
   observe({
     if (input$edna > 0) {
