@@ -17,13 +17,81 @@ library(RColorBrewer)
 library(viridis)
 library(htmltools)
 library(rsconnect)
+library(shinytreeview)
+
+
+
+
+
+species_list <- data.frame(
+  Suborder = c(rep('Odontocete',16), rep('Mysticete',6), rep('Unidentified',10)),
+  Family = c('Delphinidae', 
+             'Ziphiidae', 
+             'Delphinidae', 
+             'Ziphiidae',
+             'Delphinidae',
+             'Delphinidae',
+             'Physeteridae',
+             'Delphinidae',
+             'Delphinidae',
+             'Phocoenidae',
+             'Phocoenidae',
+             'Delphinidae',
+             'Delphinidae',
+             'Delphinidae',
+             'Delphinidae',
+             'Delphinidae',
+             rep('All Mysticetes', 6),
+             rep('All Unidentified', 10)
+  ),
+  Species = c('Short-beaked common dolphin',
+              'Cuviers beaked whale',
+              'Pacific white-sided dolphin',
+              'Bairds beaked whale',
+              'Rissos dolphin',
+              'Bottlenose dolphin',
+              'Sperm whale',
+              'Striped dolphin',
+              'Long-beaked common dolphin',
+              'Dalls porpoise',
+              'Harbor porpoise',
+              'Northern right whale dolphin',
+              'Rough toothed dolphin',
+              'Killer whale',
+              'Short-finned pilot whale',
+              'False killer whale',
+              'Blue whale',
+              'Fin whale',
+              'Humpback whale',
+              'Gray whale',
+              'Minke whale',
+              'Sei whale',
+              'Unidentified common dolphin',
+              'Unidentified large whale',
+              'Unidentified dolphin',
+              'Unidentified beaked whale',
+              'Unidentified small cetacean',
+              'Unidentified cetacean',
+              'Unidentified small whale',
+              'Unidentified ziphid',
+              'Unidentified odontocete',
+              'Other')
+)
+
+
 
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
+whale$Season <- trimws(whale$Season)
 whale = whale[-1105,]
 station <- read.csv("CalCOFIStationOrder.csv")
 edna <- read.csv("edna.csv")
 viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
+
+
+seasons_dataframe <- data.frame(
+  Season = c(rep("Summer", 18), rep("Fall", 18), rep("Winter", 16), rep("Spring", 15)),
+  Cruise_Id = c(unique(whale$Cruise[whale$Season == "summer"]), unique(whale$Cruise[whale$Season == "fall"]), unique(whale$Cruise[whale$Season == "winter"]), unique(whale$Cruise[whale$Season == "spring"])))
 
 # # Define custom star marker icon
 # starIcon <- makeIcon(
@@ -36,7 +104,7 @@ viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
 # #Begin with the user interface (ui). This is where we will create the inputs and outputs that the user will be able to interact with.
 ui <- fluidPage(
   #choose a CSS theme -- you can also create a custom theme if you know CSS
-  theme = shinytheme("darkly"),
+  theme = shinytheme("cosmo"),
   #create a navigation bar for the top of the app, and give it a main title
   navbarPage("SAEL CalCOFI ShinyApp",
              #add the first tab panel (tab1) and annotate -- the tags$h command adds text at different sizes
@@ -49,8 +117,19 @@ ui <- fluidPage(
                           #create inputs for species and date
                           # add input for observational data
                           # add action button for site markers
-                          selectizeInput("cruise", "Choose CalCOFI Cruise (yy-mm):",
-                                         choices = NULL, multiple = FALSE),
+                          # selectizeInput("cruise", "Choose CalCOFI Cruise (yy-mm):",
+                          #                choices = NULL, multiple = FALSE),
+                          
+                          #add collapsible checkboxes for suborders and species:
+                          treecheckInput(
+                            inputId =  "all_cruises",
+                            label = "Choose Cruise by Season:",
+                            choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
+                            width = "100%",
+                            borders = TRUE
+                          ),
+                          
+                          
                           actionButton("sites", "Display Stations", width = '150px',
                                        style='border-color: #565655;
                                        background-color: #F47831;
@@ -91,6 +170,7 @@ ui <- fluidPage(
                                        background-color: #FF69B4;
                                        padding:3px'),
                           
+<<<<<<< Updated upstream
                           selectInput("season", "Filter by Season:",
                                       choices = c("All", "spring", "summer", "fall", "winter"), selected = "All"),
                           
@@ -109,6 +189,16 @@ ui <- fluidPage(
                           
                           
                           
+=======
+                          # add collapsible checkboxes for suborders and species:
+                          treecheckInput(
+                            inputId = "all_species",
+                            label = "Choose Species:",
+                            choices = make_tree(species_list, c('Suborder', 'Family', 'Species')),
+                            width = '100%',
+                            borders = TRUE
+                          ),
+>>>>>>> Stashed changes
                         ),
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
@@ -180,6 +270,7 @@ server <- function(input, output, session) {
   
   # add reactive filter for visual effort per cruise
   vizFilter <- reactive({
+<<<<<<< Updated upstream
     if (input$cruise == "All") {
       viz  # Return all data if "All" is selected
     } else {
@@ -188,6 +279,11 @@ server <- function(input, output, session) {
   })
   
   
+=======
+    filter(viz, viz$cruise %in% input$all_cruises)
+  })
+  
+>>>>>>> Stashed changes
   # observe event for vizEffort data reactivity
   observeEvent(input$viz, { # put cruise filtering within vizeffort observe event so that we can display visual effort 
     # per cruise. 
@@ -222,38 +318,29 @@ server <- function(input, output, session) {
   # when user selects a suborder from "Choose suborder" dropdown, this observe function will be triggered
   # if suborder == All, then species_choices can be any of them
   # if suborder == suborder, then it filters suborder choices based on suborder column 
-  observe({
-    # Update species choices based on selected suborder
-    if (input$suborder == "All") {
-      species_choices <- unique(whale$SpeciesName)
-    } else {
-      species_choices <- unique(whale$SpeciesName[whale$SubOrder == input$suborder])
-    }
-    
-    # update checkbox inputs based on suborder selection
-    if (input$suborder == "All") {
-      updateCheckboxGroupInput(session, "all_species", choices = species_choices, selected = NULL)
-      updateCheckboxGroupInput(session, "species", choices = NULL, selected = NULL)
-    } else {
-      updateCheckboxGroupInput(session, "all_species", choices = NULL, selected = NULL)
-      updateCheckboxGroupInput(session, "species", choices = species_choices, selected = NULL)
-    }
-  })
+  
   
   # Update SELECTIZE INPUT
+<<<<<<< Updated upstream
   updateSelectizeInput(session = session, "cruise",
                        choices = c("All", unique(whale$Cruise)),
                        selected = unique(whale$Cruise)[1], server = TRUE)
+=======
+  # updateSelectizeInput(session = session, "cruise",
+  #                      choices = unique(whale$Cruise),
+  #                      selected = unique(whale$Cruise)[1], server = TRUE)
+>>>>>>> Stashed changes
   
   # create the base map using leaflet
   output$mymap <- renderLeaflet({
     leaflet() %>%
       setView(lng = -121, lat = 34, zoom = 6.5) %>%
       addProviderTiles(providers$CartoDB.Positron, layerId = "base")
-  })
+  })   
   
   # OBS DATA
   # create reactivity for obs data
+<<<<<<< Updated upstream
   obsFilter <- reactive({
     if (input$cruise == "All") {
       if (input$suborder == "All" & input$season == "All") {
@@ -279,6 +366,10 @@ server <- function(input, output, session) {
   })
 
   
+=======
+  # reactive expression filters dataset based on input conditions and returns filtered subset of the data
+  obsFilter <- reactive({filter(whale, whale$Cruise %in% input$all_cruises & whale$SpeciesName %in% input$all_species)})
+>>>>>>> Stashed changes
   
   # Define the number of colors for observational whale points
   num_colors = length(unique(whale$SpeciesName))  # there are 33 unique cetacean codes in this dataset
@@ -329,6 +420,7 @@ server <- function(input, output, session) {
   
   # eDNA effort filter for plotting eDNA effort per cruise. Plot as black circle 
   ednaEffortFilter <- reactive({
+<<<<<<< Updated upstream
     if (input$cruise == "All") {
       edna  # Return all data if "All" is selected
     } else {
@@ -344,6 +436,21 @@ server <- function(input, output, session) {
     }
   })
   
+=======
+    
+    filter(edna, edna$cruise == input$cruise)
+  })
+  
+  #print(str(ednaEffortFilter()))
+  
+  ednaDetectionFilter <- reactive({
+    
+    filter(edna, edna$cruise %in% input$all_cruises & edna$SpeciesName!="NA")
+    
+  })
+  
+  
+>>>>>>> Stashed changes
   # observe layer for eDNA effort data reactivity
   observe({
     if (input$edna > 0) {
