@@ -87,8 +87,26 @@ viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
 
 
 seasons_dataframe <- data.frame(
-  Season = c(rep("Summer", 18), rep("Fall", 18), rep("Winter", 16), rep("Spring", 15)),
-  Cruise_Id = c(unique(whale$Cruise[whale$Season == "summer"]), unique(whale$Cruise[whale$Season == "fall"]), unique(whale$Cruise[whale$Season == "winter"]), unique(whale$Cruise[whale$Season == "spring"])))
+  Season = c(rep("Summer", 18), 
+             rep("Fall", 18), 
+             rep("Winter", 16), 
+             rep("Spring", 15), 
+             rep("Cruise with eDNA", length(unique(edna$cruise))), 
+             rep("Cruise without eDNA", length(setdiff(unique(whale$Cruise), unique(edna$cruise))))
+             ),
+  Cruise_Id = c(unique(whale$Cruise[whale$Season == "summer"]), 
+                unique(whale$Cruise[whale$Season == "fall"]), 
+                unique(whale$Cruise[whale$Season == "winter"]), 
+                unique(whale$Cruise[whale$Season == "spring"]),
+                unique(edna$cruise),
+                setdiff(unique(whale$Cruise), unique(edna$cruise))
+                ))
+
+# Define the data frame for cruises with eDNA data
+# cruise_edna_dataframe <- data.frame(
+#   cruise_with_eDNA = rep("Cruise with eDNA", length(unique(edna$cruise))),
+#   cruise_Id_edna = unique(edna$cruise)
+# )
 
 # # Define custom star marker icon
 # starIcon <- makeIcon(
@@ -117,14 +135,27 @@ ui <- fluidPage(
                           # selectizeInput("cruise", "Choose CalCOFI Cruise (yy-mm):",
                           #                choices = NULL, multiple = FALSE),
                           
+                          
+                          
                           #add collapsible checkboxes for suborders and species:
                           treecheckInput(
                             inputId =  "all_cruises",
-                            label = "Choose Cruise by Season:",
+                            label = "Choose Cruise by Season/eDNA:",
                             choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
                             width = "100%",
                             borders = TRUE
                           ),
+                          
+                          # treecheckInput(
+                          #   inputId =  "all_cruises_eDNA",
+                          #   label = "Choose Cruise by eDNA:",
+                          #   choices = make_tree(cruise_edna_dataframe, c("cruise_with_eDNA", "cruise_Id_edna")),
+                          #   width = "100%",
+                          #   borders = TRUE
+                          # ),
+                          
+                          
+                          
                           
                           
                           actionButton("sites", "Display Stations", width = '150px',
@@ -223,6 +254,7 @@ ui <- fluidPage(
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
 server <- function(input, output, session) {
   
+  
   observeEvent(input$sites, { # when the user selects the display sites input button
     leafletProxy("mymap", session) %>% # add a layer to the map
       clearGroup("sites") %>%
@@ -247,6 +279,9 @@ server <- function(input, output, session) {
   
   # add reactive filter for visual effort per cruise
   vizFilter <- reactive({filter(viz, viz$cruise %in% input$all_cruises)})
+  
+
+  
   
 
   # observe event for vizEffort data reactivity
@@ -278,6 +313,7 @@ server <- function(input, output, session) {
         clearGroup("viz")
     }
   })
+  
   
   
   # when user selects a suborder from "Choose suborder" dropdown, this observe function will be triggered
