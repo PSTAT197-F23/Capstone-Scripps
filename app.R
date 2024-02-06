@@ -20,9 +20,6 @@ library(rsconnect)
 library(shinytreeview)
 
 
-
-
-
 species_list <- data.frame(
   Suborder = c(rep('Odontocete',16), rep('Mysticete',6), rep('Unidentified',10)),
   Family = c('Delphinidae', 
@@ -302,18 +299,47 @@ server <- function(input, output, session) {
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
   obsFilter <- reactive({filter(whale, whale$Cruise %in% input$all_cruises & whale$SpeciesName %in% input$all_species)})
 
+  species_to_color <- c(
+    "Short-beaked common dolphin" = "cyan4",
+    "Blue whale" = "cadetblue1",
+    "Unidentified common dolphin" = "yellow",
+    "Unidentified large whale" = "springgreen3",
+    "Fin whale" = "blueviolet",
+    "Cuviers beaked whale" = "chartreuse1",
+    "Unidentified dolphin" = "red1",
+    "Pacific white-sided dolphin" = "deeppink3",
+    "Bairds beaked whale" = "coral1",
+    "Unidentified beaked whale" = "lightpink",
+    "Rissos dolphin" = "darkolivegreen",
+    "Bottlenose dolphin" = "chocolate4",
+    "Sperm whale" = "gold2",
+    "Striped dolphin" = "orchid1",
+    "Long-beaked common dolphin" = "aquamarine1",
+    "Dalls porpoise" = "burlywood1",
+    "Humpback whale" = "azure2",
+    "Harbor porpoise" = "blue1",
+    "Unidentified small cetacean" = "bisque3",
+    "Gray whale" = "grey27",
+    "Northern right whale dolphin" = "darkorange3",
+    "Unidentofied cetacean" = "darkred",
+    "Rough toothed dolphin" = "deepskyblue2",
+    "Minke whale" = "orange",
+    "Unidentified small whale" = "slategray3",
+    "Killer whale" = "violetred1",
+    "Short-finned pilot whale" = "slateblue1",
+    "Unidentified ziphid" = "mistyrose",
+    "False killer whale" = "darkcyan",
+    "Unidentified odontocete" = "green2",
+    "Sei Whale" = "plum4",
+    "Other" = "seagreen1"
+  )
   
   # Define the number of colors for observational whale points
   num_colors = length(unique(whale$SpeciesName))  # there are 33 unique cetacean codes in this dataset
-  # Generate the full viridis turbo palette
-  full_palette = viridis(256, option = "turbo")
-  # Randomly shuffle the colors
-  set.seed(1)  # Set a seed for reproducibility
-  random_colors = sample(full_palette, num_colors)
   
   # observe layer for obs data reactivity
   observe({
-    pal = colorFactor(palette = random_colors, levels = as.factor(unique(whale$SpeciesName)))
+    pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
     values = obsFilter()$SpeciesName
     
     leafletProxy("mymap") %>%
@@ -326,19 +352,20 @@ server <- function(input, output, session) {
                  # radius = 5000,
                  color = ~pal(values),
                  fillColor = ~pal(values),
-                 radius = (log(obsFilter()$Best))*2000,
+                 radius = (log(obsFilter()$Best))*5000,
                  popup = ~paste("Sighting:",as.character(obsFilter()$SpeciesName),
                                 "<br>Group Size Estimate:", as.character(obsFilter()$Best),
                                 "<br>Date (Local):",as.character(obsFilter()$DateTimeLocal),
                                 "<br>Lat:",as.character(obsFilter()$DecLat)," Lon:",as.character(obsFilter()$DecLong)) %>%
                    lapply(htmltools::HTML),
-                 opacity = 0.3,
-                 fillOpacity = 0.3,
+                 opacity = 1,
+                 fillOpacity = 0.7,
                  group = "sightings",
-                 options = pathOptions(pane = "layer1")
+                 options = pathOptions(pane = "layer1", weight = 1)
       ) %>%
       addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings")
   })
+  
   
   # filter eDNA data
   # ednaFilter <- reactive({
