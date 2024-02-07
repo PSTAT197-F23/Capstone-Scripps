@@ -23,9 +23,9 @@ library(shinytreeview)
 
 species_list <- data.frame(
   Suborder = c(rep('Odontocete',16), rep('Mysticete',6), rep('Unidentified',10)),
-  Family = c('Delphinidae', 
-             'Ziphiidae', 
-             'Delphinidae', 
+  Family = c('Delphinidae',
+             'Ziphiidae',
+             'Delphinidae',
              'Ziphiidae',
              'Delphinidae',
              'Delphinidae',
