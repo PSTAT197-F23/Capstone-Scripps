@@ -4,6 +4,7 @@
 # last udpated: 10/13/23
 
 # load the libraries
+# remotes::install_github("dreamRs/shinytreeview")
 library(shiny)
 library(leaflet)
 library(leaflet.extras)
@@ -22,9 +23,9 @@ library(shinytreeview)
 
 species_list <- data.frame(
   Suborder = c(rep('Odontocete',16), rep('Mysticete',6), rep('Unidentified',10)),
-  Family = c('Delphinidae', 
-             'Ziphiidae', 
-             'Delphinidae', 
+  Family = c('Delphinidae',
+             'Ziphiidae',
+             'Delphinidae',
              'Ziphiidae',
              'Delphinidae',
              'Delphinidae',
@@ -38,8 +39,22 @@ species_list <- data.frame(
              'Delphinidae',
              'Delphinidae',
              'Delphinidae',
-             rep('All Mysticetes', 6),
-             rep('All Unidentified', 10)
+             'Blue whale',
+             'Fin whale',
+             'Humpback whale',
+             'Gray whale',
+             'Minke whale',
+             'Sei whale',
+             'Unidentified common dolphin',
+             'Unidentified large whale',
+             'Unidentified dolphin',
+             'Unidentified beaked whale',
+             'Unidentified small cetacean',
+             'Unidentified cetacean',
+             'Unidentified small whale',
+             'Unidentified ziphid',
+             'Unidentified odontocete',
+             'Other'
   ),
   Species = c('Short-beaked common dolphin',
               'Cuviers beaked whale',
@@ -57,24 +72,8 @@ species_list <- data.frame(
               'Killer whale',
               'Short-finned pilot whale',
               'False killer whale',
-              'Blue whale',
-              'Fin whale',
-              'Humpback whale',
-              'Gray whale',
-              'Minke whale',
-              'Sei whale',
-              'Unidentified common dolphin',
-              'Unidentified large whale',
-              'Unidentified dolphin',
-              'Unidentified beaked whale',
-              'Unidentified small cetacean',
-              'Unidentified cetacean',
-              'Unidentified small whale',
-              'Unidentified ziphid',
-              'Unidentified odontocete',
-              'Other')
+              rep(NA,16))
 )
-
 
 
 # import my data, obtained from CalCOFI
@@ -198,7 +197,7 @@ ui <- fluidPage(
                                        background-color: #FF69B4;
                                        padding:3px'),
                           
-                          
+
                           # add collapsible checkboxes for suborders and species:
                           treecheckInput(
                             inputId = "all_species",
@@ -278,7 +277,7 @@ server <- function(input, output, session) {
   })
   
   # add reactive filter for visual effort per cruise
-  vizFilter <- reactive({filter(viz, viz$cruise %in% input$all_cruises)})
+ vizFilter <- reactive({filter(viz, viz$cruise %in% input$all_cruises)})
   
   
   
@@ -315,7 +314,8 @@ server <- function(input, output, session) {
   })
   
   
-  
+
+ 
   # when user selects a suborder from "Choose suborder" dropdown, this observe function will be triggered
   # if suborder == All, then species_choices can be any of them
   # if suborder == suborder, then it filters suborder choices based on suborder column 
@@ -435,6 +435,7 @@ server <- function(input, output, session) {
     }
   })
   
+
   
   # filter eDNA data
   # ednaFilter <- reactive({
@@ -448,6 +449,7 @@ server <- function(input, output, session) {
   
   # eDNA effort filter for plotting eDNA effort per cruise. Plot as black circle 
   ednaEffortFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises)})
+
   
   #print(str(ednaEffortFilter()))
   
@@ -537,6 +539,7 @@ server <- function(input, output, session) {
   
   
   
+
 }
 
 # #Finally, we tell R to use the user interface and the server together to build our app!
