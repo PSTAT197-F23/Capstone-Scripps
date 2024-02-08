@@ -376,7 +376,7 @@ server <- function(input, output, session) {
   # icon for eDNA detections on map
   greenHelixIcon <- makeIcon(
     iconUrl = "https://cdn-icons-png.flaticon.com/512/922/922105.png",
-    iconWidth = 50, iconHeight = 50
+    iconWidth = 35, iconHeight = 35
   )
   
   
@@ -384,10 +384,6 @@ server <- function(input, output, session) {
   observe({
     pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
     values = obsFilter()$SpeciesName
-    
-    # for eDNA detection legend
-    pal2 = colorFactor(palette = "lightgreen", levels = as.factor(unique(edna$SpeciesName)))
-    values2 = ednaDetectionFilter()$SpeciesName
     
     leafletProxy("mymap") %>%
       clearGroup("sightings") %>%
@@ -425,9 +421,8 @@ server <- function(input, output, session) {
       # Add eDNA detection legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("bottomleft",
-                  group="edna_detection", title="Species with Detected eDNA (Marked with Helices)",
-                  pal=pal2,
-                  values=values2,
+                  colors = "lightgreen",
+                  labels = "eDNA Detection",
                   opacity = 1,
                   layerId = "edna_detection_legend"
         ) # This might seem counter intuitive, but it is to 
@@ -461,9 +456,6 @@ server <- function(input, output, session) {
   
   # observe layer for eDNA effort data reactivity
   observe({
-    # for eDNA detection legend
-    pal2 = colorFactor(palette = "lightgreen", levels = as.factor(unique(edna$SpeciesName)))
-    values2 = ednaDetectionFilter()$SpeciesName
     
     req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
     leafletProxy("mymap", session) %>%
@@ -497,9 +489,6 @@ server <- function(input, output, session) {
   
   # observe layer for eDNA detection data reactivity
   observe({
-    # for eDNA detection legend
-    pal2 = colorFactor(palette = "lightgreen", levels = as.factor(unique(edna$SpeciesName)))
-    values2 = ednaDetectionFilter()$SpeciesName
     
     req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
     leafletProxy("mymap", session) %>%
@@ -518,9 +507,8 @@ server <- function(input, output, session) {
           group = "edna_detection"
         ) %>%
         addLegend("bottomleft",
-                  group="edna_detection", title="Species with Detected eDNA (Marked with Helices)",
-                  pal=pal2,
-                  values=values2,
+                  colors = "lightgreen",
+                  labels = "eDNA Detection",
                   opacity = 1,
                   layerId = "edna_detection_legend"
         )
