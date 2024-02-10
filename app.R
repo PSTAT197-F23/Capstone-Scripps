@@ -83,6 +83,7 @@ whale = whale[-1105,]
 station <- read.csv("CalCOFIStationOrder.csv")
 edna <- read.csv("edna.csv")
 viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
+acoustic <- read.csv("acoustic.csv")
 
 
 seasons_dataframe <- data.frame(
@@ -195,6 +196,18 @@ ui <- fluidPage(
                                        width = '150px',
                                        style='border-color: #565655;
                                        background-color: #FF69B4;
+                                       padding:3px'),
+                          
+                          actionButton("acoustic", "Display Acoustic Data", width = '150px',
+                                       style='border-color: #565655;
+                                       background-color: #800080;
+                                       padding:3px'),
+                          
+                          # add action button to clear site markers
+                          actionButton("clearacoustic", "Clear Acoustic Data",
+                                       width = '150px',
+                                       style='border-color: #565655;
+                                       background-color: #800080;
                                        padding:3px'),
                           
 
@@ -526,6 +539,94 @@ server <- function(input, output, session) {
   })
   
   
+  ############################################################
+  
+  # icon for acoustic detections on map
+  musicNoteIcon <- makeIcon(
+    iconUrl = "assests/music-note-purple.png",
+    iconWidth = 35, iconHeight = 35
+  )
+  
+  # acoustic effort filter for plotting acoustic effort per cruise. Plot as black circle 
+  acousticEffortFilter <- reactive({filter(acoustic, acoustic$cruise %in% input$all_cruises)})
+  
+  acousticDetectionFilter <- reactive({
+    
+    filter(acoustic, acoustic$cruise %in% input$all_cruises & acoustic$SpeciesName!="NA")
+    
+  })
+  
+  # observe layer for acoustic effort data reactivity
+  observe({
+    
+    req(input$acoustic > 0)  # Require input$acoustic to be greater than 0 to proceed
+    leafletProxy("mymap", session) %>%
+      clearGroup("acoustic") # clear existing acoustic first
+    if (!is.null(acousticEffortFilter()$longitude)) {
+      leafletProxy("mymap", session) %>%
+        addCircles(
+          lng = as.numeric(acousticEffortFilter()$longitude),
+          lat = as.numeric(acousticEffortFilter()$latitude),
+          radius = 5000,  # Adjust the radius as needed
+          color = "#4E7724",  # Border color
+          fillColor = "#4E7724",  # Fill color
+          popup = paste("Acoustic Effort",
+                        "<br>Sample Depth (m):", as.character(acousticEffortFilter()$depth),
+                        "<br>Line:", as.character(acousticEffortFilter()$line),
+                        "<br>Station:", as.character(acousticEffortFilter()$station)) %>%
+            lapply(htmltools::HTML),
+          opacity = 1,
+          fillOpacity = 1,
+          group = "acoustic"
+        ) %>%
+        clearControls() #%>%
+        #addLegend("topleft",
+        #          colors = "#4E7724",
+        #          labels = "Acoustic Effort",
+        #          opacity = 1,
+        #          layerId = "acoustic_effort_legend"
+       # )
+    }
+  })
+  
+  # observe layer for acoustic detection data reactivity
+  observe({
+    
+    req(input$acoustic > 0)  # Require input$acoustic to be greater than 0 to proceed
+    leafletProxy("mymap", session) %>%
+      clearGroup("acoustic_detection") # clear existing acoustic detection
+    if (!is.null(acousticDetectionFilter()$longitude)){
+      leafletProxy("mymap", session) %>%
+        addMarkers(
+          lng = as.numeric(acousticDetectionFilter()$longitude) + 0,
+          lat = as.numeric(acousticDetectionFilter()$latitude) + 0,
+          icon = musicNoteIcon,
+          popup = paste("Acoustic Detection:",as.character(acousticDetectionFilter()$SpeciesName),
+                        "<br>Sample Depth (m):", as.character(acousticDetectionFilter()$depth),
+                        "<br>Line:",as.character(acousticDetectionFilter()$line),
+                        "<br>Station:",as.character(acousticDetectionFilter()$station)) %>%
+            lapply(htmltools::HTML), 
+          group = "acoustic_detection"
+        ) #%>%
+        #addLegend("topleft",
+                  #colors = "#6D00BE",
+                  #labels = "Acoustic Detection",
+                  #opacity = 1,
+                  #layerId = "acoustic_detection_legend"
+        #)
+    }
+  })
+  
+  
+  # observe event for clearing acoustic data
+  observeEvent(input$clearacoustic, {
+    req(input$clearacoustic > 0)  # Require input$clearacoustic to be greater than 0 to proceed
+    leafletProxy("mymap", session) %>%
+      clearGroup("acoustic") %>%
+      clearGroup("acoustic_detection") %>%
+      removeControl("acoustic_effort_legend") %>%
+      removeControl("acoustic_detection_legend") # Remove both legends associated with acoustic data
+  })
   
 
 }
