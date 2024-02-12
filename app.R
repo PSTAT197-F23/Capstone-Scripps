@@ -79,7 +79,7 @@ species_list <- data.frame(
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
 whale$Season <- trimws(whale$Season)
-whale$Year <- format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y')
+whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
 whale = whale[-1105,]
 station <- read.csv("CalCOFIStationOrder.csv")
 edna <- read.csv("edna.csv")
@@ -133,11 +133,11 @@ ui <- fluidPage(
                           # create the year slider / play button: 
                           sliderInput(inputId = 'years', 
                                       label = 'Years', 
-                                      #min = min(whale$Year, na.rm = TRUE), 
-                                      #max = max(whale$Year, na.rm = TRUE), 
-                                      min = 2004, max = 2022,
+                                      min = min(whale$Year, na.rm = TRUE), 
+                                      max = max(whale$Year, na.rm = TRUE), 
                                       value = c(2004, 2004),
                                       step = 1,
+                                      sep = "", 
                                       animate = animationOptions(
                                         interval = 500,
                                         loop = FALSE,
