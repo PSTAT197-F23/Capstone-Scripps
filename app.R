@@ -336,7 +336,7 @@ server <- function(input, output, session) {
       }
     })
   })
-  
+
   observeEvent(input$clearviz, { # clear the observational line when input button is clicked
     if (input$clearviz > 0) {
       leafletProxy("mymap") %>%
@@ -365,12 +365,15 @@ server <- function(input, output, session) {
   # create reactivity for obs data
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
   obsFilter <- reactive({
-    filter(whale, whale$Cruise %in% input$all_cruises 
+    filter(whale , whale$Cruise %in% input$all_cruises 
            & whale$SpeciesName %in% input$all_species 
            & whale$Year >= input$years[1] 
-           & whale$Year <= input$years[2]) 
+           & whale$Year <= input$years[2])
     })
   
+  
+
+
   species_to_color <- c(
     "Short-beaked common dolphin" = "cyan4",
     "Blue whale" = "cadetblue1",
@@ -571,11 +574,16 @@ server <- function(input, output, session) {
   )
   
   # acoustic effort filter for plotting acoustic effort per cruise. Plot as black circle 
-  acousticEffortFilter <- reactive({filter(acoustic, acoustic$cruise %in% input$all_cruises)})
+  acousticEffortFilter <- reactive({filter(acoustic, acoustic$cruise %in% input$all_cruises
+                                           & acoustic$Year >= input$years[1] 
+                                           & acoustic$Year <= input$years[2])})
   
   acousticDetectionFilter <- reactive({
     
-    filter(acoustic, acoustic$cruise %in% input$all_cruises & acoustic$SpeciesName!="NA")
+    filter(acoustic, acoustic$cruise %in% input$all_cruises 
+           & acoustic$SpeciesName!="NA"
+           & acoustic$Year >= input$years[1] 
+           & acoustic$Year <= input$years[2])
     
   })
   
