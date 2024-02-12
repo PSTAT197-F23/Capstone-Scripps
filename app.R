@@ -6,6 +6,8 @@
 # load the libraries
 # remotes::install_github("dreamRs/shinytreeview")
 library(shiny)
+library(shinyjs)
+library(shinyBS)
 library(leaflet)
 library(leaflet.extras)
 library(dplyr)
@@ -118,6 +120,49 @@ seasons_dataframe <- data.frame(
 
 # #Begin with the user interface (ui). This is where we will create the inputs and outputs that the user will be able to interact with.
 ui <- fluidPage(
+  tags$head(
+    tags$style(
+      type = 'text/css',
+      '.modal-dialog { width: fit-content !important; }'
+    ),
+    tags$style(HTML("
+      #info_button {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1000; /* Ensure it's on top of other elements */
+        width: 40px; /* Set width */
+        height: 40px; /* Set height */
+        border-radius: 50%; /* Make the border circular */
+        display: flex; /* Use flexbox */
+        justify-content: center; /* Center horizontally */
+        align-items: center; /* Center vertically */
+        font-size: 20px; /* Increase icon size */
+      }
+      #info_button span {
+        margin-left: -1px; /* Adjust icon position */
+      }
+    "),
+    tags$style(HTML("
+      .custom-modal .modal-dialog {
+        width: 600px; /* Set the width */
+        height: 400px; /* Set the height */
+      }
+      .custom-modal-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+    "))
+    )
+  ),
+  actionButton("info_button", icon("info-circle"), style = "color: #007bff;"),
+  
+  
+
+  
   #choose a CSS theme -- you can also create a custom theme if you know CSS
   theme = shinytheme("cosmo"),
   #create a navigation bar for the top of the app, and give it a main title
@@ -263,12 +308,28 @@ ui <- fluidPage(
                       
                       
              )
+             
   )
+  
+  
 )
 
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
 server <- function(input, output, session) {
   
+  observeEvent(input$info_button, {
+    showModal(modalDialog(
+      title = "Somewhat important message",
+      div(class = "custom-modal-content",
+          div(img(src = "edna_poster.jpg", height = 600, width = 900)),
+          div("This is the text content of the custom modal dialog.")
+      ),
+      size = 'l',
+      easyClose = TRUE,
+      footer = NULL,
+      class = "custom-modal" # Add custom class to the modal dialog
+    ))
+  })
   
   observeEvent(input$sites, { # when the user selects the display sites input button
     leafletProxy("mymap", session) %>% # add a layer to the map
