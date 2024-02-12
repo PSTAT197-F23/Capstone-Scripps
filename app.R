@@ -79,6 +79,7 @@ species_list <- data.frame(
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
 whale$Season <- trimws(whale$Season)
+whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
 whale = whale[-1105,]
 station <- read.csv("CalCOFIStationOrder.csv")
 edna <- read.csv("edna.csv")
@@ -128,6 +129,23 @@ ui <- fluidPage(
                       #create the sidebar that will hold the input functions that we add
                       sidebarLayout(
                         sidebarPanel(
+                          
+                          # create the year slider / play button: 
+                          sliderInput(inputId = 'years', 
+                                      label = 'Years', 
+                                      min = min(whale$Year, na.rm = TRUE), 
+                                      max = max(whale$Year, na.rm = TRUE), 
+                                      value = c(2004, 2004),
+                                      step = 1,
+                                      sep = "", 
+                                      animate = animationOptions(
+                                        interval = 500,
+                                        loop = FALSE,
+                                        playButton = icon("play", "fa-2x"),
+                                        pauseButton = icon("pause", "fa-2x")
+                                      )
+                          ),
+                          
                           #create inputs for species and date
                           # add input for observational data
                           # add action button for site markers
@@ -333,7 +351,12 @@ server <- function(input, output, session) {
   # OBS DATA
   # create reactivity for obs data
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
-  obsFilter <- reactive({filter(whale, whale$Cruise %in% input$all_cruises & whale$SpeciesName %in% input$all_species)})
+  obsFilter <- reactive({
+    filter(whale, whale$Cruise %in% input$all_cruises 
+           & whale$SpeciesName %in% input$all_species 
+           & whale$Year >= input$years[1] 
+           & whale$Year <= input$years[2]) 
+    })
   
   species_to_color <- c(
     "Short-beaked common dolphin" = "cyan4",
@@ -395,7 +418,7 @@ server <- function(input, output, session) {
                  # radius = 5000,
                  color = ~pal(values),
                  fillColor = ~pal(values),
-                 radius = (log(obsFilter()$Best))*5000,
+                 radius = (log(obsFilter()$Best))*2000,
                  popup = ~paste("Sighting:",as.character(obsFilter()$SpeciesName),
                                 "<br>Group Size Estimate:", as.character(obsFilter()$Best),
                                 "<br>Date (Local):",as.character(obsFilter()$DateTimeLocal),
