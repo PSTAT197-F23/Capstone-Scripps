@@ -509,25 +509,25 @@ server <- function(input, output, session) {
         clearControls() %>%
         addMapPane("layer1", zIndex = 430) %>%
         addCircles(data = obsFilter(),
-                  lat = as.numeric(obsFilter()$DecLat), lng = as.numeric(obsFilter()$DecLong),
-                 # radius = 5000,
-                  color = ~pal(values),
-                  fillColor = ~pal(values),
-                  radius = (log(obsFilter()$Best))*2000,
-                  popup = ~paste("Sighting:",as.character(obsFilter()$SpeciesName),
+                   lat = as.numeric(obsFilter()$DecLat), lng = as.numeric(obsFilter()$DecLong),
+                   # radius = 5000,
+                   color = ~pal(values),
+                   fillColor = ~pal(values),
+                   radius = (log(obsFilter()$Best))*2000,
+                   popup = ~paste("Sighting:",as.character(obsFilter()$SpeciesName),
                                   "<br>Group Size Estimate:", as.character(obsFilter()$Best),
                                   "<br>Date (Local):",as.character(obsFilter()$DateTimeLocal),
                                   "<br>Lat:",as.character(obsFilter()$DecLat)," Lon:",as.character(obsFilter()$DecLong)) %>%
-                    lapply(htmltools::HTML),
-                  opacity = 1,
-                  fillOpacity = 0.7,
-                  group = "sightings",
-                  options = pathOptions(pane = "layer1", weight = 1)
+                     lapply(htmltools::HTML),
+                   opacity = 1,
+                   fillOpacity = 0.7,
+                   group = "sightings",
+                   options = pathOptions(pane = "layer1", weight = 1)
         )
     } %>% 
       addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings",layerId = "sightings_legend")
     # Check if eDNA legends are currently displayed
-    if (input$edna > 0) {
+    if (input$edna > 0 & !ednaCleared()) {
       # Add eDNA effort legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("bottomleft",
@@ -548,7 +548,7 @@ server <- function(input, output, session) {
       # take care of the edge case where selecting all will clear eDNA legends.
     }
     # Check if acoustic legends are currently displayed
-    if (input$acoustic > 0) {
+    if (input$acoustic > 0 & !acousticCleared()) {
       # Add acoustic effort legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("topleft",
@@ -566,7 +566,7 @@ server <- function(input, output, session) {
                   opacity = 1,
                   layerId = "acoustic_detection_legend"
         ) # This might seem counter intuitive, but it is to 
-      # take care of the edge case where selecting all will clear eDNA legends.
+      # take care of the edge case where selecting all will clear acoustic legends.
     }
     
   })
@@ -644,9 +644,9 @@ server <- function(input, output, session) {
                     opacity = 1,
                     layerId = "edna_effort_legend"
           )}
-    # Check if acoustic legends are currently displayed
-      if (input$acoustic > 0) {
-      # Add acoustic effort legend if it was displayed
+      # Check if acoustic legends are currently displayed
+      if (input$acoustic > 0 & !acousticCleared()) {
+        # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
                     colors = "#4E7724",
@@ -654,8 +654,8 @@ server <- function(input, output, session) {
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
           )
-      
-      # Add acoustic detection legend if it was displayed
+        
+        # Add acoustic detection legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
                     colors = "#6D00BE",
@@ -663,10 +663,10 @@ server <- function(input, output, session) {
                     opacity = 1,
                     layerId = "acoustic_detection_legend"
           ) # This might seem counter intuitive, but it is to 
-      # take care of the edge case where selecting all will clear eDNA legends.
+        # take care of the edge case where selecting all will clear eDNA legends.
       }
-    # Add sightings legend if it was displayed
-      if (input$sightings >0) {
+      # Add sightings legend if it was displayed
+      if (input$sightings >0 & !sightingsCleared()) {
         leafletProxy("mymap", session) %>%
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
@@ -702,9 +702,9 @@ server <- function(input, output, session) {
                     layerId = "edna_detection_legend"
           )
       }
-    # Check if acoustic legends are currently displayed
-      if (input$acoustic > 0) {
-      # Add acoustic effort legend if it was displayed
+      # Check if acoustic legends are currently displayed
+      if (input$acoustic > 0 & !acousticCleared()) {
+        # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
                     colors = "#4E7724",
@@ -712,8 +712,8 @@ server <- function(input, output, session) {
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
           )
-      
-      # Add acoustic detection legend if it was displayed
+        
+        # Add acoustic detection legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
                     colors = "#6D00BE",
@@ -721,10 +721,10 @@ server <- function(input, output, session) {
                     opacity = 1,
                     layerId = "acoustic_detection_legend"
           ) # This might seem counter intuitive, but it is to 
-      # take care of the edge case where selecting all will clear eDNA legends.
+        # take care of the edge case where selecting all will clear eDNA legends.
       }
-    # Add sightings legend if it was displayed
-      if (input$sightings >0) {
+      # Add sightings legend if it was displayed
+      if (input$sightings >0 & !sightingsCleared()) {
         leafletProxy("mymap", session) %>%
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
@@ -802,8 +802,8 @@ server <- function(input, output, session) {
                     layerId = "acoustic_effort_legend"
           )
       }
-      if (input$edna > 0) {
-      # Add eDNA effort legend if it was displayed
+      if (input$edna > 0 & !ednaCleared()) {
+        # Add eDNA effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("bottomleft",
                     colors = "black",
@@ -811,8 +811,8 @@ server <- function(input, output, session) {
                     opacity = 1,
                     layerId = "edna_effort_legend"
           )
-      
-      # Add eDNA detection legend if it was displayed
+        
+        # Add eDNA detection legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("bottomleft",
                     colors = "lightgreen",
@@ -820,9 +820,9 @@ server <- function(input, output, session) {
                     opacity = 1,
                     layerId = "edna_detection_legend"
           ) # This might seem counter intuitive, but it is to 
-      # take care of the edge case where selecting all will clear eDNA legends.
+        # take care of the edge case where selecting all will clear eDNA legends.
       }
-      if (input$sightings >0) {
+      if (input$sightings >0 & !sightingsCleared()) {
         leafletProxy("mymap", session) %>%
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId="sightings_legend")}
     }
@@ -857,8 +857,8 @@ server <- function(input, output, session) {
                     layerId = "acoustic_detection_legend"
           )
       }
-      if (input$edna > 0) {
-      # Add eDNA effort legend if it was displayed
+      if (input$edna > 0 & !ednaCleared()) {
+        # Add eDNA effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("bottomleft",
                     colors = "black",
@@ -866,15 +866,15 @@ server <- function(input, output, session) {
                     opacity = 1,
                     layerId = "edna_effort_legend"
           )
-      
-      # Add eDNA detection legend if it was displayed
+        
+        # Add eDNA detection legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("bottomleft",
                     colors = "lightgreen",
                     labels = "eDNA Detection",
                     opacity = 1,
                     layerId = "edna_detection_legend")}
-      if (input$sightings >0) {
+      if (input$sightings >0 & !sightingsCleared()) {
         leafletProxy("mymap", session) %>%
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
