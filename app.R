@@ -85,6 +85,7 @@ whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/
 whale = whale[-1105,]
 station <- read.csv("CalCOFIStationOrder.csv")
 edna <- read.csv("edna.csv")
+colnames(edna)[colnames(edna) == "year"] ="Year"
 viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
 acoustic <- read.csv("acoustic.csv")
 
@@ -144,7 +145,7 @@ ui <- fluidPage(
         margin-left: -1px; /* Adjust icon position */
       }
     "),
-    tags$style(HTML("
+               tags$style(HTML("
       .custom-modal .modal-dialog {
         width: 600px; /* Set the width */
         height: 400px; /* Set the height */
@@ -162,7 +163,7 @@ ui <- fluidPage(
   actionButton("info_button", icon("info-circle"), style = "color: #007bff;"),
   
   
-
+  
   
   #choose a CSS theme -- you can also create a custom theme if you know CSS
   theme = shinytheme("cosmo"),
@@ -219,7 +220,15 @@ ui <- fluidPage(
                           
                           
                           
+                          actionButton("sightings", "Display Sightings", width = '150px',
+                                       style='border-color: #565655;
+                                       background-color: #316BF4;
+                                       padding:3px'),
                           
+                          actionButton("clearsightings", "Clear Sightings", width = '150px',
+                                       style='border-color: #565655;
+                                       background-color: #316BF4;
+                                       padding:3px'),
                           
                           actionButton("sites", "Display Stations", width = '150px',
                                        style='border-color: #565655;
@@ -273,7 +282,7 @@ ui <- fluidPage(
                                        background-color: #800080;
                                        padding:3px'),
                           
-
+                          
                           # add collapsible checkboxes for suborders and species:
                           treecheckInput(
                             inputId = "all_species",
@@ -332,6 +341,10 @@ ui <- fluidPage(
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
 server <- function(input, output, session) {
   
+  sightingsCleared <- reactiveVal(FALSE)
+  ednaCleared <- reactiveVal(FALSE)
+  acousticCleared <- reactiveVal(FALSE)
+  
   observeEvent(input$info_button, {
     showModal(modalDialog(
       title = "Somewhat important message",
@@ -369,7 +382,9 @@ server <- function(input, output, session) {
   })
   
   # add reactive filter for visual effort per cruise
- vizFilter <- reactive({filter(viz, viz$cruise %in% input$all_cruises)})
+  vizFilter <- reactive({filter(viz, viz$cruise %in% input$all_cruises
+                                & viz$Year >= input$years[1] 
+                                & viz$Year <= input$years[2])})
   
   
   
@@ -397,7 +412,7 @@ server <- function(input, output, session) {
       }
     })
   })
-
+  
   observeEvent(input$clearviz, { # clear the observational line when input button is clicked
     if (input$clearviz > 0) {
       leafletProxy("mymap") %>%
@@ -406,8 +421,8 @@ server <- function(input, output, session) {
   })
   
   
-
- 
+  
+  
   # when user selects a suborder from "Choose suborder" dropdown, this observe function will be triggered
   # if suborder == All, then species_choices can be any of them
   # if suborder == suborder, then it filters suborder choices based on suborder column 
@@ -430,11 +445,11 @@ server <- function(input, output, session) {
            & whale$SpeciesName %in% input$all_species 
            & whale$Year >= input$years[1] 
            & whale$Year <= input$years[2])
-    })
+  })
   
   
-
-
+  
+  
   species_to_color <- c(
     "Short-beaked common dolphin" = "cyan4",
     "Blue whale" = "cadetblue1",
@@ -485,28 +500,32 @@ server <- function(input, output, session) {
     pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
     values = obsFilter()$SpeciesName
     
-    leafletProxy("mymap") %>%
-      clearGroup("sightings") %>%
-      #clearGroup("edna") %>%
-      clearControls() %>%
-      addMapPane("layer1", zIndex = 430) %>%
-      addCircles(data = obsFilter(),
-                 lat = as.numeric(obsFilter()$DecLat), lng = as.numeric(obsFilter()$DecLong),
+    req(input$sightings > 0)
+    
+    if (!sightingsCleared()) {
+      leafletProxy("mymap") %>%
+        clearGroup("sightings") %>%
+        #clearGroup("edna") %>%
+        clearControls() %>%
+        addMapPane("layer1", zIndex = 430) %>%
+        addCircles(data = obsFilter(),
+                  lat = as.numeric(obsFilter()$DecLat), lng = as.numeric(obsFilter()$DecLong),
                  # radius = 5000,
-                 color = ~pal(values),
-                 fillColor = ~pal(values),
-                 radius = (log(obsFilter()$Best))*2000,
-                 popup = ~paste("Sighting:",as.character(obsFilter()$SpeciesName),
-                                "<br>Group Size Estimate:", as.character(obsFilter()$Best),
-                                "<br>Date (Local):",as.character(obsFilter()$DateTimeLocal),
-                                "<br>Lat:",as.character(obsFilter()$DecLat)," Lon:",as.character(obsFilter()$DecLong)) %>%
-                   lapply(htmltools::HTML),
-                 opacity = 1,
-                 fillOpacity = 0.7,
-                 group = "sightings",
-                 options = pathOptions(pane = "layer1", weight = 1)
-      ) %>%
-      addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings")
+                  color = ~pal(values),
+                  fillColor = ~pal(values),
+                  radius = (log(obsFilter()$Best))*2000,
+                  popup = ~paste("Sighting:",as.character(obsFilter()$SpeciesName),
+                                  "<br>Group Size Estimate:", as.character(obsFilter()$Best),
+                                  "<br>Date (Local):",as.character(obsFilter()$DateTimeLocal),
+                                  "<br>Lat:",as.character(obsFilter()$DecLat)," Lon:",as.character(obsFilter()$DecLong)) %>%
+                    lapply(htmltools::HTML),
+                  opacity = 1,
+                  fillOpacity = 0.7,
+                  group = "sightings",
+                  options = pathOptions(pane = "layer1", weight = 1)
+        )
+    } %>% 
+      addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings",layerId = "sightings_legend")
     # Check if eDNA legends are currently displayed
     if (input$edna > 0) {
       # Add eDNA effort legend if it was displayed
@@ -528,9 +547,43 @@ server <- function(input, output, session) {
         ) # This might seem counter intuitive, but it is to 
       # take care of the edge case where selecting all will clear eDNA legends.
     }
+    # Check if acoustic legends are currently displayed
+    if (input$acoustic > 0) {
+      # Add acoustic effort legend if it was displayed
+      leafletProxy("mymap", session) %>%
+        addLegend("topleft",
+                  colors = "#4E7724",
+                  labels = "Acoustic Effort",
+                  opacity = 1,
+                  layerId = "acoustic_effort_legend"
+        )
+      
+      # Add acoustic detection legend if it was displayed
+      leafletProxy("mymap", session) %>%
+        addLegend("topleft",
+                  colors = "#6D00BE",
+                  labels = "Acoustic Detection",
+                  opacity = 1,
+                  layerId = "acoustic_detection_legend"
+        ) # This might seem counter intuitive, but it is to 
+      # take care of the edge case where selecting all will clear eDNA legends.
+    }
+    
   })
   
-
+  # observe event for clearing acoustic data
+  observeEvent(input$clearsightings, {
+    req(input$clearsightings > 0)  # Require input$clearsightings to be greater than 0 to proceed
+    leafletProxy("mymap", session) %>%
+      clearGroup("sightings") %>% 
+      removeControl("sightings_legend") # Remove legend associated with sightings
+    sightingsCleared(TRUE)
+  })
+  
+  observeEvent(input$sightings, {
+    sightingsCleared(FALSE)
+  })
+  
   
   # filter eDNA data
   # ednaFilter <- reactive({
@@ -543,75 +596,137 @@ server <- function(input, output, session) {
   # })
   
   # eDNA effort filter for plotting eDNA effort per cruise. Plot as black circle 
-  ednaEffortFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises)})
-
+  ednaEffortFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises 
+                                       & edna$Year >= input$years[1] 
+                                       & edna$Year <= input$years[2])})
+  
   
   #print(str(ednaEffortFilter()))
   
   ednaDetectionFilter <- reactive({
     
-    filter(edna, edna$cruise %in% input$all_cruises & edna$SpeciesName!="NA")
+    filter(edna, edna$cruise %in% input$all_cruises & edna$SpeciesName!="NA" 
+           & edna$Year >= input$years[1] 
+           & edna$Year <= input$years[2])
     
   })
   
   # observe layer for eDNA effort data reactivity
   observe({
+    pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
+    values = obsFilter()$SpeciesName
     
     req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
-    leafletProxy("mymap", session) %>%
-      clearGroup("edna") # clear existing edna first
-    if (!is.null(ednaEffortFilter()$longitude)) {
+    if(!ednaCleared()) {
       leafletProxy("mymap", session) %>%
-        addCircles(
-          lng = as.numeric(ednaEffortFilter()$longitude),
-          lat = as.numeric(ednaEffortFilter()$latitude),
-          radius = 5000,  # Adjust the radius as needed
-          color = "black",  # Border color
-          fillColor = "black",  # Fill color
-          popup = paste("eDNA Effort",
-                        "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
-                        "<br>Line:", as.character(ednaEffortFilter()$line),
-                        "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
-            lapply(htmltools::HTML),
-          opacity = 1,
-          fillOpacity = 1,
-          group = "edna"
-        ) %>%
-        clearControls() %>%
-        addLegend("bottomleft",
-                  colors = "black",
-                  labels = "eDNA Effort",
-                  opacity = 1,
-                  layerId = "edna_effort_legend"
-        )
+        clearGroup("edna") # clear existing edna first
+      if (!is.null(ednaEffortFilter()$longitude)) {
+        leafletProxy("mymap", session) %>%
+          addCircles(
+            lng = as.numeric(ednaEffortFilter()$longitude),
+            lat = as.numeric(ednaEffortFilter()$latitude),
+            radius = 5000,  # Adjust the radius as needed
+            color = "black",  # Border color
+            fillColor = "black",  # Fill color
+            popup = paste("eDNA Effort",
+                          "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
+                          "<br>Line:", as.character(ednaEffortFilter()$line),
+                          "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
+              lapply(htmltools::HTML),
+            opacity = 1,
+            fillOpacity = 1,
+            group = "edna"
+          ) %>%
+          clearControls() %>%
+          addLegend("bottomleft",
+                    colors = "black",
+                    labels = "eDNA Effort",
+                    opacity = 1,
+                    layerId = "edna_effort_legend"
+          )}
+    # Check if acoustic legends are currently displayed
+      if (input$acoustic > 0) {
+      # Add acoustic effort legend if it was displayed
+        leafletProxy("mymap", session) %>%
+          addLegend("topleft",
+                    colors = "#4E7724",
+                    labels = "Acoustic Effort",
+                    opacity = 1,
+                    layerId = "acoustic_effort_legend"
+          )
+      
+      # Add acoustic detection legend if it was displayed
+        leafletProxy("mymap", session) %>%
+          addLegend("topleft",
+                    colors = "#6D00BE",
+                    labels = "Acoustic Detection",
+                    opacity = 1,
+                    layerId = "acoustic_detection_legend"
+          ) # This might seem counter intuitive, but it is to 
+      # take care of the edge case where selecting all will clear eDNA legends.
+      }
+    # Add sightings legend if it was displayed
+      if (input$sightings >0) {
+        leafletProxy("mymap", session) %>%
+          addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
+    
   })
   
   # observe layer for eDNA detection data reactivity
   observe({
+    pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
+    values = obsFilter()$SpeciesName
     
     req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
-    leafletProxy("mymap", session) %>%
-      clearGroup("edna_detection") # clear existing edna detection
-    if (!is.null(ednaDetectionFilter()$longitude)){
+    if(!ednaCleared()) {
       leafletProxy("mymap", session) %>%
-        addMarkers(
-          lng = as.numeric(ednaDetectionFilter()$longitude),
-          lat = as.numeric(ednaDetectionFilter()$latitude),
-          icon = greenHelixIcon,
-          popup = paste("eDNA Detection:",as.character(ednaDetectionFilter()$SpeciesName),
-                        "<br>Sample Depth (m):", as.character(ednaDetectionFilter()$depth),
-                        "<br>Line:",as.character(ednaDetectionFilter()$line),
-                        "<br>Station:",as.character(ednaDetectionFilter()$station)) %>%
-            lapply(htmltools::HTML), 
-          group = "edna_detection"
-        ) %>%
-        addLegend("bottomleft",
-                  colors = "lightgreen",
-                  labels = "eDNA Detection",
-                  opacity = 1,
-                  layerId = "edna_detection_legend"
-        )
+        clearGroup("edna_detection") # clear existing edna detection
+      if (!is.null(ednaDetectionFilter()$longitude)){
+        leafletProxy("mymap", session) %>%
+          addMarkers(
+            lng = as.numeric(ednaDetectionFilter()$longitude),
+            lat = as.numeric(ednaDetectionFilter()$latitude),
+            icon = greenHelixIcon,
+            popup = paste("eDNA Detection:",as.character(ednaDetectionFilter()$SpeciesName),
+                          "<br>Sample Depth (m):", as.character(ednaDetectionFilter()$depth),
+                          "<br>Line:",as.character(ednaDetectionFilter()$line),
+                          "<br>Station:",as.character(ednaDetectionFilter()$station)) %>%
+              lapply(htmltools::HTML), 
+            group = "edna_detection"
+          ) %>%
+          addLegend("bottomleft",
+                    colors = "lightgreen",
+                    labels = "eDNA Detection",
+                    opacity = 1,
+                    layerId = "edna_detection_legend"
+          )
+      }
+    # Check if acoustic legends are currently displayed
+      if (input$acoustic > 0) {
+      # Add acoustic effort legend if it was displayed
+        leafletProxy("mymap", session) %>%
+          addLegend("topleft",
+                    colors = "#4E7724",
+                    labels = "Acoustic Effort",
+                    opacity = 1,
+                    layerId = "acoustic_effort_legend"
+          )
+      
+      # Add acoustic detection legend if it was displayed
+        leafletProxy("mymap", session) %>%
+          addLegend("topleft",
+                    colors = "#6D00BE",
+                    labels = "Acoustic Detection",
+                    opacity = 1,
+                    layerId = "acoustic_detection_legend"
+          ) # This might seem counter intuitive, but it is to 
+      # take care of the edge case where selecting all will clear eDNA legends.
+      }
+    # Add sightings legend if it was displayed
+      if (input$sightings >0) {
+        leafletProxy("mymap", session) %>%
+          addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
   })
   
@@ -622,7 +737,12 @@ server <- function(input, output, session) {
       clearGroup("edna") %>%
       clearGroup("edna_detection") %>%
       removeControl("edna_effort_legend") %>%
-      removeControl("edna_detection_legend") # Remove both legends associated with eDNA data
+      removeControl("edna_detection_legend")# Remove both legends associated with eDNA data
+    ednaCleared(TRUE)
+  })
+  
+  observeEvent(input$edna, {
+    ednaCleared(FALSE)
   })
   
   
@@ -650,77 +770,133 @@ server <- function(input, output, session) {
   
   # observe layer for acoustic effort data reactivity
   observe({
+    pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
+    values = obsFilter()$SpeciesName
     
     req(input$acoustic > 0)  # Require input$acoustic to be greater than 0 to proceed
-    leafletProxy("mymap", session) %>%
-      clearGroup("acoustic") # clear existing acoustic first
-    if (!is.null(acousticEffortFilter()$longitude)) {
+    if(!acousticCleared()) {
       leafletProxy("mymap", session) %>%
-        addCircles(
-          lng = as.numeric(acousticEffortFilter()$longitude),
-          lat = as.numeric(acousticEffortFilter()$latitude),
-          radius = 5000,  # Adjust the radius as needed
-          color = "#4E7724",  # Border color
-          fillColor = "#4E7724",  # Fill color
-          popup = paste("Acoustic Effort",
-                        "<br>Sample Depth (m):", as.character(acousticEffortFilter()$depth),
-                        "<br>Line:", as.character(acousticEffortFilter()$line),
-                        "<br>Station:", as.character(acousticEffortFilter()$station)) %>%
-            lapply(htmltools::HTML),
-          opacity = 1,
-          fillOpacity = 1,
-          group = "acoustic"
-        ) %>%
-        clearControls() #%>%
-        #addLegend("topleft",
-        #          colors = "#4E7724",
-        #          labels = "Acoustic Effort",
-        #          opacity = 1,
-        #          layerId = "acoustic_effort_legend"
-       # )
+        clearGroup("acoustic") # clear existing acoustic first
+      if (!is.null(acousticEffortFilter()$longitude)) {
+        leafletProxy("mymap", session) %>%
+          addCircles(
+            lng = as.numeric(acousticEffortFilter()$longitude),
+            lat = as.numeric(acousticEffortFilter()$latitude),
+            radius = 5000,  # Adjust the radius as needed
+            color = "#4E7724",  # Border color
+            fillColor = "#4E7724",  # Fill color
+            popup = paste("Acoustic Effort",
+                          "<br>Sample Depth (m):", as.character(acousticEffortFilter()$depth),
+                          "<br>Line:", as.character(acousticEffortFilter()$line),
+                          "<br>Station:", as.character(acousticEffortFilter()$station)) %>%
+              lapply(htmltools::HTML),
+            opacity = 1,
+            fillOpacity = 1,
+            group = "acoustic"
+          ) %>%
+          clearControls() %>%
+          addLegend("topleft",
+                    colors = "#4E7724",
+                    labels = "Acoustic Effort",
+                    opacity = 1,
+                    layerId = "acoustic_effort_legend"
+          )
+      }
+      if (input$edna > 0) {
+      # Add eDNA effort legend if it was displayed
+        leafletProxy("mymap", session) %>%
+          addLegend("bottomleft",
+                    colors = "black",
+                    labels = "eDNA Effort",
+                    opacity = 1,
+                    layerId = "edna_effort_legend"
+          )
+      
+      # Add eDNA detection legend if it was displayed
+        leafletProxy("mymap", session) %>%
+          addLegend("bottomleft",
+                    colors = "lightgreen",
+                    labels = "eDNA Detection",
+                    opacity = 1,
+                    layerId = "edna_detection_legend"
+          ) # This might seem counter intuitive, but it is to 
+      # take care of the edge case where selecting all will clear eDNA legends.
+      }
+      if (input$sightings >0) {
+        leafletProxy("mymap", session) %>%
+          addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId="sightings_legend")}
     }
   })
   
   # observe layer for acoustic detection data reactivity
   observe({
+    pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
+    values = obsFilter()$SpeciesName
     
     req(input$acoustic > 0)  # Require input$acoustic to be greater than 0 to proceed
-    leafletProxy("mymap", session) %>%
-      clearGroup("acoustic_detection") # clear existing acoustic detection
-    if (!is.null(acousticDetectionFilter()$longitude)){
+    if(!acousticCleared()) {
       leafletProxy("mymap", session) %>%
-        addMarkers(
-          lng = as.numeric(acousticDetectionFilter()$longitude) + 0,
-          lat = as.numeric(acousticDetectionFilter()$latitude) + 0,
-          icon = musicNoteIcon,
-          popup = paste("Acoustic Detection:",as.character(acousticDetectionFilter()$SpeciesName),
-                        "<br>Sample Depth (m):", as.character(acousticDetectionFilter()$depth),
-                        "<br>Line:",as.character(acousticDetectionFilter()$line),
-                        "<br>Station:",as.character(acousticDetectionFilter()$station)) %>%
-            lapply(htmltools::HTML), 
-          group = "acoustic_detection"
-        ) #%>%
-        #addLegend("topleft",
-                  #colors = "#6D00BE",
-                  #labels = "Acoustic Detection",
-                  #opacity = 1,
-                  #layerId = "acoustic_detection_legend"
-        #)
+        clearGroup("acoustic_detection") # clear existing acoustic detection
+      if (!is.null(acousticDetectionFilter()$longitude)){
+        leafletProxy("mymap", session) %>%
+          addMarkers(
+            lng = as.numeric(acousticDetectionFilter()$longitude) + 0,
+            lat = as.numeric(acousticDetectionFilter()$latitude) + 0,
+            icon = musicNoteIcon,
+            popup = paste("Acoustic Detection:",as.character(acousticDetectionFilter()$SpeciesName),
+                          "<br>Sample Depth (m):", as.character(acousticDetectionFilter()$depth),
+                          "<br>Line:",as.character(acousticDetectionFilter()$line),
+                          "<br>Station:",as.character(acousticDetectionFilter()$station)) %>%
+              lapply(htmltools::HTML), 
+            group = "acoustic_detection"
+          ) %>%
+          addLegend("topleft",
+                    colors = "#6D00BE",
+                    labels = "Acoustic Detection",
+                    opacity = 1,
+                    layerId = "acoustic_detection_legend"
+          )
+      }
+      if (input$edna > 0) {
+      # Add eDNA effort legend if it was displayed
+        leafletProxy("mymap", session) %>%
+          addLegend("bottomleft",
+                    colors = "black",
+                    labels = "eDNA Effort",
+                    opacity = 1,
+                    layerId = "edna_effort_legend"
+          )
+      
+      # Add eDNA detection legend if it was displayed
+        leafletProxy("mymap", session) %>%
+          addLegend("bottomleft",
+                    colors = "lightgreen",
+                    labels = "eDNA Detection",
+                    opacity = 1,
+                    layerId = "edna_detection_legend")}
+      if (input$sightings >0) {
+        leafletProxy("mymap", session) %>%
+          addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
   })
   
   
   # observe event for clearing acoustic data
   observeEvent(input$clearacoustic, {
-    req(input$clearacoustic > 0)  # Require input$clearacoustic to be greater than 0 to proceed
+    req(input$clearacoustic > 0) # Require input$clearacoustic to be greater than 0 to proceed
     leafletProxy("mymap", session) %>%
       clearGroup("acoustic") %>%
       clearGroup("acoustic_detection") %>%
       removeControl("acoustic_effort_legend") %>%
       removeControl("acoustic_detection_legend") # Remove both legends associated with acoustic data
+    acousticCleared(TRUE)
   })
   
-
+  observeEvent(input$acoustic, {
+    acousticCleared(FALSE)
+  })
+  
+  
 }
 
 # #Finally, we tell R to use the user interface and the server together to build our app!
