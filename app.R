@@ -500,8 +500,6 @@ server <- function(input, output, session) {
     pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
     values = obsFilter()$SpeciesName
     
-    req(input$sightings > 0)
-    
     if (!sightingsCleared()) {
       leafletProxy("mymap") %>%
         clearGroup("sightings") %>%
