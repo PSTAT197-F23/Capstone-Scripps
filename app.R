@@ -88,7 +88,12 @@ edna <- read.csv("edna.csv")
 colnames(edna)[colnames(edna) == "year"] ="Year"
 viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
 acoustic <- read.csv("acoustic.csv")
-
+acoustic <- acoustic %>%
+  mutate(SpeciesName = ifelse(is.na(SpeciesName), NA, 
+                              sapply(SpeciesName, function(x) {
+                                x <- paste(toupper(substring(x, 1, 1)), tolower(substring(x, 2)), sep="")
+                                if(x == "Fin") "Fin whale" else x
+                              }))) 
 
 seasons_dataframe <- data.frame(
   Season = c(rep("Summer", 18), 
@@ -754,13 +759,14 @@ server <- function(input, output, session) {
   
   # acoustic effort filter for plotting acoustic effort per cruise. Plot as black circle 
   acousticEffortFilter <- reactive({filter(acoustic, acoustic$cruise %in% input$all_cruises
+                                           & acoustic$SpeciesName %in% input$all_species
                                            & acoustic$Year >= input$years[1] 
                                            & acoustic$Year <= input$years[2])})
   
   acousticDetectionFilter <- reactive({
     
     filter(acoustic, acoustic$cruise %in% input$all_cruises 
-           & acoustic$SpeciesName!="NA"
+           & acoustic$SpeciesName %in% input$all_species
            & acoustic$Year >= input$years[1] 
            & acoustic$Year <= input$years[2])
     
@@ -784,7 +790,6 @@ server <- function(input, output, session) {
             color = "#4E7724",  # Border color
             fillColor = "#4E7724",  # Fill color
             popup = paste("Acoustic Effort",
-                          "<br>Sample Depth (m):", as.character(acousticEffortFilter()$depth),
                           "<br>Line:", as.character(acousticEffortFilter()$line),
                           "<br>Station:", as.character(acousticEffortFilter()$station)) %>%
               lapply(htmltools::HTML),
@@ -842,7 +847,7 @@ server <- function(input, output, session) {
             lat = as.numeric(acousticDetectionFilter()$latitude) + 0,
             icon = musicNoteIcon,
             popup = paste("Acoustic Detection:",as.character(acousticDetectionFilter()$SpeciesName),
-                          "<br>Sample Depth (m):", as.character(acousticDetectionFilter()$depth),
+                          "<br>Presence of Duration:", as.character(acousticDetectionFilter()[, 23]),
                           "<br>Line:",as.character(acousticDetectionFilter()$line),
                           "<br>Station:",as.character(acousticDetectionFilter()$station)) %>%
               lapply(htmltools::HTML), 
