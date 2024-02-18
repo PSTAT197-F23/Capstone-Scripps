@@ -537,7 +537,7 @@ server <- function(input, output, session) {
                   colors = "black",
                   labels = "eDNA Effort",
                   opacity = 1,
-                  layerId = "edna_effort_legend"
+                  layerId = "edna_effort_legend",
         )
       
       # Add eDNA detection legend if it was displayed
@@ -797,7 +797,6 @@ server <- function(input, output, session) {
             fillOpacity = 1,
             group = "acoustic"
           ) %>%
-          clearControls() %>%
           addLegend("topleft",
                     colors = "#4E7724",
                     labels = "Acoustic Effort",
@@ -847,7 +846,7 @@ server <- function(input, output, session) {
             lat = as.numeric(acousticDetectionFilter()$latitude) + 0,
             icon = musicNoteIcon,
             popup = paste("Acoustic Detection:",as.character(acousticDetectionFilter()$SpeciesName),
-                          "<br>Presence of Duration:", as.character(acousticDetectionFilter()[, 23]),
+                          "<br>Duration (hours):", as.character(acousticDetectionFilter()[, 23]),
                           "<br>Line:",as.character(acousticDetectionFilter()$line),
                           "<br>Station:",as.character(acousticDetectionFilter()$station)) %>%
               lapply(htmltools::HTML), 
