@@ -166,23 +166,13 @@ ui <- fluidPage(
     )
   ),
   actionButton("info_button", icon("info-circle"), style = "color: #007bff;"),
-  
-  
-  
-  
-  #choose a CSS theme -- you can also create a custom theme if you know CSS
   theme = shinytheme("cosmo"),
-  #create a navigation bar for the top of the app, and give it a main title
   navbarPage("SAEL CalCOFI ShinyApp",
-             #add the first tab panel (tab1) and annotate -- the tags$h command adds text at different sizes
              tabPanel("Species Map",
                       tags$h2("Interactive Cetacean Species Map", align = "center"),
                       tags$h6("Species presence data from CalCOFI."),
-                      #create the sidebar that will hold the input functions that we add
                       sidebarLayout(
                         sidebarPanel(
-                          
-                          # create the year slider / play button: 
                           sliderInput(inputId = 'years', 
                                       label = 'Years', 
                                       min = min(whale$Year, na.rm = TRUE), 
@@ -197,16 +187,6 @@ ui <- fluidPage(
                                         pauseButton = icon("pause", "fa-2x")
                                       )
                           ),
-                          
-                          #create inputs for species and date
-                          # add input for observational data
-                          # add action button for site markers
-                          # selectizeInput("cruise", "Choose CalCOFI Cruise (yy-mm):",
-                          #                choices = NULL, multiple = FALSE),
-                          
-                          
-                          
-                          #add collapsible checkboxes for suborders and species:
                           treecheckInput(
                             inputId =  "all_cruises",
                             label = "Choose Cruise by Season/eDNA:",
@@ -214,81 +194,50 @@ ui <- fluidPage(
                             width = "100%",
                             borders = TRUE
                           ),
-                          
-                          # treecheckInput(
-                          #   inputId =  "all_cruises_eDNA",
-                          #   label = "Choose Cruise by eDNA:",
-                          #   choices = make_tree(cruise_edna_dataframe, c("cruise_with_eDNA", "cruise_Id_edna")),
-                          #   width = "100%",
-                          #   borders = TRUE
-                          # ),
-                          
-                          
-                          
                           actionButton("sightings", "Display Sightings", width = '150px',
                                        style='border-color: #565655;
                                        background-color: #316BF4;
                                        padding:3px'),
-                          
                           actionButton("clearsightings", "Clear Sightings", width = '150px',
                                        style='border-color: #565655;
                                        background-color: #316BF4;
                                        padding:3px'),
-                          
                           actionButton("sites", "Display Stations", width = '150px',
                                        style='border-color: #565655;
                                        background-color: #F47831;
                                        padding:3px'),
-                          
-                          # add action button to clear site markers
                           actionButton("clearsites", "Clear Stations",
                                        width = '150px',
                                        style='border-color: #565655;
                                        background-color: #F47831;
                                        padding:3px'),
-                          
                           actionButton("edna", "Display eDNA Data", width = '150px',
                                        style='border-color: #565655;
                                        background-color: #008080;
                                        padding:3px'),
-                          
-                          #  HTML("<br>eDNA processed for cruises CC1402-CC1611"),  # Add your description here
-                          
-                          # add action button to clear site markers
                           actionButton("clearedna", "Clear eDNA Data",
                                        width = '150px',
                                        style='border-color: #565655;
                                        background-color: #008080;
                                        padding:3px'),
-                          
-                          
-                          # add action button for viz markers
                           actionButton("viz", "Display Visual Effort", width = '150px',
                                        style='border-color: #565655;
                                        background-color: #FF69B4;
                                        padding:3px'),
-                          
-                          # add action button to clear site markers
                           actionButton("clearviz", "Clear Visual Effort",
                                        width = '150px',
                                        style='border-color: #565655;
                                        background-color: #FF69B4;
                                        padding:3px'),
-                          
                           actionButton("acoustic", "Display Acoustic Data", width = '150px',
                                        style='border-color: #565655;
                                        background-color: #800080;
                                        padding:3px'),
-                          
-                          # add action button to clear site markers
                           actionButton("clearacoustic", "Clear Acoustic Data",
                                        width = '150px',
                                        style='border-color: #565655;
                                        background-color: #800080;
                                        padding:3px'),
-                          
-                          
-                          # add collapsible checkboxes for suborders and species:
                           treecheckInput(
                             inputId = "all_species",
                             label = "Choose Species:",
@@ -296,10 +245,15 @@ ui <- fluidPage(
                             width = '100%',
                             borders = TRUE
                           ),
+                          # Add reset map zoom button here
+                          actionButton("resetZoom", "Reset Map Zoom", width = '150px',
+                                       style='border-color: #565655;
+                                       background-color: #007bff; padding:3px')
                         ),
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-                          leafletOutput(outputId = "mymap")),
+                          leafletOutput(outputId = "mymap")
+                        )
                       )
              ),
              tabPanel("More information",
@@ -345,6 +299,13 @@ ui <- fluidPage(
 
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
 server <- function(input, output, session) {
+  
+  
+  observeEvent(input$resetZoom, {
+    # Use leafletProxy to interact with the Leaflet map named 'mymap'
+    leafletProxy("mymap", session) %>%
+      setView(lng = -121, lat = 34, zoom = 6.5) # Reset to default view
+  })
   
   sightingsCleared <- reactiveVal(FALSE)
   ednaCleared <- reactiveVal(FALSE)
@@ -840,15 +801,22 @@ server <- function(input, output, session) {
       leafletProxy("mymap", session) %>%
         clearGroup("acoustic_detection") # clear existing acoustic detection
       if (!is.null(acousticDetectionFilter()$longitude)){
+        # Define jitter amount
+        jitter_amount <- 0.045  # Adjust this value as needed
+        
+        # Apply jitter to longitude and latitude
+        jittered_lng <- as.numeric(acousticDetectionFilter()$longitude) + runif(length(acousticDetectionFilter()$longitude), -jitter_amount, jitter_amount)
+        jittered_lat <- as.numeric(acousticDetectionFilter()$latitude) + runif(length(acousticDetectionFilter()$latitude), -jitter_amount, jitter_amount)
+        
         leafletProxy("mymap", session) %>%
           addMarkers(
-            lng = as.numeric(acousticDetectionFilter()$longitude) + 0,
-            lat = as.numeric(acousticDetectionFilter()$latitude) + 0,
+            lng = jittered_lng,
+            lat = jittered_lat,
             icon = musicNoteIcon,
-            popup = paste("Acoustic Detection:",as.character(acousticDetectionFilter()$SpeciesName),
+            popup = paste("Acoustic Detection:", as.character(acousticDetectionFilter()$SpeciesName),
                           "<br>Duration (hours):", as.character(acousticDetectionFilter()[, 23]),
-                          "<br>Line:",as.character(acousticDetectionFilter()$line),
-                          "<br>Station:",as.character(acousticDetectionFilter()$station)) %>%
+                          "<br>Line:", as.character(acousticDetectionFilter()$line),
+                          "<br>Station:", as.character(acousticDetectionFilter()$station)) %>%
               lapply(htmltools::HTML), 
             group = "acoustic_detection"
           ) %>%
@@ -881,6 +849,7 @@ server <- function(input, output, session) {
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
   })
+  
   
   
   # observe event for clearing acoustic data
