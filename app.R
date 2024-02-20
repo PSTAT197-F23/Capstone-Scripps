@@ -246,7 +246,7 @@ ui <- fluidPage(
                             borders = TRUE
                           ),
                           # Add reset map zoom button here
-                          actionButton("resetZoom", "Reset Map Zoom", width = '150px',
+                          actionButton("resetZoom", "Reset Map", width = '150px',
                                        style='border-color: #565655;
                                        background-color: #007bff; padding:3px')
                         ),
