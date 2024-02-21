@@ -101,15 +101,17 @@ seasons_dataframe <- data.frame(
              rep("Fall", 18), 
              rep("Winter", 16), 
              rep("Spring", 15), 
-             rep("Cruise with eDNA", length(unique(edna$cruise))), 
-             rep("Cruise without eDNA", length(setdiff(unique(whale$Cruise), unique(edna$cruise))))
+             rep("Cruise with eDNA data", length(unique(edna$cruise))), 
+             #rep("Cruise without eDNA", length(setdiff(unique(whale$Cruise), unique(edna$cruise)))),
+             rep("Cruise with acoustic data", length(unique(acoustic$cruise)))
   ),
   Cruise_Id = c(unique(whale$Cruise[whale$Season == "summer"]), 
                 unique(whale$Cruise[whale$Season == "fall"]), 
                 unique(whale$Cruise[whale$Season == "winter"]), 
                 unique(whale$Cruise[whale$Season == "spring"]),
                 unique(edna$cruise),
-                setdiff(unique(whale$Cruise), unique(edna$cruise))
+                #setdiff(unique(whale$Cruise), unique(edna$cruise)),
+                unique(acoustic$cruise)
   ))
 
 # Define the data frame for cruises with eDNA data
@@ -210,7 +212,7 @@ ui <- fluidPage(
                           #add collapsible checkboxes for suborders and species:
                           treecheckInput(
                             inputId =  "all_cruises",
-                            label = "Choose Cruise by Season/eDNA:",
+                            label = "Choose Cruise by Season/eDNA/Acoustics:",
                             choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
                             width = "100%",
                             borders = TRUE
