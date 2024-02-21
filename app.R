@@ -128,8 +128,27 @@ seasons_dataframe <- data.frame(
 
 #build the app!
 
+themeSelector <- function() {
+  div(
+    div(
+      style = "display: flex; align-items: center;",
+      tags$i(class = "fas fa-moon", style = "margin-right: 5px;"),  # Moon icon
+      materialSwitch(inputId = "theme-toggle", label = "Dark Mode", status = "primary")
+    ),
+    tags$script(
+      "$('#theme-toggle').on('change', function(el) {
+        var theme = el.target.checked ? 'darkly' : 'flatly';
+        $('link[href^=\"shinythemes/css\"]').attr('href', 'shinythemes/css/' + theme + '.min.css');
+      });"
+    )
+  )
+}
+
+
+
 # #Begin with the user interface (ui). This is where we will create the inputs and outputs that the user will be able to interact with.
 ui <- fluidPage(
+  #shinythemes::themeSelector(),
   tags$head(
     tags$style(
       type = 'text/css',
@@ -174,7 +193,7 @@ ui <- fluidPage(
   
   
   #choose a CSS theme -- you can also create a custom theme if you know CSS
-  theme = shinytheme("cosmo"),
+  theme = shinytheme("flatly"),
   #create a navigation bar for the top of the app, and give it a main title
   navbarPage("SAEL CalCOFI ShinyApp",
              #add the first tab panel (tab1) and annotate -- the tags$h command adds text at different sizes
@@ -242,6 +261,7 @@ ui <- fluidPage(
                           # display acoustic data toggle:
                           materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
                           
+                          themeSelector(),
                           
                           
                           # add collapsible checkboxes for suborders and species:
@@ -256,8 +276,10 @@ ui <- fluidPage(
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
                           leafletOutput(outputId = "mymap")),
+                        
                       )
              ),
+             
              tabPanel("More information",
                       tags$h1("Data description"),
                       tags$h5('California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on
@@ -294,6 +316,7 @@ ui <- fluidPage(
                       
              )
              
+             
   )
   
   
@@ -320,6 +343,10 @@ server <- function(input, output, session) {
       class = "custom-modal" # Add custom class to the modal dialog
     ))
   })
+  
+  
+  
+  
   
   observeEvent(input$sites, { # when the user selects the display sites input button
     if (input$sites > 0) {
