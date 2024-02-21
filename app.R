@@ -21,6 +21,7 @@ library(viridis)
 library(htmltools)
 library(rsconnect)
 library(shinytreeview)
+library(shinyWidgets)
 
 
 species_list <- data.frame(
@@ -100,15 +101,17 @@ seasons_dataframe <- data.frame(
              rep("Fall", 18), 
              rep("Winter", 16), 
              rep("Spring", 15), 
-             rep("Cruise with eDNA", length(unique(edna$cruise))), 
-             rep("Cruise without eDNA", length(setdiff(unique(whale$Cruise), unique(edna$cruise))))
+             rep("Cruise with eDNA data", length(unique(edna$cruise))), 
+             #rep("Cruise without eDNA", length(setdiff(unique(whale$Cruise), unique(edna$cruise)))),
+             rep("Cruise with acoustic data", length(unique(acoustic$cruise)))
   ),
   Cruise_Id = c(unique(whale$Cruise[whale$Season == "summer"]), 
                 unique(whale$Cruise[whale$Season == "fall"]), 
                 unique(whale$Cruise[whale$Season == "winter"]), 
                 unique(whale$Cruise[whale$Season == "spring"]),
                 unique(edna$cruise),
-                setdiff(unique(whale$Cruise), unique(edna$cruise))
+                #setdiff(unique(whale$Cruise), unique(edna$cruise)),
+                unique(acoustic$cruise)
   ))
 
 # Define the data frame for cruises with eDNA data
@@ -125,8 +128,27 @@ seasons_dataframe <- data.frame(
 
 #build the app!
 
+themeSelector <- function() {
+  div(
+    div(
+      style = "display: flex; align-items: center;",
+      tags$i(class = "fas fa-moon", style = "margin-right: 5px;"),  # Moon icon
+      materialSwitch(inputId = "theme-toggle", label = "Dark Mode", status = "primary")
+    ),
+    tags$script(
+      "$('#theme-toggle').on('change', function(el) {
+        var theme = el.target.checked ? 'darkly' : 'flatly';
+        $('link[href^=\"shinythemes/css\"]').attr('href', 'shinythemes/css/' + theme + '.min.css');
+      });"
+    )
+  )
+}
+
+
+
 # #Begin with the user interface (ui). This is where we will create the inputs and outputs that the user will be able to interact with.
 ui <- fluidPage(
+  #shinythemes::themeSelector(),
   tags$head(
     tags$style(
       type = 'text/css',
@@ -165,8 +187,13 @@ ui <- fluidPage(
     "))
     )
   ),
+  
   actionButton("info_button", icon("info-circle"), style = "color: #007bff;"),
-  theme = shinytheme("cosmo"),
+
+  #choose a CSS theme -- you can also create a custom theme if you know CSS
+  theme = shinytheme("flatly"),
+  #create a navigation bar for the top of the app, and give it a main title
+
   navbarPage("SAEL CalCOFI ShinyApp",
              tabPanel("Species Map",
                       tags$h2("Interactive Cetacean Species Map", align = "center"),
@@ -189,55 +216,42 @@ ui <- fluidPage(
                           ),
                           treecheckInput(
                             inputId =  "all_cruises",
-                            label = "Choose Cruise by Season/eDNA:",
+                            label = "Choose Cruise by Season/eDNA/Acoustics:",
                             choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
                             width = "100%",
                             borders = TRUE
                           ),
-                          actionButton("sightings", "Display Sightings", width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #316BF4;
-                                       padding:3px'),
-                          actionButton("clearsightings", "Clear Sightings", width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #316BF4;
-                                       padding:3px'),
-                          actionButton("sites", "Display Stations", width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #F47831;
-                                       padding:3px'),
-                          actionButton("clearsites", "Clear Stations",
-                                       width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #F47831;
-                                       padding:3px'),
-                          actionButton("edna", "Display eDNA Data", width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #008080;
-                                       padding:3px'),
-                          actionButton("clearedna", "Clear eDNA Data",
-                                       width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #008080;
-                                       padding:3px'),
-                          actionButton("viz", "Display Visual Effort", width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #FF69B4;
-                                       padding:3px'),
-                          actionButton("clearviz", "Clear Visual Effort",
-                                       width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #FF69B4;
-                                       padding:3px'),
-                          actionButton("acoustic", "Display Acoustic Data", width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #800080;
-                                       padding:3px'),
-                          actionButton("clearacoustic", "Clear Acoustic Data",
-                                       width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #800080;
-                                       padding:3px'),
+
+                          
+                          # treecheckInput(
+                          #   inputId =  "all_cruises_eDNA",
+                          #   label = "Choose Cruise by eDNA:",
+                          #   choices = make_tree(cruise_edna_dataframe, c("cruise_with_eDNA", "cruise_Id_edna")),
+                          #   width = "100%",
+                          #   borders = TRUE
+                          # ),
+                          
+                          
+                          # display sightings toggle:
+                          materialSwitch(inputId = "sightings", label = "Display Sightings", value = TRUE, status = "primary"),
+                          
+                          # display stations toggle:
+                          materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
+                          
+                          # display eDNA toggle:
+                          materialSwitch(inputId = "edna", label = "Display eDNA Data", status = "success"),
+                          
+                          # display visual effort toggle:
+                          materialSwitch(inputId = "viz", label = "Display Visual Effort", status = "danger"),
+                          
+                          # display acoustic data toggle:
+                          materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
+                          
+                          themeSelector(),
+                          
+                          
+                          # add collapsible checkboxes for suborders and species:
+
                           treecheckInput(
                             inputId = "all_species",
                             label = "Choose Species:",
@@ -252,10 +266,12 @@ ui <- fluidPage(
                         ),
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-                          leafletOutput(outputId = "mymap")
-                        )
+
+                          leafletOutput(outputId = "mymap")),
+                        
                       )
              ),
+             
              tabPanel("More information",
                       tags$h1("Data description"),
                       tags$h5('California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on
@@ -292,6 +308,7 @@ ui <- fluidPage(
                       
              )
              
+             
   )
   
   
@@ -311,6 +328,7 @@ server <- function(input, output, session) {
   ednaCleared <- reactiveVal(FALSE)
   acousticCleared <- reactiveVal(FALSE)
   
+  # info button
   observeEvent(input$info_button, {
     showModal(modalDialog(
       title = "Somewhat important message",
@@ -325,7 +343,12 @@ server <- function(input, output, session) {
     ))
   })
   
+  
+  
+  
+  
   observeEvent(input$sites, { # when the user selects the display sites input button
+    if (input$sites > 0) {
     leafletProxy("mymap", session) %>% # add a layer to the map
       clearGroup("sites") %>%
       addCircleMarkers( # add circular markers for site locations
@@ -339,21 +362,21 @@ server <- function(input, output, session) {
         weight = 1,
         group = "sites"
       )
+    }
   })
   
   # add layer to clear sites
-  observeEvent(input$clearsites, { # when the user clicks the clear sites button
+  observeEvent(input$sites, { # when the user clicks the clear sites button
+    if (input$sites < 1) {
     leafletProxy("mymap") %>%
       clearGroup("sites")
+    }
   })
   
   # add reactive filter for visual effort per cruise
   vizFilter <- reactive({filter(viz, viz$cruise %in% input$all_cruises
                                 & viz$Year >= input$years[1] 
                                 & viz$Year <= input$years[2])})
-  
-  
-  
   
   
   # observe event for vizEffort data reactivity
@@ -379,15 +402,12 @@ server <- function(input, output, session) {
     })
   })
   
-  observeEvent(input$clearviz, { # clear the observational line when input button is clicked
-    if (input$clearviz > 0) {
+  observeEvent(input$viz, { # clear the observational line when input button is clicked
+    if (input$viz < 1) {
       leafletProxy("mymap") %>%
         clearGroup("viz")
     }
   })
-  
-  
-  
   
   # when user selects a suborder from "Choose suborder" dropdown, this observe function will be triggered
   # if suborder == All, then species_choices can be any of them
@@ -412,8 +432,6 @@ server <- function(input, output, session) {
            & whale$Year >= input$years[1] 
            & whale$Year <= input$years[2])
   })
-  
-  
   
   
   species_to_color <- c(
@@ -466,10 +484,9 @@ server <- function(input, output, session) {
     pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
     values = obsFilter()$SpeciesName
     
-    if (!sightingsCleared()) {
+    if (input$sightings > 0) {
       leafletProxy("mymap") %>%
         clearGroup("sightings") %>%
-        #clearGroup("edna") %>%
         clearControls() %>%
         addMapPane("layer1", zIndex = 430) %>%
         addCircles(data = obsFilter(),
@@ -491,7 +508,7 @@ server <- function(input, output, session) {
     } %>% 
       addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings",layerId = "sightings_legend")
     # Check if eDNA legends are currently displayed
-    if (input$edna > 0 & !ednaCleared()) {
+    if (input$edna > 0) {
       # Add eDNA effort legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("bottomleft",
@@ -512,7 +529,7 @@ server <- function(input, output, session) {
       # take care of the edge case where selecting all will clear eDNA legends.
     }
     # Check if acoustic legends are currently displayed
-    if (input$acoustic > 0 & !acousticCleared()) {
+    if (input$acoustic > 0) {
       # Add acoustic effort legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("topleft",
@@ -535,9 +552,9 @@ server <- function(input, output, session) {
     
   })
   
-  # observe event for clearing acoustic data
-  observeEvent(input$clearsightings, {
-    req(input$clearsightings > 0)  # Require input$clearsightings to be greater than 0 to proceed
+  # observe event for clearing sightings
+  observeEvent(input$sightings, {
+    req(input$sightings < 1)  # Require input$sightings to be off
     leafletProxy("mymap", session) %>%
       clearGroup("sightings") %>% 
       removeControl("sightings_legend") # Remove legend associated with sightings
@@ -549,27 +566,13 @@ server <- function(input, output, session) {
   })
   
   
-  # filter eDNA data
-  # ednaFilter <- reactive({
-  #   if (input$suborder == "All") {
-  #     filter(edna, edna$cruise == input$cruise & edna$SpeciesName %in% input$all_species)
-  #   } else {
-  #   filter(edna, edna$cruise == input$cruise & edna$SubOrder == input$suborder & edna$SpeciesName %in% input$species)
-  #   }
-  # 
-  # })
-  
   # eDNA effort filter for plotting eDNA effort per cruise. Plot as black circle 
   ednaEffortFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises 
                                        & edna$Year >= input$years[1] 
                                        & edna$Year <= input$years[2])})
   
   
-  #print(str(ednaEffortFilter()))
-  
-  ednaDetectionFilter <- reactive({
-    
-    filter(edna, edna$cruise %in% input$all_cruises & edna$SpeciesName!="NA" 
+  ednaDetectionFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises & edna$SpeciesName!="NA" 
            & edna$Year >= input$years[1] 
            & edna$Year <= input$years[2])
     
@@ -581,7 +584,7 @@ server <- function(input, output, session) {
     values = obsFilter()$SpeciesName
     
     req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
-    if(!ednaCleared()) {
+    if(input$edna > 0) {
       leafletProxy("mymap", session) %>%
         clearGroup("edna") # clear existing edna first
       if (!is.null(ednaEffortFilter()$longitude)) {
@@ -609,7 +612,7 @@ server <- function(input, output, session) {
                     layerId = "edna_effort_legend"
           )}
       # Check if acoustic legends are currently displayed
-      if (input$acoustic > 0 & !acousticCleared()) {
+      if (input$acoustic > 0) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
@@ -630,7 +633,7 @@ server <- function(input, output, session) {
         # take care of the edge case where selecting all will clear eDNA legends.
       }
       # Add sightings legend if it was displayed
-      if (input$sightings >0 & !sightingsCleared()) {
+      if (input$sightings > 0) {
         leafletProxy("mymap", session) %>%
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
@@ -643,7 +646,7 @@ server <- function(input, output, session) {
     values = obsFilter()$SpeciesName
     
     req(input$edna > 0)  # Require input$edna to be greater than 0 to proceed
-    if(!ednaCleared()) {
+    if(input$edna > 0) {
       leafletProxy("mymap", session) %>%
         clearGroup("edna_detection") # clear existing edna detection
       if (!is.null(ednaDetectionFilter()$longitude)){
@@ -667,7 +670,7 @@ server <- function(input, output, session) {
           )
       }
       # Check if acoustic legends are currently displayed
-      if (input$acoustic > 0 & !acousticCleared()) {
+      if (input$acoustic > 0) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
@@ -688,15 +691,15 @@ server <- function(input, output, session) {
         # take care of the edge case where selecting all will clear eDNA legends.
       }
       # Add sightings legend if it was displayed
-      if (input$sightings >0 & !sightingsCleared()) {
+      if (input$sightings > 0) {
         leafletProxy("mymap", session) %>%
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
   })
   
   # observe event for clearing eDNA data
-  observeEvent(input$clearedna, {
-    req(input$clearedna > 0)  # Require input$clearedna to be greater than 0 to proceed
+  observeEvent(input$edna, {
+    req(input$edna < 1)  # Require input$clearedna to be greater than 0 to proceed
     leafletProxy("mymap", session) %>%
       clearGroup("edna") %>%
       clearGroup("edna_detection") %>%
@@ -739,7 +742,7 @@ server <- function(input, output, session) {
     values = obsFilter()$SpeciesName
     
     req(input$acoustic > 0)  # Require input$acoustic to be greater than 0 to proceed
-    if(!acousticCleared()) {
+    if(input$acoustic > 0) {
       leafletProxy("mymap", session) %>%
         clearGroup("acoustic") # clear existing acoustic first
       if (!is.null(acousticEffortFilter()$longitude)) {
@@ -765,7 +768,7 @@ server <- function(input, output, session) {
                     layerId = "acoustic_effort_legend"
           )
       }
-      if (input$edna > 0 & !ednaCleared()) {
+      if (input$edna > 0) {
         # Add eDNA effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("bottomleft",
@@ -785,7 +788,7 @@ server <- function(input, output, session) {
           ) # This might seem counter intuitive, but it is to 
         # take care of the edge case where selecting all will clear eDNA legends.
       }
-      if (input$sightings >0 & !sightingsCleared()) {
+      if (input$sightings > 0) {
         leafletProxy("mymap", session) %>%
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId="sightings_legend")}
     }
@@ -797,7 +800,7 @@ server <- function(input, output, session) {
     values = obsFilter()$SpeciesName
     
     req(input$acoustic > 0)  # Require input$acoustic to be greater than 0 to proceed
-    if(!acousticCleared()) {
+    if(input$acoustic > 0) {
       leafletProxy("mymap", session) %>%
         clearGroup("acoustic_detection") # clear existing acoustic detection
       if (!is.null(acousticDetectionFilter()$longitude)){
@@ -827,7 +830,7 @@ server <- function(input, output, session) {
                     layerId = "acoustic_detection_legend"
           )
       }
-      if (input$edna > 0 & !ednaCleared()) {
+      if (input$edna > 0) {
         # Add eDNA effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("bottomleft",
@@ -844,7 +847,7 @@ server <- function(input, output, session) {
                     labels = "eDNA Detection",
                     opacity = 1,
                     layerId = "edna_detection_legend")}
-      if (input$sightings >0 & !sightingsCleared()) {
+      if (input$sightings > 0) {
         leafletProxy("mymap", session) %>%
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
     }
@@ -853,8 +856,8 @@ server <- function(input, output, session) {
   
   
   # observe event for clearing acoustic data
-  observeEvent(input$clearacoustic, {
-    req(input$clearacoustic > 0) # Require input$clearacoustic to be greater than 0 to proceed
+  observeEvent(input$acoustic, {
+    req(input$acoustic < 1) # Require input$clearacoustic to be greater than 0 to proceed
     leafletProxy("mymap", session) %>%
       clearGroup("acoustic") %>%
       clearGroup("acoustic_detection") %>%
