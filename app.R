@@ -100,18 +100,18 @@ seasons_dataframe <- data.frame(
   Season = c(rep("Summer", 18), 
              rep("Fall", 18), 
              rep("Winter", 16), 
-             rep("Spring", 15), 
-             rep("Cruise with eDNA data", length(unique(edna$cruise))), 
+             rep("Spring", 15)
+             #rep("Cruise with eDNA data", length(unique(edna$cruise))), 
              #rep("Cruise without eDNA", length(setdiff(unique(whale$Cruise), unique(edna$cruise)))),
-             rep("Cruise with acoustic data", length(unique(acoustic$cruise)))
+             #rep("Cruise with acoustic data", length(unique(acoustic$cruise)))
   ),
   Cruise_Id = c(unique(whale$Cruise[whale$Season == "summer"]), 
                 unique(whale$Cruise[whale$Season == "fall"]), 
                 unique(whale$Cruise[whale$Season == "winter"]), 
-                unique(whale$Cruise[whale$Season == "spring"]),
-                unique(edna$cruise),
+                unique(whale$Cruise[whale$Season == "spring"])
+                #unique(edna$cruise),
                 #setdiff(unique(whale$Cruise), unique(edna$cruise)),
-                unique(acoustic$cruise)
+                #unique(acoustic$cruise)
   ))
 
 # Define the data frame for cruises with eDNA data
@@ -216,7 +216,7 @@ ui <- fluidPage(
                           ),
                           treecheckInput(
                             inputId =  "all_cruises",
-                            label = "Choose Cruise by Season/eDNA/Acoustics:",
+                            label = "Choose Cruise by Season:",
                             choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
                             width = "100%",
                             borders = TRUE
