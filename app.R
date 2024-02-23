@@ -78,6 +78,18 @@ species_list <- data.frame(
               rep(NA,16))
 )
 
+adjustSize <- function(value) {
+  baseSize <- 2000
+  scaledValue <- log(value)
+  if (!is.na(value)){
+    if (scaledValue < 1) {
+      return(baseSize * 2)
+    } else {
+      return(baseSize * scaledValue)  
+    }
+  }
+}
+
 
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
@@ -436,7 +448,7 @@ server <- function(input, output, session) {
   
   species_to_color <- c(
     "Short-beaked common dolphin" = "cyan4",
-    "Blue whale" = "cadetblue1",
+    "Blue whale" = "darkorange3",
     "Unidentified common dolphin" = "yellow",
     "Unidentified large whale" = "springgreen3",
     "Fin whale" = "blueviolet",
@@ -445,17 +457,17 @@ server <- function(input, output, session) {
     "Pacific white-sided dolphin" = "deeppink3",
     "Bairds beaked whale" = "coral1",
     "Unidentified beaked whale" = "lightpink",
-    "Rissos dolphin" = "darkolivegreen",
+    "Rissos dolphin" = "blue1",
     "Bottlenose dolphin" = "chocolate4",
     "Sperm whale" = "gold2",
     "Striped dolphin" = "orchid1",
     "Long-beaked common dolphin" = "aquamarine1",
     "Dalls porpoise" = "burlywood1",
-    "Humpback whale" = "azure2",
-    "Harbor porpoise" = "blue1",
+    "Humpback whale" = "seagreen1",
+    "Harbor porpoise" = "darkolivegreen",
     "Unidentified small cetacean" = "bisque3",
     "Gray whale" = "grey27",
-    "Northern right whale dolphin" = "darkorange3",
+    "Northern right whale dolphin" = "cadetblue1",
     "Unidentofied cetacean" = "darkred",
     "Rough toothed dolphin" = "deepskyblue2",
     "Minke whale" = "orange",
@@ -466,7 +478,7 @@ server <- function(input, output, session) {
     "False killer whale" = "darkcyan",
     "Unidentified odontocete" = "green2",
     "Sei Whale" = "plum4",
-    "Other" = "seagreen1"
+    "Other" = "azure2"
   )
   
   # Define the number of colors for observational whale points
@@ -494,7 +506,7 @@ server <- function(input, output, session) {
                    # radius = 5000,
                    color = ~pal(values),
                    fillColor = ~pal(values),
-                   radius = (log(obsFilter()$Best))*2000,
+                   radius = sapply(obsFilter()$Best, adjustSize),
                    popup = ~paste("Sighting:",as.character(obsFilter()$SpeciesName),
                                   "<br>Group Size Estimate:", as.character(obsFilter()$Best),
                                   "<br>Date (Local):",as.character(obsFilter()$DateTimeLocal),
