@@ -201,11 +201,11 @@ ui <- fluidPage(
   ),
   
   actionButton("info_button", icon("info-circle"), style = "color: #007bff;"),
-
+  
   #choose a CSS theme -- you can also create a custom theme if you know CSS
   theme = shinytheme("flatly"),
   #create a navigation bar for the top of the app, and give it a main title
-
+  
   navbarPage("SAEL CalCOFI ShinyApp",
              tabPanel("Species Map",
                       tags$h2("Interactive Cetacean Species Map", align = "center"),
@@ -233,7 +233,7 @@ ui <- fluidPage(
                             width = "100%",
                             borders = TRUE
                           ),
-
+                          
                           
                           # treecheckInput(
                           #   inputId =  "all_cruises_eDNA",
@@ -263,7 +263,7 @@ ui <- fluidPage(
                           
                           
                           # add collapsible checkboxes for suborders and species:
-
+                          
                           treecheckInput(
                             inputId = "all_species",
                             label = "Choose Species:",
@@ -278,7 +278,7 @@ ui <- fluidPage(
                         ),
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-
+                          
                           leafletOutput(outputId = "mymap")),
                         
                       )
@@ -361,27 +361,27 @@ server <- function(input, output, session) {
   
   observeEvent(input$sites, { # when the user selects the display sites input button
     if (input$sites > 0) {
-    leafletProxy("mymap", session) %>% # add a layer to the map
-      clearGroup("sites") %>%
-      addCircleMarkers( # add circular markers for site locations
-        lng = station$Lon..dec., lat = station$Lat..dec.,
-        color = 'black',
-        stroke = TRUE,
-        popup = paste("Line:",station$Line,
-                      "<br>Station:",station$Sta) %>% # popup with information about line + station
-          lapply(htmltools::HTML), # read this html code
-        radius = 2,
-        weight = 1,
-        group = "sites"
-      )
+      leafletProxy("mymap", session) %>% # add a layer to the map
+        clearGroup("sites") %>%
+        addCircleMarkers( # add circular markers for site locations
+          lng = station$Lon..dec., lat = station$Lat..dec.,
+          color = 'black',
+          stroke = TRUE,
+          popup = paste("Line:",station$Line,
+                        "<br>Station:",station$Sta) %>% # popup with information about line + station
+            lapply(htmltools::HTML), # read this html code
+          radius = 2,
+          weight = 1,
+          group = "sites"
+        )
     }
   })
   
   # add layer to clear sites
   observeEvent(input$sites, { # when the user clicks the clear sites button
     if (input$sites < 1) {
-    leafletProxy("mymap") %>%
-      clearGroup("sites")
+      leafletProxy("mymap") %>%
+        clearGroup("sites")
     }
   })
   
@@ -545,7 +545,7 @@ server <- function(input, output, session) {
       # Add acoustic effort legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("topleft",
-                  colors = "#4E7724",
+                  colors = "black",
                   labels = "Acoustic Effort",
                   opacity = 1,
                   layerId = "acoustic_effort_legend"
@@ -585,8 +585,8 @@ server <- function(input, output, session) {
   
   
   ednaDetectionFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises & edna$SpeciesName!="NA" 
-           & edna$Year >= input$years[1] 
-           & edna$Year <= input$years[2])
+                                          & edna$Year >= input$years[1] 
+                                          & edna$Year <= input$years[2])
     
   })
   
@@ -628,7 +628,7 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-                    colors = "#4E7724",
+                    colors = "black",
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -686,7 +686,7 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-                    colors = "#4E7724",
+                    colors = "black",
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -763,8 +763,8 @@ server <- function(input, output, session) {
             lng = as.numeric(acousticEffortFilter()$longitude),
             lat = as.numeric(acousticEffortFilter()$latitude),
             radius = 5000,  # Adjust the radius as needed
-            color = "#4E7724",  # Border color
-            fillColor = "#4E7724",  # Fill color
+            color = "black",  # Border color
+            fillColor = "black",  # Fill color
             popup = paste("Acoustic Effort",
                           "<br>Line:", as.character(acousticEffortFilter()$line),
                           "<br>Station:", as.character(acousticEffortFilter()$station)) %>%
@@ -774,7 +774,7 @@ server <- function(input, output, session) {
             group = "acoustic"
           ) %>%
           addLegend("topleft",
-                    colors = "#4E7724",
+                    colors = "black",
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
