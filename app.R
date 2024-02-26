@@ -81,7 +81,7 @@ species_list <- data.frame(
 
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
-whale$Season <- trimws(whale$Season)
+whale$Season <- str_to_title(trimws(whale$Season))
 whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
 whale = whale[-1105,]
 station <- read.csv("CalCOFIStationOrder.csv")
@@ -96,23 +96,21 @@ acoustic <- acoustic %>%
                                 if(x == "Fin") "Fin whale" else x
                               }))) 
 
-seasons_dataframe <- data.frame(
-  Season = c(rep("Summer", 18), 
-             rep("Fall", 18), 
-             rep("Winter", 16), 
-             rep("Spring", 15)
-             #rep("Cruise with eDNA data", length(unique(edna$cruise))), 
-             #rep("Cruise without eDNA", length(setdiff(unique(whale$Cruise), unique(edna$cruise)))),
-             #rep("Cruise with acoustic data", length(unique(acoustic$cruise)))
-  ),
-  Cruise_Id = c(unique(whale$Cruise[whale$Season == "summer"]), 
-                unique(whale$Cruise[whale$Season == "fall"]), 
-                unique(whale$Cruise[whale$Season == "winter"]), 
-                unique(whale$Cruise[whale$Season == "spring"])
-                #unique(edna$cruise),
-                #setdiff(unique(whale$Cruise), unique(edna$cruise)),
-                #unique(acoustic$cruise)
-  ))
+# seasons_dataframe <- data.frame(
+#   Season = c(rep("Summer", 18), 
+#              rep("Fall", 18), 
+#              rep("Winter", 16), 
+#              rep("Spring", 15)
+#   ),
+#   Cruise = c(unique(whale$Cruise[whale$Season == "Summer"]), 
+#                 unique(whale$Cruise[whale$Season == "Fall"]), 
+#                 unique(whale$Cruise[whale$Season == "Winter"]), 
+#                 unique(whale$Cruise[whale$Season == "Spring"])
+#   ))
+
+seasons_dataframe <- whale %>% select('Cruise', 'Season', 'Year') %>%
+  distinct(Cruise, .keep_all = TRUE)
+
 
 # Define the data frame for cruises with eDNA data
 # cruise_edna_dataframe <- data.frame(
@@ -172,7 +170,7 @@ ui <- fluidPage(
         margin-left: -1px; /* Adjust icon position */
       }
     "),
-               tags$style(HTML("
+    tags$style(HTML("
       .custom-modal .modal-dialog {
         width: 600px; /* Set the width */
         height: 400px; /* Set the height */
@@ -189,22 +187,25 @@ ui <- fluidPage(
   ),
   
   actionButton("info_button", icon("info-circle"), style = "color: #007bff;"),
-
+  
   #choose a CSS theme -- you can also create a custom theme if you know CSS
   theme = shinytheme("flatly"),
   #create a navigation bar for the top of the app, and give it a main title
-
+  
   navbarPage("SAEL CalCOFI ShinyApp",
              tabPanel("Species Map",
                       tags$h2("Interactive Cetacean Species Map", align = "center"),
                       tags$h6("Species presence data from CalCOFI."),
                       sidebarLayout(
                         sidebarPanel(
+                          
+                          # create the year slider / play button
                           sliderInput(inputId = 'years', 
                                       label = 'Years', 
                                       min = min(whale$Year, na.rm = TRUE), 
                                       max = max(whale$Year, na.rm = TRUE), 
-                                      value = c(2004, 2004),
+                                      value = c(min(whale$Year, na.rm = TRUE), 
+                                                max(whale$Year, na.rm = TRUE)),
                                       step = 1,
                                       sep = "", 
                                       animate = animationOptions(
@@ -214,14 +215,21 @@ ui <- fluidPage(
                                         pauseButton = icon("pause", "fa-2x")
                                       )
                           ),
-                          treecheckInput(
-                            inputId =  "all_cruises",
-                            label = "Choose Cruise by Season:",
-                            choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
-                            width = "100%",
-                            borders = TRUE
-                          ),
-
+                          
+                          # seasonal cruise checkboxes
+                          # treecheckInput(
+                          #   inputId =  "all_cruises",
+                          #   label = "Choose Cruise by Season:",
+                          #   choices = make_tree(seasons_dataframe, c("Season", "Cruise")),
+                          #   width = "100%",
+                          #   borders = TRUE
+                          # ),
+                          
+                          selectizeInput("all_cruises", "Choose CalCOFI Cruise (yy-mm):",
+                                         choices = unique(whale$Cruise), 
+                                         multiple = TRUE),
+                          
+                          
                           
                           # treecheckInput(
                           #   inputId =  "all_cruises_eDNA",
@@ -251,7 +259,6 @@ ui <- fluidPage(
                           
                           
                           # add collapsible checkboxes for suborders and species:
-
                           treecheckInput(
                             inputId = "all_species",
                             label = "Choose Species:",
@@ -259,6 +266,7 @@ ui <- fluidPage(
                             width = '100%',
                             borders = TRUE
                           ),
+                          
                           # Add reset map zoom button here
                           actionButton("resetZoom", "Reset Map", width = '150px',
                                        style='border-color: #565655;
@@ -266,7 +274,7 @@ ui <- fluidPage(
                         ),
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-
+                          
                           leafletOutput(outputId = "mymap")),
                         
                       )
@@ -345,31 +353,42 @@ server <- function(input, output, session) {
   
   
   
+  # update cruise based off year slider:
+  observeEvent(input$years, {
+    filtered_cruises <- subset(seasons_dataframe <- whale %>% select('Cruise', 'Season', 'Year') %>%
+                                 distinct(Cruise, .keep_all = TRUE),
+                               Year >= input$years[1] & Year <= input$years[2])
+    updateSelectizeInput(session, 
+                         inputId = 'all_cruises', 
+                         choices = filtered_cruises$Cruise)
+  })
+  
+  
   
   
   observeEvent(input$sites, { # when the user selects the display sites input button
     if (input$sites > 0) {
-    leafletProxy("mymap", session) %>% # add a layer to the map
-      clearGroup("sites") %>%
-      addCircleMarkers( # add circular markers for site locations
-        lng = station$Lon..dec., lat = station$Lat..dec.,
-        color = 'black',
-        stroke = TRUE,
-        popup = paste("Line:",station$Line,
-                      "<br>Station:",station$Sta) %>% # popup with information about line + station
-          lapply(htmltools::HTML), # read this html code
-        radius = 2,
-        weight = 1,
-        group = "sites"
-      )
+      leafletProxy("mymap", session) %>% # add a layer to the map
+        clearGroup("sites") %>%
+        addCircleMarkers( # add circular markers for site locations
+          lng = station$Lon..dec., lat = station$Lat..dec.,
+          color = 'black',
+          stroke = TRUE,
+          popup = paste("Line:",station$Line,
+                        "<br>Station:",station$Sta) %>% # popup with information about line + station
+            lapply(htmltools::HTML), # read this html code
+          radius = 2,
+          weight = 1,
+          group = "sites"
+        )
     }
   })
   
   # add layer to clear sites
   observeEvent(input$sites, { # when the user clicks the clear sites button
     if (input$sites < 1) {
-    leafletProxy("mymap") %>%
-      clearGroup("sites")
+      leafletProxy("mymap") %>%
+        clearGroup("sites")
     }
   })
   
@@ -573,8 +592,8 @@ server <- function(input, output, session) {
   
   
   ednaDetectionFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises & edna$SpeciesName!="NA" 
-           & edna$Year >= input$years[1] 
-           & edna$Year <= input$years[2])
+                                          & edna$Year >= input$years[1] 
+                                          & edna$Year <= input$years[2])
     
   })
   
