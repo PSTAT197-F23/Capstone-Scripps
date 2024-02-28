@@ -184,7 +184,7 @@ ui <- fluidPage(
         margin-left: -1px; /* Adjust icon position */
       }
     "),
-               tags$style(HTML("
+    tags$style(HTML("
       .custom-modal .modal-dialog {
         width: 600px; /* Set the width */
         height: 400px; /* Set the height */
@@ -223,7 +223,7 @@ ui <- fluidPage(
                                       label = 'Years', 
                                       min = min(whale$Year, na.rm = TRUE), 
                                       max = max(whale$Year, na.rm = TRUE), 
-                                      value = c(2004, 2004),
+                                      value = c(2004, 2006),
                                       step = 1,
                                       sep = "", 
                                       animate = animationOptions(
@@ -266,7 +266,7 @@ ui <- fluidPage(
                           # display acoustic data toggle:
                           materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
                           
-                          themeSelector(),
+                          
                           
                           
                           # add collapsible checkboxes for suborders and species:
@@ -279,10 +279,33 @@ ui <- fluidPage(
                             borders = TRUE
                           ),
                           # Add reset map zoom button here
-                          actionButton("resetZoom", "Reset Map", width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #007bff; padding:3px')
+                          div(
+                            style = "margin-bottom: 5px; text-align: left;",
+                            tags$label("Map Settings:")
+                          ),
+                          div(
+                            style = "margin-bottom: 10px; text-align: left;",  # Increase margin for more space
+                            actionButton("resetZoom", "Reset Map", width = '150px',
+                                         style = 'border-color: #565655; background-color: #007bff; padding: 3px')
+                          ),
+                          div(
+                            style = "margin-bottom: 10px; text-align: left;",
+                            selectInput("provider", label = "Select Map Provider:", 
+                                        choices = c("CartoDB.Positron", "CartoDB.DarkMatter","OpenStreetMap.Mapnik",
+                                                    "Esri.WorldPhysical", "Esri.WorldImagery",
+                                                    "Esri.WorldTerrain", "Esri.NatGeoWorldMap",
+                                                    "USGS.USImageryTopo"),
+                                        selected = "OpenStreetMap.Mapnik"),
+                          ),
+                          div(
+                            style = "margin-bottom: 5px; text-align: left;",
+                            tags$label("UI Settings:")
+                          ),
+                          themeSelector(),
                         ),
+                        
+                        
+                        
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
                           
@@ -343,6 +366,8 @@ server <- function(input, output, session) {
       setView(lng = -121, lat = 34, zoom = 6.5) # Reset to default view
   })
   
+
+  
   sightingsCleared <- reactiveVal(FALSE)
   ednaCleared <- reactiveVal(FALSE)
   acousticCleared <- reactiveVal(FALSE)
@@ -350,11 +375,47 @@ server <- function(input, output, session) {
   # info button
   observeEvent(input$info_button, {
     showModal(modalDialog(
-      title = "Somewhat important message",
+      title = "CalCOFI eDNA Sampling",
       div(class = "custom-modal-content",
           div(img(src = "edna_poster.jpg", height = 600, width = 900)),
-          div("This is the text content of the custom modal dialog.")
+          div(style = "margin-bottom: 20px;"), # Empty div for spacing
+          div(style = "width: 900px; margin: 0 auto;",
+              div(style = "text-align: left; padding-left: 20px; padding-right: 20px;",
+                  "   Environmental DNA (eDNA) sampling for marine mammals involves collecting water samples from various locations within a study area, 
+                typically ranging from coastal waters to open ocean environments. These samples are then processed to extract both intracellular and 
+                extracellular DNA shed by marine mammals into their surroundings, which can include skin cells, feces, urine, and other bodily fluids. 
+                Once the DNA is extracted, it undergoes amplification using polymerase chain reaction (PCR) techniques targeting specific genetic markers, 
+                such as mitochondrial DNA (mtDNA) genes like the control region (D-loop), 12s rRNA gene, 16s rRNA gene, or cytochrome b.
+                The amplified DNA sequences are then analyzed to detect the presence of target species, 
+                assess biodiversity by identifying multiple species simultaneously through eDNA metabarcoding 
+                using universal primers coupled with next-generation sequencing (NGS), and characterize intraspecific genetic diversity. 
+                This eDNA approach offers a non-invasive, cost-effective, and sensitive method for monitoring marine mammal populations, especially for rare, elusive, 
+                or threatened species that are challenging to detect using traditional visual and acoustic methods. However, challenges remain in optimizing sampling strategies, 
+                assay design, and data interpretation to maximize the reliability and accuracy of eDNA-based monitoring programs for marine mammal assessment and conservation.")
+          ),
+          actionButton("next_button", "Next Page")
       ),
+      size = 'l',
+      easyClose = TRUE,
+      footer = NULL,
+      class = "custom-modal" # Add custom class to the modal dialog
+    ))
+  })
+  
+  observeEvent(input$next_button, {
+    showModal(modalDialog(
+      title = "CalCOFI Actual Cruise Track: 2001RL Example",
+      div(class = "custom-modal-content",
+          div(img(src = "2001Ancil_North_actual.png", height = 950, width = 700)),
+          div(style = "margin-bottom: 20px;"), # Empty div for spacing
+          div(style = "width: 900px; margin: 0 auto;",
+              div(style = "text-align: left; padding-left: 20px; padding-right: 20px;",
+                  "CalCOFI 2001RL sailed on NOAA FSV Reuben Lasker on 04 Jan 2020 at 1400PDT from 10th Avenue Marine Terminal, San Diego. 
+                  All 104 science stations were successfully occupied. CTD casts and various net tows were completed at each science station. 
+                  Underway visual observations of marine mammals were conducted while under transit and sonobuoys deployed before stations as the acoustic component. 
+                  Other underway science included continuous pCO2/pH and meteorological measurements. The cruise ended in San Francisco at Pier 30/32 on 26 Jan 2020 at 1300PDT.")
+          ),
+    ),
       size = 'l',
       easyClose = TRUE,
       footer = NULL,
@@ -435,13 +496,19 @@ server <- function(input, output, session) {
   
   # Update SELECTIZE INPUT
   
-  # create the base map using leaflet
+  #create the base map using leaflet
+  # output$mymap <- renderLeaflet({
+  #   leaflet() %>%
+  #     setView(lng = -121, lat = 34, zoom = 6.5) %>%
+  #     addProviderTiles(providers$CartoDB.Positron, layerId = "base")
+  # })
+  
   output$mymap <- renderLeaflet({
     leaflet() %>%
       setView(lng = -121, lat = 34, zoom = 6.5) %>%
-      addProviderTiles(providers$CartoDB.Positron, layerId = "base")
-  })   
-  
+      addProviderTiles(input$provider)
+  })
+
   # OBS DATA
   # create reactivity for obs data
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
