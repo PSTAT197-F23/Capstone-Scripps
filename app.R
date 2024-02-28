@@ -67,11 +67,11 @@ species_list <- data.frame(
               'Bottlenose dolphin',
               'Sperm whale',
               'Striped dolphin',
-              'Long-beaked common dolphin',
+              'Long-beaked common dolphin ',
               'Dalls porpoise',
               'Harbor porpoise',
               'Northern right whale dolphin',
-              'Rough toothed dolphin',
+              'Rough toothed dolphin ',
               'Killer whale',
               'Short-finned pilot whale',
               'False killer whale',
@@ -521,40 +521,76 @@ server <- function(input, output, session) {
   
   
   species_to_color <- c(
-    "Short-beaked common dolphin" = "cyan4",
-    "Blue whale" = "darkorange3",
-    "Unidentified common dolphin" = "yellow",
-    "Unidentified large whale" = "springgreen3",
-    "Fin whale" = "blueviolet",
-    "Cuviers beaked whale" = "chartreuse1",
-    "Unidentified dolphin" = "red1",
-    "Pacific white-sided dolphin" = "deeppink3",
-    "Bairds beaked whale" = "coral1",
-    "Unidentified beaked whale" = "lightpink",
-    "Rissos dolphin" = "blue1",
-    "Bottlenose dolphin" = "chocolate4",
-    "Sperm whale" = "gold2",
-    "Striped dolphin" = "orchid1",
-    "Long-beaked common dolphin" = "aquamarine1",
-    "Dalls porpoise" = "burlywood1",
-    "Humpback whale" = "seagreen1",
-    "Harbor porpoise" = "darkolivegreen",
-    "Unidentified small cetacean" = "bisque3",
-    "Gray whale" = "grey27",
-    "Northern right whale dolphin" = "cadetblue1",
-    "Unidentofied cetacean" = "darkred",
-    "Rough toothed dolphin" = "deepskyblue2",
-    "Minke whale" = "orange",
-    "Unidentified small whale" = "slategray3",
-    "Killer whale" = "violetred1",
-    "Short-finned pilot whale" = "slateblue1",
-    "Unidentified ziphid" = "mistyrose",
-    "False killer whale" = "darkcyan",
-    "Unidentified odontocete" = "green2",
-    "Sei Whale" = "plum4",
-    "Other" = "azure2"
+    # Odontocetes (16)---------------------
+    "Short-beaked common dolphin"= "cyan4",
+    "Cuviers beaked whale"="#e66c2e",
+    "Pacific white-sided dolphin"="lightpink",
+    "Bairds beaked whale"="#bfef45",
+    "Rissos dolphin"="deepskyblue2",
+    "Bottlenose dolphin"="#f032e6",
+    "Sperm whale"= "#5e2210",
+    "Striped dolphin"="#975b2b",
+    "Long-beaked common dolphin "="#9100a8",
+    "Dalls porpoise "="#8d9fdc",
+    "Harbor porpoise"="#5f455a",
+    "Northern right whale dolphin"="#41528d",
+    "Rough toothed dolphin "="#a08b44",
+    "Killer whale"="#469990",
+    "Short-finned pilot whale"="#dcbeff",
+    "False killer whale"="#efa864",
+    # Mysticetes --------------------------
+    "Blue whale"="#ff7d8c",
+    "Fin whale"="#87ce43",
+    "Humpback whale"="#c800e9",
+    "Gray whale"="#4944b8",
+    "Minke whale"="#fff8a7",
+    "Sei Whale"="#164817",
+    # Unidentified-------------------------
+    "Unidentified common dolphin"="#935481",
+    "Unidentified large whale"="#899aff",
+    "Unidentified dolphin"="#dea1b9",
+    "Unidentified beaked whale"="#f2baa0",
+    "Unidentified small cetacean"="#9100a8",
+    "Unidentified cetacean"="#8cc8c2",
+    "Unidentified small whale"="#d2e595",
+    "Unidentified ziphid"="#624367",
+    "Unidentified odontocete"="#e8ebb5",
+    "Other"="#2c2c7c"
   )
-  
+  species_levels <- as.factor(c(
+    "Short-beaked common dolphin",
+    "Cuviers beaked whale",
+    "Pacific white-sided dolphin",
+    "Bairds beaked whale",
+    "Rissos dolphin",
+    "Bottlenose dolphin",
+    "Sperm whale",
+    "Striped dolphin",
+    "Long-beaked common dolphin ",
+    "Dalls porpoise",
+    "Harbor porpoise",
+    "Northern right whale dolphin",
+    "Rough toothed dolphin ",
+    "Killer whale",
+    "Short-finned pilot whale",
+    "False killer whale",
+    "Blue whale",
+    "Fin whale",
+    "Humpback whale",
+    "Gray whale",
+    "Minke whale",
+    "Sei whale",
+    "Unidentified common dolphin",
+    "Unidentified large whale",
+    "Unidentified dolphin",
+    "Unidentified beaked whale",
+    "Unidentified small cetacean",
+    "Unidentified cetacean",
+    "Unidentified small whale",
+    "Unidentified ziphid",
+    "Unidentified odontocete",
+    "Other")
+  )
   # Define the number of colors for observational whale points
   num_colors = length(unique(whale$SpeciesName))  # there are 33 unique cetacean codes in this dataset
   
@@ -567,7 +603,7 @@ server <- function(input, output, session) {
   
   # observe layer for obs data reactivity
   observe({
-    pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
+    pal = colorFactor(palette = species_to_color, levels = species_levels)
     values = obsFilter()$SpeciesName
     
     if (input$sightings > 0) {
