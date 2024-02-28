@@ -72,6 +72,122 @@ colnames(split_df)[colnames(split_df) == "Hour.spans"] <- "duration"
 colnames(split_df)[colnames(split_df) == "Cruise"] <- "cruise"
 
 
+```
+```{r}
 write.csv(split_df, "acoustic-ready.csv", row.names = FALSE)
+
+
+```
+```{r}
+acoustic <- read.csv("acoustic-ready.csv")
+# Step 1: Load the dplyr package
+library(dplyr)
+
+# Assuming your dataframe is named 'acoustic'
+# Step 2: Find unique combinations of station and line
+unique_combinations <- unique(acoustic[c("station", "line")])
+
+# Step 3: Iterate over each unique combination and store the filtered, subsetted dataframes, excluding NAs
+nested_dictionary <- list()
+
+for (i in seq_len(nrow(unique_combinations))) {
+  # Extract the current station and line
+  current_station <- as.character(unique_combinations$station[i])
+  current_line <- as.character(unique_combinations$line[i])
+  
+  # Filter the dataframe to exclude NA values for SpeciesName or duration, and select only those columns
+  filtered_df_subset <- acoustic %>%
+    filter(station == current_station & line == current_line) %>%
+    filter(!is.na(SpeciesName) & !is.na(duration)) %>%
+    select(SpeciesName, duration) # Select only the required columns after filtering out NAs
+  
+  # Initialize nested list for the station if it doesn't exist
+  if (!is.list(nested_dictionary[[current_station]])) {
+    nested_dictionary[[current_station]] <- list()
+  }
+  
+  # Safely assign the filtered dataframe to the nested list
+  nested_dictionary[[current_station]][[current_line]] <- filtered_df_subset
+}
+
+# 'nested_dictionary' now contains filtered dataframes without NA values for SpeciesName and duration
+
+```
+
+```{r}
+# Assuming nested_dictionary is your original nested list of dataframes
+formatted_strings_nested_list <- list() # Initialize an empty list to store formatted strings in a nested structure
+
+for (station in names(nested_dictionary)) {
+  for (line in names(nested_dictionary[[station]])) {
+    # Retrieve the current dataframe
+    current_df <- nested_dictionary[[station]][[line]]
+    
+    # Initialize the header for this station and line
+    header <- sprintf("Line: %s\tStation: %s\n\nSpecies\t\t| Duration\n", line, station)
+    
+    # Initialize an empty string to store data rows
+    data_rows <- ""
+    
+    # Loop through each row of the dataframe to format its data
+    for (row in 1:nrow(current_df)) {
+      species_name <- current_df$SpeciesName[row]
+      duration <- current_df$duration[row]
+      
+      # Append this row's data to the data rows string
+      data_rows <- paste(data_rows, sprintf("%s\t| %s\n", species_name, duration), sep = "")
+    }
+    
+    # Combine the header and the data rows
+    full_string <- paste(header, data_rows)
+    
+    # Check if the station key exists in the new nested list, if not, create it
+    if (!is.list(formatted_strings_nested_list[[station]])) {
+      formatted_strings_nested_list[[station]] <- list()
+    }
+    
+    # Store the full string under the corresponding station and line
+    formatted_strings_nested_list[[station]][[line]] <- full_string
+  }
+}
+
+```
+
+```{r}
+# Assuming 'formatted_strings_nested_list' contains your formatted strings
+# and 'acoustic' is your original dataframe
+
+# Function to retrieve the formatted string for a given station and line
+get_formatted_string <- function(station, line) {
+  # Check if the station exists in the list
+  if (!is.null(formatted_strings_nested_list[[as.character(station)]])) {
+    # Check if the line exists under this station
+    if (!is.null(formatted_strings_nested_list[[as.character(station)]][[as.character(line)]])) {
+      return(formatted_strings_nested_list[[as.character(station)]][[as.character(line)]])
+    }
+  }
+  return(NA) # Return NA if there's no formatted string for the station-line combination
+}
+
+# Use the dplyr package to add the new column
+library(dplyr)
+
+acoustic <- acoustic %>%
+  rowwise() %>%
+  mutate(Summary = get_formatted_string(station, line)) %>%
+  ungroup()
+
+# Now 'acoustic' dataframe has a new column 'Summary' with the formatted strings
+
+# Assuming your data frame is named 'your_dataframe'
+# and the column you want to modify is 'your_column_name'
+
+acoustic$Summary <- gsub("Duration\n[ \t]+", "Duration\n", acoustic$Summary, perl = TRUE)
+
+```
+
+```{r}
+write.csv(acoustic, "acoustic-ready.csv", row.names = FALSE)
+
 
 ```

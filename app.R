@@ -669,6 +669,12 @@ server <- function(input, output, session) {
       leafletProxy("mymap", session) %>%
         clearGroup("edna_detection") # clear existing edna detection
       if (!is.null(ednaDetectionFilter()$longitude)){
+        # Define jitter amount
+        #jitter_amount <- 0.045  # Adjust this value as needed
+        
+        # Apply jitter to longitude and latitude
+        #jittered_lng <- as.numeric(ednaDetectionFilter()$longitude) + runif(length(ednaDetectionFilter()$longitude), -jitter_amount, jitter_amount)
+        #jittered_lat <- as.numeric(ednaDetectionFilter()$latitude) + runif(length(ednaDetectionFilter()$latitude), -jitter_amount, jitter_amount)
         leafletProxy("mymap", session) %>%
           addMarkers(
             lng = as.numeric(ednaDetectionFilter()$longitude),
@@ -746,7 +752,10 @@ server <- function(input, output, session) {
                                            & acoustic$Year >= input$years[1] 
                                            & acoustic$Year <= input$years[2])})
   
+
   acousticDetectionFilter <- reactive({
+
+
     
     filter(acoustic, acoustic$cruise %in% input$all_cruises 
            & acoustic$SpeciesName %in% input$all_species
@@ -813,6 +822,7 @@ server <- function(input, output, session) {
     }
   })
   
+
   # observe layer for acoustic detection data reactivity
   observe({
     pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
@@ -824,22 +834,22 @@ server <- function(input, output, session) {
         clearGroup("acoustic_detection") # clear existing acoustic detection
       if (!is.null(acousticDetectionFilter()$longitude)){
         # Define jitter amount
-        jitter_amount <- 0.045  # Adjust this value as needed
+        #jitter_amount <- 0.045  # Adjust this value as needed
         
         # Apply jitter to longitude and latitude
-        jittered_lng <- as.numeric(acousticDetectionFilter()$longitude) + runif(length(acousticDetectionFilter()$longitude), -jitter_amount, jitter_amount)
-        jittered_lat <- as.numeric(acousticDetectionFilter()$latitude) + runif(length(acousticDetectionFilter()$latitude), -jitter_amount, jitter_amount)
+        #jittered_lng <- as.numeric(acousticDetectionFilter()$longitude) + runif(length(acousticDetectionFilter()$longitude), -jitter_amount, jitter_amount)
+        #jittered_lat <- as.numeric(acousticDetectionFilter()$latitude) + runif(length(acousticDetectionFilter()$latitude), -jitter_amount, jitter_amount)
         
-        leafletProxy("mymap", session) %>%
+          leafletProxy("mymap", session) %>%
           addMarkers(
-            lng = jittered_lng,
-            lat = jittered_lat,
+            lng = as.numeric(acousticDetectionFilter()$longitude),
+            lat = as.numeric(acousticDetectionFilter()$latitude),
             icon = musicNoteIcon,
-            popup = paste("Acoustic Detection:", as.character(acousticDetectionFilter()$SpeciesName),
-                          "<br>Duration (hours):", as.character(acousticDetectionFilter()$duration),
-                          "<br>Line:", as.character(acousticDetectionFilter()$line),
-                          "<br>Station:", as.character(acousticDetectionFilter()$station)) %>%
-              lapply(htmltools::HTML), 
+            popup =acousticDetectionFilter()$Summary %>%
+              lapply(function(x) gsub("\n", "<br/>", x)) %>%
+              lapply(function(x) gsub("\t", "&emsp;", x)) %>%
+              lapply(htmltools::HTML)
+              ,
             group = "acoustic_detection"
           ) %>%
           addLegend("topleft",
