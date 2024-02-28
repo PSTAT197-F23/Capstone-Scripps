@@ -891,16 +891,16 @@ server <- function(input, output, session) {
         clearGroup("acoustic_detection") # clear existing acoustic detection
       if (!is.null(acousticDetectionFilter()$longitude)){
         # Define jitter amount
-        jitter_amount <- 0.045  # Adjust this value as needed
+        #jitter_amount <- 0.045  # Adjust this value as needed
         
         # Apply jitter to longitude and latitude
-        jittered_lng <- as.numeric(acousticDetectionFilter()$longitude) + runif(length(acousticDetectionFilter()$longitude), -jitter_amount, jitter_amount)
-        jittered_lat <- as.numeric(acousticDetectionFilter()$latitude) + runif(length(acousticDetectionFilter()$latitude), -jitter_amount, jitter_amount)
+        #jittered_lng <- as.numeric(acousticDetectionFilter()$longitude) + runif(length(acousticDetectionFilter()$longitude), -jitter_amount, jitter_amount)
+        #jittered_lat <- as.numeric(acousticDetectionFilter()$latitude) + runif(length(acousticDetectionFilter()$latitude), -jitter_amount, jitter_amount)
         
         leafletProxy("mymap", session) %>%
           addMarkers(
-            lng = jittered_lng,
-            lat = jittered_lat,
+            lng = as.numeric(acousticDetectionFilter()$longitude),
+            lat = as.numeric(acousticDetectionFilter()$latitude),
             icon = musicNoteIcon,
             popup = paste("Acoustic Detection:", as.character(acousticDetectionFilter()$SpeciesName),
                           "<br>Duration (hours):", as.character(acousticDetectionFilter()$duration),
