@@ -295,7 +295,7 @@ ui <- fluidPage(
                                                     "Esri.WorldPhysical", "Esri.WorldImagery",
                                                     "Esri.WorldTerrain", "Esri.NatGeoWorldMap",
                                                     "USGS.USImageryTopo"),
-                                        selected = "OpenStreetMap.Mapnik"),
+                                        selected = "CartoDB.Positron"),
                           ),
                           div(
                             style = "margin-bottom: 5px; text-align: left;",
