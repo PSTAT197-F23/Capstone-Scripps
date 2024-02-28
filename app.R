@@ -22,6 +22,7 @@ library(htmltools)
 library(rsconnect)
 library(shinytreeview)
 library(shinyWidgets)
+library(tableHTML)
 
 
 species_list <- data.frame(
@@ -902,10 +903,8 @@ server <- function(input, output, session) {
             lng = jittered_lng,
             lat = jittered_lat,
             icon = musicNoteIcon,
-            popup = paste("Acoustic Detection:", as.character(acousticDetectionFilter()$SpeciesName),
-                          "<br>Duration (hours):", as.character(acousticDetectionFilter()$duration),
-                          "<br>Line:", as.character(acousticDetectionFilter()$line),
-                          "<br>Station:", as.character(acousticDetectionFilter()$station)) %>%
+            popup = tableHTML(acousticDetectionFilter()[c(14,24)], 
+                              second_headers = list(c(1,2),c("Line"," Station"))) %>%
               lapply(htmltools::HTML), 
             group = "acoustic_detection"
           ) %>%
