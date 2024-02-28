@@ -197,7 +197,14 @@ ui <- fluidPage(
         text-align: center;
       }
     "))
-    )
+    ),
+    tags$style(HTML("
+  #sidebar-container {
+    height: calc(100vh - 100px); /* Adjust the 100px to account for your page's specific header/footer sizes */
+    overflow-y: auto;
+  }
+"))
+    
   ),
   
   actionButton("info_button", icon("info-circle"), style = "color: #007bff;"),
@@ -211,7 +218,7 @@ ui <- fluidPage(
                       tags$h2("Interactive Cetacean Species Map", align = "center"),
                       tags$h6("Species presence data from CalCOFI."),
                       sidebarLayout(
-                        sidebarPanel(
+                        sidebarPanel(id = "sidebar-container",
                           sliderInput(inputId = 'years', 
                                       label = 'Years', 
                                       min = min(whale$Year, na.rm = TRUE), 
