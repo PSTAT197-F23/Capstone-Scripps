@@ -100,13 +100,13 @@ station <- read.csv("CalCOFIStationOrder.csv")
 edna <- read.csv("edna.csv")
 colnames(edna)[colnames(edna) == "year"] ="Year"
 viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
-acoustic <- read.csv("acoustic.csv")
-acoustic <- acoustic %>%
-  mutate(SpeciesName = ifelse(is.na(SpeciesName), NA, 
-                              sapply(SpeciesName, function(x) {
-                                x <- paste(toupper(substring(x, 1, 1)), tolower(substring(x, 2)), sep="")
-                                if(x == "Fin") "Fin whale" else x
-                              }))) 
+acoustic <- read.csv("acoustic-ready.csv")
+#acoustic <- acoustic %>%
+#  mutate(SpeciesName = ifelse(is.na(SpeciesName), NA, 
+#                              sapply(SpeciesName, function(x) {
+#                                x <- paste(toupper(substring(x, 1, 1)), tolower(substring(x, 2)), sep="")
+#                                if(x == "Fin") "Fin whale" else x
+#                              }))) 
 
 seasons_dataframe <- data.frame(
   Season = c(rep("Summer", 18), 
@@ -836,7 +836,7 @@ server <- function(input, output, session) {
             lat = jittered_lat,
             icon = musicNoteIcon,
             popup = paste("Acoustic Detection:", as.character(acousticDetectionFilter()$SpeciesName),
-                          "<br>Duration (hours):", as.character(acousticDetectionFilter()[, 23]),
+                          "<br>Duration (hours):", as.character(acousticDetectionFilter()$duration),
                           "<br>Line:", as.character(acousticDetectionFilter()$line),
                           "<br>Station:", as.character(acousticDetectionFilter()$station)) %>%
               lapply(htmltools::HTML), 

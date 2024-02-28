@@ -1,0 +1,77 @@
+```{r}
+
+# Laod Station Data
+station <- read.csv("CalCOFIStationOrder.csv")
+
+# Subset data by columns
+station <- station[,c('Order.Occ', "Line", "Sta", "Lat..dec.", "Lon..dec.")]
+
+# Rename headers
+colnames(station) <- c('Order.Occ', "line", "station", "latitude.", "longitude")
+
+# Round down line
+station$line <- floor(station$line)
+
+# Round down station
+station$station <- floor(station$station)
+
+head(station)
+```
+
+```{r}
+# Load acoustic data
+acoustic <- read.csv("acoustic.csv")
+
+# Rename column header
+colnames(acoustic)[colnames(acoustic) == "CC.Line"] <- "line"
+colnames(acoustic)[colnames(acoustic) == "CC.Station"] <- "station"
+colnames(acoustic)[colnames(acoustic) == "Spp..Detected"] <- "SpeciesName"
+
+# Merge Dataframe
+merged_split_df <- merge(acoustic, station, by = c("station", "line"))
+
+# Load the tidyr package
+library(tidyr)
+
+
+# Split the "SpeciesName" column into separate rows
+split_df <- separate_rows(merged_split_df, SpeciesName, sep = ",\\s*")
+
+# Remove leading/trailing whitespaces
+split_df$SpeciesName <- trimws(split_df$SpeciesName)
+
+# Adding whale
+#split_df$SpeciesName <- paste(split_df$SpeciesName, " Whale", sep = "")
+split_df$SpeciesName[split_df$SpeciesName != ""] <- paste(split_df$SpeciesName[split_df$SpeciesName != ""], " Whale", sep = "")
+
+# Adding NAs for ""
+split_df[split_df == ""] <- NA
+
+# Standardize species names
+split_df$SpeciesName <- gsub("^\\s+|\\s+$", "", split_df$SpeciesName) # Remove leading and trailing whitespaces
+split_df$SpeciesName <- gsub("\\s+", " ", split_df$SpeciesName) # Remove extra whitespaces
+
+# Replace variations with standardized names
+split_df$SpeciesName <- ifelse(tolower(split_df$SpeciesName) == "blue whale", "Blue whale",
+                         ifelse(tolower(split_df$SpeciesName) %in% c("fin whale", "fin  whale", "fIn whale"), "Fin whale",
+                                ifelse(tolower(split_df$SpeciesName) %in% c("humpback whale", "humpback  whale"), "Humpback whale",
+                                       NA)))
+
+
+
+# Remove the last two characters of each string in the "Cruise" column
+split_df$cruise <- substr(split_df$Cruise, 1, nchar(split_df$Cruise) - 2)
+
+# changing data types
+split_df$line <- as.numeric(split_df$line)
+split_df$station <- as.numeric(split_df$station)
+split_df$Hour.spans <- as.numeric(split_df$Hour.spans)
+
+# change name
+colnames(split_df)[colnames(split_df) == "Hour.spans"] <- "duration"
+colnames(split_df)[colnames(split_df) == "Cruise"] <- "cruise"
+
+
+write.csv(split_df, "acoustic-ready.csv", row.names = FALSE)
+
+```
