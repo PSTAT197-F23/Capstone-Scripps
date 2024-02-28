@@ -124,7 +124,7 @@ for (station in names(nested_dictionary)) {
     current_df <- nested_dictionary[[station]][[line]]
     
     # Initialize the header for this station and line
-    header <- sprintf("Line: %s\tStation: %s\n\nSpecies\t\t| Duration\n", line, station)
+    header <- sprintf("Line: %s\tStation: %s\n\nAcoustic Detection\t| Duration (Hours)\n", line, station)
     
     # Initialize an empty string to store data rows
     data_rows <- ""
