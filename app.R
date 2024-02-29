@@ -102,6 +102,8 @@ edna <- read.csv("edna.csv")
 colnames(edna)[colnames(edna) == "year"] ="Year"
 viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
 acoustic <- read.csv("acoustic-ready.csv")
+colnames(acoustic)[colnames(acoustic) == "duration"] ="Duration (Hours)"
+colnames(acoustic)[colnames(acoustic) == "SpeciesName"] ="Species Name"
 #acoustic <- acoustic %>%
 #  mutate(SpeciesName = ifelse(is.na(SpeciesName), NA, 
 #                              sapply(SpeciesName, function(x) {
@@ -185,7 +187,7 @@ ui <- fluidPage(
         margin-left: -1px; /* Adjust icon position */
       }
     "),
-    tags$style(HTML("
+               tags$style(HTML("
       .custom-modal .modal-dialog {
         width: 600px; /* Set the width */
         height: 400px; /* Set the height */
@@ -220,89 +222,89 @@ ui <- fluidPage(
                       tags$h6("Species presence data from CalCOFI."),
                       sidebarLayout(
                         sidebarPanel(id = "sidebar-container",
-                          sliderInput(inputId = 'years', 
-                                      label = 'Years', 
-                                      min = min(whale$Year, na.rm = TRUE), 
-                                      max = max(whale$Year, na.rm = TRUE), 
-                                      value = c(2004, 2006),
-                                      step = 1,
-                                      sep = "", 
-                                      animate = animationOptions(
-                                        interval = 500,
-                                        loop = FALSE,
-                                        playButton = icon("play", "fa-2x"),
-                                        pauseButton = icon("pause", "fa-2x")
-                                      )
-                          ),
-                          treecheckInput(
-                            inputId =  "all_cruises",
-                            label = "Choose Cruise by Season:",
-                            choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
-                            width = "100%",
-                            borders = TRUE
-                          ),
-                          
-                          
-                          # treecheckInput(
-                          #   inputId =  "all_cruises_eDNA",
-                          #   label = "Choose Cruise by eDNA:",
-                          #   choices = make_tree(cruise_edna_dataframe, c("cruise_with_eDNA", "cruise_Id_edna")),
-                          #   width = "100%",
-                          #   borders = TRUE
-                          # ),
-                          
-                          
-                          # display sightings toggle:
-                          materialSwitch(inputId = "sightings", label = "Display Sightings", value = TRUE, status = "primary"),
-                          
-                          # display stations toggle:
-                          materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
-                          
-                          # display eDNA toggle:
-                          materialSwitch(inputId = "edna", label = "Display eDNA Data", status = "success"),
-                          
-                          # display visual effort toggle:
-                          materialSwitch(inputId = "viz", label = "Display Visual Effort", status = "danger"),
-                          
-                          # display acoustic data toggle:
-                          materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
-                          
-                          
-                          
-                          
-                          # add collapsible checkboxes for suborders and species:
-                          
-                          treecheckInput(
-                            inputId = "all_species",
-                            label = "Choose Species:",
-                            choices = make_tree(species_list, c('Suborder', 'Family', 'Species')),
-                            width = '100%',
-                            borders = TRUE
-                          ),
-                          # Add reset map zoom button here
-                          div(
-                            style = "margin-bottom: 5px; text-align: left;",
-                            tags$label("Map Settings:")
-                          ),
-                          div(
-                            style = "margin-bottom: 10px; text-align: left;",  # Increase margin for more space
-                            actionButton("resetZoom", "Reset Map", width = '150px',
-                                         style = 'border-color: #565655; background-color: #007bff; padding: 3px')
-                          ),
-                          div(
-                            style = "margin-bottom: 10px; text-align: left;",
-                            selectInput("provider", label = "Select Map Provider:", 
-                                        choices = c("CartoDB.Positron", "CartoDB.DarkMatter","OpenStreetMap.Mapnik",
-                                                    "Esri.WorldPhysical", "Esri.WorldImagery",
-                                                    "Esri.WorldTerrain", "Esri.NatGeoWorldMap",
-                                                    "USGS.USImageryTopo"),
-                                        selected = "OpenStreetMap.Mapnik"),
-                          ),
-                          div(
-                            style = "margin-bottom: 5px; text-align: left;",
-                            tags$label("UI Settings:")
-                          ),
-                          themeSelector(),
+                                     sliderInput(inputId = 'years', 
+                                                 label = 'Years', 
+                                                 min = min(whale$Year, na.rm = TRUE), 
+                                                 max = max(whale$Year, na.rm = TRUE), 
+                                                 value = c(2004, 2006),
+                                                 step = 1,
+                                                 sep = "", 
+                                                 animate = animationOptions(
+                                                   interval = 500,
+                                                   loop = FALSE,
+                                                   playButton = icon("play", "fa-2x"),
+                                                   pauseButton = icon("pause", "fa-2x")
+                                                 )
+                                     ),
+                                     treecheckInput(
+                                       inputId =  "all_cruises",
+                                       label = "Choose Cruise by Season:",
+                                       choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
+                                       width = "100%",
+                                       borders = TRUE
+                                     ),
+                                     
+                                     
+                                     # treecheckInput(
+                                     #   inputId =  "all_cruises_eDNA",
+                                     #   label = "Choose Cruise by eDNA:",
+                                     #   choices = make_tree(cruise_edna_dataframe, c("cruise_with_eDNA", "cruise_Id_edna")),
+                                     #   width = "100%",
+                                     #   borders = TRUE
+                                     # ),
+                                     
+                                     
+                                     # display sightings toggle:
+                                     materialSwitch(inputId = "sightings", label = "Display Sightings", value = TRUE, status = "primary"),
+                                     
+                                     # display stations toggle:
+                                     materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
+                                     
+                                     # display eDNA toggle:
+                                     materialSwitch(inputId = "edna", label = "Display eDNA Data", status = "success"),
+                                     
+                                     # display visual effort toggle:
+                                     materialSwitch(inputId = "viz", label = "Display Visual Effort", status = "danger"),
+                                     
+                                     # display acoustic data toggle:
+                                     materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
+                                     
+                                     
+                                     
+                                     
+                                     # add collapsible checkboxes for suborders and species:
+                                     
+                                     treecheckInput(
+                                       inputId = "all_species",
+                                       label = "Choose Species:",
+                                       choices = make_tree(species_list, c('Suborder', 'Family', 'Species')),
+                                       width = '100%',
+                                       borders = TRUE
+                                     ),
+                                     # Add reset map zoom button here
+                                     div(
+                                       style = "margin-bottom: 5px; text-align: left;",
+                                       tags$label("Map Settings:")
+                                     ),
+                                     div(
+                                       style = "margin-bottom: 10px; text-align: left;",  # Increase margin for more space
+                                       actionButton("resetZoom", "Reset Map", width = '150px',
+                                                    style = 'border-color: #565655; background-color: #007bff; padding: 3px')
+                                     ),
+                                     div(
+                                       style = "margin-bottom: 10px; text-align: left;",
+                                       selectInput("provider", label = "Select Map Provider:", 
+                                                   choices = c("CartoDB.Positron", "CartoDB.DarkMatter","OpenStreetMap.Mapnik",
+                                                               "Esri.WorldPhysical", "Esri.WorldImagery",
+                                                               "Esri.WorldTerrain", "Esri.NatGeoWorldMap",
+                                                               "USGS.USImageryTopo"),
+                                                   selected = "OpenStreetMap.Mapnik"),
+                                     ),
+                                     div(
+                                       style = "margin-bottom: 5px; text-align: left;",
+                                       tags$label("UI Settings:")
+                                     ),
+                                     themeSelector(),
                         ),
                         
                         
@@ -367,7 +369,7 @@ server <- function(input, output, session) {
       setView(lng = -121, lat = 34, zoom = 6.5) # Reset to default view
   })
   
-
+  
   
   sightingsCleared <- reactiveVal(FALSE)
   ednaCleared <- reactiveVal(FALSE)
@@ -416,7 +418,7 @@ server <- function(input, output, session) {
                   Underway visual observations of marine mammals were conducted while under transit and sonobuoys deployed before stations as the acoustic component. 
                   Other underway science included continuous pCO2/pH and meteorological measurements. The cruise ended in San Francisco at Pier 30/32 on 26 Jan 2020 at 1300PDT.")
           ),
-    ),
+      ),
       size = 'l',
       easyClose = TRUE,
       footer = NULL,
@@ -509,7 +511,7 @@ server <- function(input, output, session) {
       setView(lng = -121, lat = 34, zoom = 6.5) %>%
       addProviderTiles(input$provider)
   })
-
+  
   # OBS DATA
   # create reactivity for obs data
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
@@ -810,18 +812,19 @@ server <- function(input, output, session) {
   
   # acoustic effort filter for plotting acoustic effort per cruise. Plot as black circle 
   acousticEffortFilter <- reactive({filter(acoustic, acoustic$cruise %in% input$all_cruises
-                                           & acoustic$SpeciesName %in% input$all_species
+                                           & acoustic$`Species Name` %in% input$all_species
                                            & acoustic$Year >= input$years[1] 
                                            & acoustic$Year <= input$years[2])})
   
   acousticDetectionFilter <- reactive({
     
     filter(acoustic, acoustic$cruise %in% input$all_cruises 
-           & acoustic$SpeciesName %in% input$all_species
+           & acoustic$`Species Name` %in% input$all_species
            & acoustic$Year >= input$years[1] 
            & acoustic$Year <= input$years[2])
     
   })
+  
   
   # observe layer for acoustic effort data reactivity
   observe({
@@ -900,11 +903,12 @@ server <- function(input, output, session) {
         
         leafletProxy("mymap", session) %>%
           addMarkers(
-            lng = jittered_lng,
-            lat = jittered_lat,
+            lng = as.numeric(acousticDetectionFilter()$longitude) ,
+            lat = as.numeric(acousticDetectionFilter()$latitude),
             icon = musicNoteIcon,
-            popup = tableHTML(acousticDetectionFilter()[c(14,24)], 
-                              second_headers = list(c(1,2),c("Line"," Station"))) %>%
+            popup = paste("Line:", as.character(acousticDetectionFilter()$line),
+                          "<br>Station:", as.character(acousticDetectionFilter()$station),
+                          tableHTML(acousticDetectionFilter()[c(14,24)],border=0)) %>%
               lapply(htmltools::HTML), 
             group = "acoustic_detection"
           ) %>%

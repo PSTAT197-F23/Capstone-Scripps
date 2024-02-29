@@ -1,0 +1,32 @@
+---
+title: "acoustic-detection-marker-preprocessing"
+author: "Sam Guimte"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+# Load acoustic data
+new_acoustic <- read.csv("acoustic-ready.csv")
+
+# Rename column headers
+colnames(new_acoustic)[colnames(new_acoustic) == "SpeciesName"] <- "Species Name"
+colnames(new_acoustic)[colnames(new_acoustic) == "duration"] <- "Duration"
+new_acoustic
+
+# Aggregate data
+agg <- new_acoustic %>% group_by(line, station, Year, Season, `Species Name`)  %>%
+                    summarise("Duration (Hours)" = sum(Duration))
+agg <- na.omit(agg)
+agg
+
+#make csv file
+write.csv(agg, "acoustic-det-marker.csv", row.names = FALSE)
+```
+
