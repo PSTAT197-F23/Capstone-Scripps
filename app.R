@@ -78,14 +78,14 @@ species_list <- data.frame(
               rep(NA,16))
 )
 
+# function to scale the dots:
 adjustSize <- function(value) {
-  baseSize <- 2000
-  scaledValue <- log(value)
   if (!is.na(value)){
-    if (scaledValue < 1) {
-      return(baseSize * 2)
-    } else {
-      return(baseSize * scaledValue)  
+    if (value < 10) {
+      return(4750 + (1000 * log(value)))
+    } 
+    else {
+      return((log(value) * 2000) + 3750)
     }
   }
 }
@@ -526,7 +526,7 @@ server <- function(input, output, session) {
     "Cuviers beaked whale"="#e66c2e",
     "Pacific white-sided dolphin"="lightpink",
     "Bairds beaked whale"="#bfef45",
-    "Rissos dolphin"="deepskyblue2",
+    "Rissos dolphin"="#77dded",
     "Bottlenose dolphin"="#f032e6",
     "Sperm whale"= "#5e2210",
     "Striped dolphin"="#975b2b",
@@ -539,7 +539,7 @@ server <- function(input, output, session) {
     "Short-finned pilot whale"="#dcbeff",
     "False killer whale"="#efa864",
     # Mysticetes --------------------------
-    "Blue whale"="#ff7d8c",
+    "Blue whale"="#3cadde",
     "Fin whale"="#87ce43",
     "Humpback whale"="#c800e9",
     "Gray whale"="#4944b8",
