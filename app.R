@@ -22,6 +22,8 @@ library(htmltools)
 library(rsconnect)
 library(shinytreeview)
 library(shinyWidgets)
+#install.packages("purrr")
+library(purrr)
 
 
 species_list <- data.frame(
@@ -67,16 +69,28 @@ species_list <- data.frame(
               'Bottlenose dolphin',
               'Sperm whale',
               'Striped dolphin',
-              'Long-beaked common dolphin',
+              'Long-beaked common dolphin ',
               'Dalls porpoise',
               'Harbor porpoise',
               'Northern right whale dolphin',
-              'Rough toothed dolphin',
+              'Rough toothed dolphin ',
               'Killer whale',
               'Short-finned pilot whale',
               'False killer whale',
               rep(NA,16))
 )
+
+adjustSize <- function(value) {
+  baseSize <- 2000
+  scaledValue <- log(value)
+  if (!is.na(value)){
+    if (scaledValue < 1) {
+      return(baseSize * 2)
+    } else {
+      return(baseSize * scaledValue)  
+    }
+  }
+}
 
 
 # import my data, obtained from CalCOFI
@@ -88,30 +102,27 @@ station <- read.csv("CalCOFIStationOrder.csv")
 edna <- read.csv("edna.csv")
 colnames(edna)[colnames(edna) == "year"] ="Year"
 viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
-acoustic <- read.csv("acoustic.csv")
-acoustic <- acoustic %>%
-  mutate(SpeciesName = ifelse(is.na(SpeciesName), NA, 
-                              sapply(SpeciesName, function(x) {
-                                x <- paste(toupper(substring(x, 1, 1)), tolower(substring(x, 2)), sep="")
-                                if(x == "Fin") "Fin whale" else x
-                              }))) 
+
+acoustic_detections <- read.csv("acoustic_detections.csv")
+station_acoustic <- read.csv("acoustic_station.csv") # station data for plotting acoustic detentions
+
 
 seasons_dataframe <- data.frame(
   Season = c(rep("Summer", 18), 
              rep("Fall", 18), 
              rep("Winter", 16), 
-             rep("Spring", 15), 
-             rep("Cruise with eDNA data", length(unique(edna$cruise))), 
+             rep("Spring", 15)
+             #rep("Cruise with eDNA data", length(unique(edna$cruise))), 
              #rep("Cruise without eDNA", length(setdiff(unique(whale$Cruise), unique(edna$cruise)))),
-             rep("Cruise with acoustic data", length(unique(acoustic$cruise)))
+             #rep("Cruise with acoustic data", length(unique(acoustic$cruise)))
   ),
   Cruise_Id = c(unique(whale$Cruise[whale$Season == "summer"]), 
                 unique(whale$Cruise[whale$Season == "fall"]), 
                 unique(whale$Cruise[whale$Season == "winter"]), 
-                unique(whale$Cruise[whale$Season == "spring"]),
-                unique(edna$cruise),
+                unique(whale$Cruise[whale$Season == "spring"])
+                #unique(edna$cruise),
                 #setdiff(unique(whale$Cruise), unique(edna$cruise)),
-                unique(acoustic$cruise)
+                #unique(acoustic$cruise)
   ))
 
 # Define the data frame for cruises with eDNA data
@@ -172,7 +183,7 @@ ui <- fluidPage(
         margin-left: -1px; /* Adjust icon position */
       }
     "),
-               tags$style(HTML("
+    tags$style(HTML("
       .custom-modal .modal-dialog {
         width: 600px; /* Set the width */
         height: 400px; /* Set the height */
@@ -185,26 +196,37 @@ ui <- fluidPage(
         text-align: center;
       }
     "))
-    )
+    ),
+    tags$style(HTML("
+  #sidebar-container {
+    height: calc(100vh - 100px); /* Adjust the 100px to account for your page's specific header/footer sizes */
+    overflow-y: auto;
+  }
+"))
+    
   ),
   
   actionButton("info_button", icon("info-circle"), style = "color: #007bff;"),
-
+  
   #choose a CSS theme -- you can also create a custom theme if you know CSS
   theme = shinytheme("flatly"),
   #create a navigation bar for the top of the app, and give it a main title
-
+  
   navbarPage("SAEL CalCOFI ShinyApp",
+             #tabPanel("Datasets", 
+             #         dataTableOutput("dataset1Table"), 
+             #         dataTableOutput("dataset2Table")
+             #),
              tabPanel("Species Map",
                       tags$h2("Interactive Cetacean Species Map", align = "center"),
                       tags$h6("Species presence data from CalCOFI."),
                       sidebarLayout(
-                        sidebarPanel(
+                        sidebarPanel(id = "sidebar-container",
                           sliderInput(inputId = 'years', 
                                       label = 'Years', 
                                       min = min(whale$Year, na.rm = TRUE), 
                                       max = max(whale$Year, na.rm = TRUE), 
-                                      value = c(2004, 2004),
+                                      value = c(2004, 2006),
                                       step = 1,
                                       sep = "", 
                                       animate = animationOptions(
@@ -216,12 +238,12 @@ ui <- fluidPage(
                           ),
                           treecheckInput(
                             inputId =  "all_cruises",
-                            label = "Choose Cruise by Season/eDNA/Acoustics:",
+                            label = "Choose Cruise by Season:",
                             choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
                             width = "100%",
                             borders = TRUE
                           ),
-
+                          
                           
                           # treecheckInput(
                           #   inputId =  "all_cruises_eDNA",
@@ -247,11 +269,11 @@ ui <- fluidPage(
                           # display acoustic data toggle:
                           materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
                           
-                          themeSelector(),
+                          
                           
                           
                           # add collapsible checkboxes for suborders and species:
-
+                          
                           treecheckInput(
                             inputId = "all_species",
                             label = "Choose Species:",
@@ -260,13 +282,36 @@ ui <- fluidPage(
                             borders = TRUE
                           ),
                           # Add reset map zoom button here
-                          actionButton("resetZoom", "Reset Map", width = '150px',
-                                       style='border-color: #565655;
-                                       background-color: #007bff; padding:3px')
+                          div(
+                            style = "margin-bottom: 5px; text-align: left;",
+                            tags$label("Map Settings:")
+                          ),
+                          div(
+                            style = "margin-bottom: 10px; text-align: left;",  # Increase margin for more space
+                            actionButton("resetZoom", "Reset Map", width = '150px',
+                                         style = 'border-color: #565655; background-color: #007bff; padding: 3px')
+                          ),
+                          div(
+                            style = "margin-bottom: 10px; text-align: left;",
+                            selectInput("provider", label = "Select Map Provider:", 
+                                        choices = c("CartoDB.Positron", "CartoDB.DarkMatter","OpenStreetMap.Mapnik",
+                                                    "Esri.WorldPhysical", "Esri.WorldImagery",
+                                                    "Esri.WorldTerrain", "Esri.NatGeoWorldMap",
+                                                    "USGS.USImageryTopo"),
+                                        selected = "CartoDB.Positron"),
+                          ),
+                          div(
+                            style = "margin-bottom: 5px; text-align: left;",
+                            tags$label("UI Settings:")
+                          ),
+                          themeSelector(),
                         ),
+                        
+                        
+                        
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-
+                          
                           leafletOutput(outputId = "mymap")),
                         
                       )
@@ -324,6 +369,8 @@ server <- function(input, output, session) {
       setView(lng = -121, lat = 34, zoom = 6.5) # Reset to default view
   })
   
+
+  
   sightingsCleared <- reactiveVal(FALSE)
   ednaCleared <- reactiveVal(FALSE)
   acousticCleared <- reactiveVal(FALSE)
@@ -331,11 +378,47 @@ server <- function(input, output, session) {
   # info button
   observeEvent(input$info_button, {
     showModal(modalDialog(
-      title = "Somewhat important message",
+      title = "CalCOFI eDNA Sampling",
       div(class = "custom-modal-content",
           div(img(src = "edna_poster.jpg", height = 600, width = 900)),
-          div("This is the text content of the custom modal dialog.")
+          div(style = "margin-bottom: 20px;"), # Empty div for spacing
+          div(style = "width: 900px; margin: 0 auto;",
+              div(style = "text-align: left; padding-left: 20px; padding-right: 20px;",
+                  "   Environmental DNA (eDNA) sampling for marine mammals involves collecting water samples from various locations within a study area, 
+                typically ranging from coastal waters to open ocean environments. These samples are then processed to extract both intracellular and 
+                extracellular DNA shed by marine mammals into their surroundings, which can include skin cells, feces, urine, and other bodily fluids. 
+                Once the DNA is extracted, it undergoes amplification using polymerase chain reaction (PCR) techniques targeting specific genetic markers, 
+                such as mitochondrial DNA (mtDNA) genes like the control region (D-loop), 12s rRNA gene, 16s rRNA gene, or cytochrome b.
+                The amplified DNA sequences are then analyzed to detect the presence of target species, 
+                assess biodiversity by identifying multiple species simultaneously through eDNA metabarcoding 
+                using universal primers coupled with next-generation sequencing (NGS), and characterize intraspecific genetic diversity. 
+                This eDNA approach offers a non-invasive, cost-effective, and sensitive method for monitoring marine mammal populations, especially for rare, elusive, 
+                or threatened species that are challenging to detect using traditional visual and acoustic methods. However, challenges remain in optimizing sampling strategies, 
+                assay design, and data interpretation to maximize the reliability and accuracy of eDNA-based monitoring programs for marine mammal assessment and conservation.")
+          ),
+          actionButton("next_button", "Next Page")
       ),
+      size = 'l',
+      easyClose = TRUE,
+      footer = NULL,
+      class = "custom-modal" # Add custom class to the modal dialog
+    ))
+  })
+  
+  observeEvent(input$next_button, {
+    showModal(modalDialog(
+      title = "CalCOFI Actual Cruise Track: 2001RL Example",
+      div(class = "custom-modal-content",
+          div(img(src = "2001Ancil_North_actual.png", height = 950, width = 700)),
+          div(style = "margin-bottom: 20px;"), # Empty div for spacing
+          div(style = "width: 900px; margin: 0 auto;",
+              div(style = "text-align: left; padding-left: 20px; padding-right: 20px;",
+                  "CalCOFI 2001RL sailed on NOAA FSV Reuben Lasker on 04 Jan 2020 at 1400PDT from 10th Avenue Marine Terminal, San Diego. 
+                  All 104 science stations were successfully occupied. CTD casts and various net tows were completed at each science station. 
+                  Underway visual observations of marine mammals were conducted while under transit and sonobuoys deployed before stations as the acoustic component. 
+                  Other underway science included continuous pCO2/pH and meteorological measurements. The cruise ended in San Francisco at Pier 30/32 on 26 Jan 2020 at 1300PDT.")
+          ),
+    ),
       size = 'l',
       easyClose = TRUE,
       footer = NULL,
@@ -349,27 +432,27 @@ server <- function(input, output, session) {
   
   observeEvent(input$sites, { # when the user selects the display sites input button
     if (input$sites > 0) {
-    leafletProxy("mymap", session) %>% # add a layer to the map
-      clearGroup("sites") %>%
-      addCircleMarkers( # add circular markers for site locations
-        lng = station$Lon..dec., lat = station$Lat..dec.,
-        color = 'black',
-        stroke = TRUE,
-        popup = paste("Line:",station$Line,
-                      "<br>Station:",station$Sta) %>% # popup with information about line + station
-          lapply(htmltools::HTML), # read this html code
-        radius = 2,
-        weight = 1,
-        group = "sites"
-      )
+      leafletProxy("mymap", session) %>% # add a layer to the map
+        clearGroup("sites") %>%
+        addCircleMarkers( # add circular markers for site locations
+          lng = station$Lon..dec., lat = station$Lat..dec.,
+          color = 'black',
+          stroke = TRUE,
+          popup = paste("Line:",station$Line,
+                        "<br>Station:",station$Sta) %>% # popup with information about line + station
+            lapply(htmltools::HTML), # read this html code
+          radius = 2,
+          weight = 1,
+          group = "sites"
+        )
     }
   })
   
   # add layer to clear sites
   observeEvent(input$sites, { # when the user clicks the clear sites button
     if (input$sites < 1) {
-    leafletProxy("mymap") %>%
-      clearGroup("sites")
+      leafletProxy("mymap") %>%
+        clearGroup("sites")
     }
   })
   
@@ -416,13 +499,19 @@ server <- function(input, output, session) {
   
   # Update SELECTIZE INPUT
   
-  # create the base map using leaflet
+  #create the base map using leaflet
+  # output$mymap <- renderLeaflet({
+  #   leaflet() %>%
+  #     setView(lng = -121, lat = 34, zoom = 6.5) %>%
+  #     addProviderTiles(providers$CartoDB.Positron, layerId = "base")
+  # })
+  
   output$mymap <- renderLeaflet({
     leaflet() %>%
       setView(lng = -121, lat = 34, zoom = 6.5) %>%
-      addProviderTiles(providers$CartoDB.Positron, layerId = "base")
-  })   
-  
+      addProviderTiles(input$provider)
+  })
+
   # OBS DATA
   # create reactivity for obs data
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
@@ -435,40 +524,76 @@ server <- function(input, output, session) {
   
   
   species_to_color <- c(
-    "Short-beaked common dolphin" = "cyan4",
-    "Blue whale" = "cadetblue1",
-    "Unidentified common dolphin" = "yellow",
-    "Unidentified large whale" = "springgreen3",
-    "Fin whale" = "blueviolet",
-    "Cuviers beaked whale" = "chartreuse1",
-    "Unidentified dolphin" = "red1",
-    "Pacific white-sided dolphin" = "deeppink3",
-    "Bairds beaked whale" = "coral1",
-    "Unidentified beaked whale" = "lightpink",
-    "Rissos dolphin" = "darkolivegreen",
-    "Bottlenose dolphin" = "chocolate4",
-    "Sperm whale" = "gold2",
-    "Striped dolphin" = "orchid1",
-    "Long-beaked common dolphin" = "aquamarine1",
-    "Dalls porpoise" = "burlywood1",
-    "Humpback whale" = "azure2",
-    "Harbor porpoise" = "blue1",
-    "Unidentified small cetacean" = "bisque3",
-    "Gray whale" = "grey27",
-    "Northern right whale dolphin" = "darkorange3",
-    "Unidentofied cetacean" = "darkred",
-    "Rough toothed dolphin" = "deepskyblue2",
-    "Minke whale" = "orange",
-    "Unidentified small whale" = "slategray3",
-    "Killer whale" = "violetred1",
-    "Short-finned pilot whale" = "slateblue1",
-    "Unidentified ziphid" = "mistyrose",
-    "False killer whale" = "darkcyan",
-    "Unidentified odontocete" = "green2",
-    "Sei Whale" = "plum4",
-    "Other" = "seagreen1"
+    # Odontocetes (16)---------------------
+    "Short-beaked common dolphin"= "cyan4",
+    "Cuviers beaked whale"="#e66c2e",
+    "Pacific white-sided dolphin"="lightpink",
+    "Bairds beaked whale"="#bfef45",
+    "Rissos dolphin"="deepskyblue2",
+    "Bottlenose dolphin"="#f032e6",
+    "Sperm whale"= "#5e2210",
+    "Striped dolphin"="#975b2b",
+    "Long-beaked common dolphin "="#9100a8",
+    "Dalls porpoise "="#8d9fdc",
+    "Harbor porpoise"="#5f455a",
+    "Northern right whale dolphin"="#41528d",
+    "Rough toothed dolphin "="#a08b44",
+    "Killer whale"="#469990",
+    "Short-finned pilot whale"="#dcbeff",
+    "False killer whale"="#efa864",
+    # Mysticetes --------------------------
+    "Blue whale"="#ff7d8c",
+    "Fin whale"="#87ce43",
+    "Humpback whale"="#c800e9",
+    "Gray whale"="#4944b8",
+    "Minke whale"="#fff8a7",
+    "Sei Whale"="#164817",
+    # Unidentified-------------------------
+    "Unidentified common dolphin"="#935481",
+    "Unidentified large whale"="#899aff",
+    "Unidentified dolphin"="#dea1b9",
+    "Unidentified beaked whale"="#f2baa0",
+    "Unidentified small cetacean"="#9100a8",
+    "Unidentified cetacean"="#8cc8c2",
+    "Unidentified small whale"="#d2e595",
+    "Unidentified ziphid"="#624367",
+    "Unidentified odontocete"="#e8ebb5",
+    "Other"="#2c2c7c"
   )
-  
+  species_levels <- as.factor(c(
+    "Short-beaked common dolphin",
+    "Cuviers beaked whale",
+    "Pacific white-sided dolphin",
+    "Bairds beaked whale",
+    "Rissos dolphin",
+    "Bottlenose dolphin",
+    "Sperm whale",
+    "Striped dolphin",
+    "Long-beaked common dolphin ",
+    "Dalls porpoise",
+    "Harbor porpoise",
+    "Northern right whale dolphin",
+    "Rough toothed dolphin ",
+    "Killer whale",
+    "Short-finned pilot whale",
+    "False killer whale",
+    "Blue whale",
+    "Fin whale",
+    "Humpback whale",
+    "Gray whale",
+    "Minke whale",
+    "Sei whale",
+    "Unidentified common dolphin",
+    "Unidentified large whale",
+    "Unidentified dolphin",
+    "Unidentified beaked whale",
+    "Unidentified small cetacean",
+    "Unidentified cetacean",
+    "Unidentified small whale",
+    "Unidentified ziphid",
+    "Unidentified odontocete",
+    "Other")
+  )
   # Define the number of colors for observational whale points
   num_colors = length(unique(whale$SpeciesName))  # there are 33 unique cetacean codes in this dataset
   
@@ -481,7 +606,7 @@ server <- function(input, output, session) {
   
   # observe layer for obs data reactivity
   observe({
-    pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
+    pal = colorFactor(palette = species_to_color, levels = species_levels)
     values = obsFilter()$SpeciesName
     
     if (input$sightings > 0) {
@@ -494,7 +619,7 @@ server <- function(input, output, session) {
                    # radius = 5000,
                    color = ~pal(values),
                    fillColor = ~pal(values),
-                   radius = (log(obsFilter()$Best))*2000,
+                   radius = sapply(obsFilter()$Best, adjustSize),
                    popup = ~paste("Sighting:",as.character(obsFilter()$SpeciesName),
                                   "<br>Group Size Estimate:", as.character(obsFilter()$Best),
                                   "<br>Date (Local):",as.character(obsFilter()$DateTimeLocal),
@@ -533,7 +658,7 @@ server <- function(input, output, session) {
       # Add acoustic effort legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("topleft",
-                  colors = "#4E7724",
+                  colors = "black",
                   labels = "Acoustic Effort",
                   opacity = 1,
                   layerId = "acoustic_effort_legend"
@@ -573,8 +698,8 @@ server <- function(input, output, session) {
   
   
   ednaDetectionFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises & edna$SpeciesName!="NA" 
-           & edna$Year >= input$years[1] 
-           & edna$Year <= input$years[2])
+                                          & edna$Year >= input$years[1] 
+                                          & edna$Year <= input$years[2])
     
   })
   
@@ -616,7 +741,7 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-                    colors = "#4E7724",
+                    colors = "black",
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -674,7 +799,7 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-                    colors = "#4E7724",
+                    colors = "black",
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -721,20 +846,7 @@ server <- function(input, output, session) {
     iconWidth = 35, iconHeight = 35
   )
   
-  # acoustic effort filter for plotting acoustic effort per cruise. Plot as black circle 
-  acousticEffortFilter <- reactive({filter(acoustic, acoustic$cruise %in% input$all_cruises
-                                           & acoustic$SpeciesName %in% input$all_species
-                                           & acoustic$Year >= input$years[1] 
-                                           & acoustic$Year <= input$years[2])})
-  
-  acousticDetectionFilter <- reactive({
-    
-    filter(acoustic, acoustic$cruise %in% input$all_cruises 
-           & acoustic$SpeciesName %in% input$all_species
-           & acoustic$Year >= input$years[1] 
-           & acoustic$Year <= input$years[2])
-    
-  })
+
   
   # observe layer for acoustic effort data reactivity
   observe({
@@ -745,24 +857,25 @@ server <- function(input, output, session) {
     if(input$acoustic > 0) {
       leafletProxy("mymap", session) %>%
         clearGroup("acoustic") # clear existing acoustic first
-      if (!is.null(acousticEffortFilter()$longitude)) {
+      if (!is.null(acousticEffortFilter2())) {
         leafletProxy("mymap", session) %>%
           addCircles(
-            lng = as.numeric(acousticEffortFilter()$longitude),
-            lat = as.numeric(acousticEffortFilter()$latitude),
+            lng = as.numeric(acousticEffortFilter2()$Longitude),
+            lat = as.numeric(acousticEffortFilter2()$Latitude),
             radius = 5000,  # Adjust the radius as needed
-            color = "#4E7724",  # Border color
-            fillColor = "#4E7724",  # Fill color
+            color = "black",  # Border color
+            fillColor = "black",  # Fill color
             popup = paste("Acoustic Effort",
-                          "<br>Line:", as.character(acousticEffortFilter()$line),
-                          "<br>Station:", as.character(acousticEffortFilter()$station)) %>%
+                          "<br>Line:", as.character(acousticEffortFilter2()$Line),
+                          "<br>Station:", as.character(acousticEffortFilter2()$Station),
+                          "<br>Effort (hours):", as.character(acousticEffortFilter2()$Effort)) %>%
               lapply(htmltools::HTML),
             opacity = 1,
             fillOpacity = 1,
             group = "acoustic"
           ) %>%
           addLegend("topleft",
-                    colors = "#4E7724",
+                    colors = "black",
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -803,24 +916,14 @@ server <- function(input, output, session) {
     if(input$acoustic > 0) {
       leafletProxy("mymap", session) %>%
         clearGroup("acoustic_detection") # clear existing acoustic detection
-      if (!is.null(acousticDetectionFilter()$longitude)){
-        # Define jitter amount
-        jitter_amount <- 0.045  # Adjust this value as needed
-        
-        # Apply jitter to longitude and latitude
-        jittered_lng <- as.numeric(acousticDetectionFilter()$longitude) + runif(length(acousticDetectionFilter()$longitude), -jitter_amount, jitter_amount)
-        jittered_lat <- as.numeric(acousticDetectionFilter()$latitude) + runif(length(acousticDetectionFilter()$latitude), -jitter_amount, jitter_amount)
+      if (!is.null(acousticDetectionFilter2()$Longitude)){
         
         leafletProxy("mymap", session) %>%
           addMarkers(
-            lng = jittered_lng,
-            lat = jittered_lat,
+            lng = as.numeric(acousticDetectionFilter2()$Longitude),
+            lat = as.numeric(acousticDetectionFilter2()$Latitude),
             icon = musicNoteIcon,
-            popup = paste("Acoustic Detection:", as.character(acousticDetectionFilter()$SpeciesName),
-                          "<br>Duration (hours):", as.character(acousticDetectionFilter()[, 23]),
-                          "<br>Line:", as.character(acousticDetectionFilter()$line),
-                          "<br>Station:", as.character(acousticDetectionFilter()$station)) %>%
-              lapply(htmltools::HTML), 
+            popup = paste(acousticDetectionFilter2()$Detections), 
             group = "acoustic_detection"
           ) %>%
           addLegend("topleft",
@@ -869,6 +972,87 @@ server <- function(input, output, session) {
   observeEvent(input$acoustic, {
     acousticCleared(FALSE)
   })
+  
+  
+  ################################
+  
+
+  
+
+
+  
+  acousticDetectionFilter2 <- reactive({
+    
+    data <- filter(acoustic_detections, acoustic_detections$Cruise %in% input$all_cruises 
+           & acoustic_detections$SpeciesName %in% input$all_species
+           & acoustic_detections$Year >= input$years[1] 
+           & acoustic_detections$Year <= input$years[2])
+    
+
+    if(nrow(data) == 0) {
+      temp <- data.frame(Line = character(), Station = character(), SpeciesName = character(), Duration = numeric())
+    } else {
+      temp <- aggregate(Duration ~ Line + Station + SpeciesName, data = data, FUN = sum)
+    }
+    
+    station$Line <- floor(station$Line)
+    station$Sta <- floor(station$Sta)
+    
+    station <- station[, c('Line','Sta','Lat..dec.','Lon..dec.')]
+    
+    names(station)[names(station) == "Sta"] <- "Station"
+    names(station)[names(station) == "Lon..dec."] <- "Longitude"
+    names(station)[names(station) == "Lat..dec."] <- "Latitude"
+    
+    
+    
+
+    
+    transform_data <- function(df) {
+
+      df_grouped <- df %>% group_by(Line, Station, Latitude, Longitude)
+      
+      df_transformed <- df_grouped %>%
+        summarise(
+          Detections = list(map2(SpeciesName, Duration, ~c(.x, .y))),
+          .groups = 'drop' 
+        )
+      
+      return(df_transformed)
+    }
+    
+
+    transform_data(merge(temp, station, by = c("Station", "Line")))
+    
+  })
+  
+  # Render dataset1
+ # output$dataset1Table <- renderDataTable({
+ #   acousticDetectionFilter2()
+ # })
+  
+
+  
+  acousticEffortFilter2 <- reactive({
+    data <- filter(station_acoustic, station_acoustic$Cruise %in% input$all_cruises
+                   & station_acoustic$Year >= input$years[1] 
+                   & station_acoustic$Year <= input$years[2])
+    
+    if(nrow(data) == 0) {
+      return(data.frame(Line = character(), Station = character(), Latitude = numeric(), 
+                        Longitude = numeric(), Effort = numeric()))
+    } else {
+      return(aggregate(Effort ~ Line + Station + Latitude + Longitude, data = data, FUN = sum))
+    }
+  })
+  
+  # Render dataset2
+ # output$dataset2Table <- renderDataTable({
+  #  acousticEffortFilter2()
+ # })
+  
+  
+  
   
   
 }

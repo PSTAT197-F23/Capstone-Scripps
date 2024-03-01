@@ -1,0 +1,101 @@
+---
+title: "acoustic-cleaning"
+output: html_document
+date: "2024-03-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load libs
+library(dplyr)
+library(tidyr)
+
+# load data
+acoustic_detections <- read.csv("acoustic-raw.csv")
+station <- read.csv("CalCOFIStationOrder.csv")
+
+```
+
+
+```{r}
+# round down station and line #s
+station$Line <- floor(station$Line)
+station$Sta <- floor(station$Sta)
+
+# subset station data
+station <- station[, c('Line','Sta','Lat..dec.','Lon..dec.')]
+
+# rename columns
+names(station)[names(station) == "Sta"] <- "Station"
+names(station)[names(station) == "Lon..dec."] <- "Longitude"
+names(station)[names(station) == "Lat..dec."] <- "Latitude"
+
+# change data types
+acoustic_detections$CC.Station <-as.numeric(acoustic_detections$CC.Station)
+acoustic_detections$CC.Line <- as.numeric(acoustic_detections$CC.Line)
+acoustic_detections$Hour.spans <- as.numeric(acoustic_detections$Hour.spans)
+
+# rename columns
+names(acoustic_detections)[names(acoustic_detections) == "Hour.spans"] <- "hours"
+names(acoustic_detections)[names(acoustic_detections) == "CC.Line"] <- "Line"
+names(acoustic_detections)[names(acoustic_detections) == "CC.Station"] <- "Station"
+```
+
+```{r}
+# Create Effort column by aggregating the sum of hours over line, station, cruise, and year
+data <- aggregate(hours ~  Line + Station + Cruise + Year, data = acoustic_detections, FUN = sum)
+
+# rename column
+names(data)[names(data) == "hours"] <- "Effort"
+
+# merge data with station
+data <- merge(data, station, by = c("Line", "Station"))
+```
+
+```{r}
+# subset columns
+acoustic_detections_mod1 <- acoustic_detections[, c('Year', 'Cruise', 'Season', 'Line', 'Station', 'Spp..Detected', 'hours')]
+
+# rename columns
+names(acoustic_detections_mod1)[names(acoustic_detections_mod1) == "Spp..Detected"] <- "SpeciesName"
+names(acoustic_detections_mod1)[names(acoustic_detections_mod1) == "hours"] <- "Duration"
+
+# split detections into multiple obs
+split_whales <- strsplit(trimws(acoustic_detections_mod1$SpeciesName), ",\\s*")
+acoustic_detections_mod1 <- acoustic_detections_mod1 %>%
+  mutate(whale_split = split_whales) %>%
+  unnest(whale_split)
+
+# subset columns
+acoustic_detections_mod1 <- acoustic_detections_mod1[, c('Year', 'Cruise', 'Season', 'Line', 'Station', 'whale_split', 'Duration')]
+
+# rename column
+names(acoustic_detections_mod1)[names(acoustic_detections_mod1) == "whale_split"] <- "SpeciesName"
+
+# fix value errors
+acoustic_detections_mod1$SpeciesName <- gsub("Fin", "Fin whale", acoustic_detections_mod1$SpeciesName)
+
+acoustic_detections_mod1$SpeciesName <- gsub("Blue", "Blue whale", acoustic_detections_mod1$SpeciesName)
+
+acoustic_detections_mod1$SpeciesName <- gsub("Humpback", "Humpback whale", acoustic_detections_mod1$SpeciesName)
+
+acoustic_detections_mod1$SpeciesName <- gsub("FIn", "Fin whale", acoustic_detections_mod1$SpeciesName)
+
+acoustic_detections_mod1$Cruise <- gsub("[^0-9]+$", "", acoustic_detections_mod1$Cruise)
+data$Cruise <- gsub("[^0-9]+$", "", data$Cruise)
+
+
+```
+
+
+```{r}
+
+data
+write.csv(data, "acoustic_station.csv", row.names = FALSE)
+acoustic_detections_mod1
+write.csv(acoustic_detections_mod1, "acoustic_detections.csv", row.names = FALSE)
+
+```
