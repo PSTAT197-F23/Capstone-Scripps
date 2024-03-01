@@ -995,8 +995,8 @@ server <- function(input, output, session) {
       temp <- aggregate(Duration ~ Line + Station + SpeciesName, data = data, FUN = sum)
     }
     
-    station$Line <- floor(station$Line)
-    station$Sta <- floor(station$Sta)
+    #station$Line <- floor(station$Line)
+    #station$Sta <- floor(station$Sta)
     
     station <- station[, c('Line','Sta','Lat..dec.','Lon..dec.')]
     

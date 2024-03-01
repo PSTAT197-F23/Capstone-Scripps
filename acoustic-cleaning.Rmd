@@ -21,9 +21,9 @@ station <- read.csv("CalCOFIStationOrder.csv")
 
 
 ```{r}
-# round down station and line #s
-station$Line <- floor(station$Line)
-station$Sta <- floor(station$Sta)
+## round down station and line #s
+#station$Line <- floor(station$Line)
+#station$Sta <- floor(station$Sta)
 
 # subset station data
 station <- station[, c('Line','Sta','Lat..dec.','Lon..dec.')]
