@@ -24,7 +24,8 @@ library(shinytreeview)
 library(shinyWidgets)
 library(mapview)
 library(webshot)
-#webshot::install_phantomjs()
+#webshot::install_phantomjs() 
+#uncomment the above to install phantomjs() for downloading the map
 
 
 species_list <- data.frame(
@@ -528,11 +529,7 @@ server <- function(input, output, session) {
   
   foundational.map <- reactive({
     
-    leaflet() %>% # create a leaflet map widget
-      
-      leaflet() %>%
-      setView(lng = -121, lat = 34, zoom = 6.5) %>%
-      addProviderTiles(input$provider)
+    leaflet() %>% addTiles('http://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png')
     
   }) # end of foundational.map()
   
