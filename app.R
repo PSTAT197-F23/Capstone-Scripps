@@ -186,8 +186,8 @@ ui <- fluidPage(
     "),
     tags$style(HTML("
       .custom-modal .modal-dialog {
-        width: 600px; /* Set the width */
-        height: 400px; /* Set the height */
+        width: 60%; /* Set the width */
+        height: 40%; /* Set the height */
       }
       .custom-modal-content {
         display: flex;
@@ -291,10 +291,10 @@ ui <- fluidPage(
                           div(
                             style = "margin-bottom: 10px; text-align: left;",
                             selectInput("provider", label = "Select Map Provider:", 
-                                        choices = c("CartoDB.Positron", "CartoDB.DarkMatter","OpenStreetMap.Mapnik",
-                                                    "Esri.WorldPhysical", "Esri.WorldImagery",
-                                                    "Esri.WorldTerrain", "Esri.NatGeoWorldMap",
-                                                    "USGS.USImageryTopo"),
+                                        choices = c("CartoDB.Positron", "OpenStreetMap.Mapnik",
+                                                    "Esri.NatGeoWorldMap", "Esri.WorldTerrain", 
+                                                    "Esri.WorldImagery"), #"CartoDB.DarkMatter", "Esri.WorldPhysical", "Esri.WorldImagery",
+                                                                          #"Esri.WorldTerrain","USGS.USImageryTopo" 
                                         selected = "CartoDB.Positron"),
                           ),
                           div(
@@ -382,25 +382,27 @@ server <- function(input, output, session) {
     showModal(modalDialog(
       title = "CalCOFI eDNA Sampling",
       div(class = "custom-modal-content",
-          div(img(src = "edna_poster.jpg", height = 600, width = 900)),
+          div(img(src = "edna_poster.jpg", style = "height: 60vh; width: 50vw;")), # Adjusted size using vh and vw units
           div(style = "margin-bottom: 20px;"), # Empty div for spacing
-          div(style = "width: 900px; margin: 0 auto;",
+          div(style = "width: 50vw; margin: 0 auto;",
               div(style = "text-align: left; padding-left: 20px; padding-right: 20px;",
                   "   Environmental DNA (eDNA) sampling for marine mammals involves collecting water samples from various locations within a study area, 
-                typically ranging from coastal waters to open ocean environments. These samples are then processed to extract both intracellular and 
-                extracellular DNA shed by marine mammals into their surroundings, which can include skin cells, feces, urine, and other bodily fluids. 
-                Once the DNA is extracted, it undergoes amplification using polymerase chain reaction (PCR) techniques targeting specific genetic markers, 
-                such as mitochondrial DNA (mtDNA) genes like the control region (D-loop), 12s rRNA gene, 16s rRNA gene, or cytochrome b.
-                The amplified DNA sequences are then analyzed to detect the presence of target species, 
-                assess biodiversity by identifying multiple species simultaneously through eDNA metabarcoding 
-                using universal primers coupled with next-generation sequencing (NGS), and characterize intraspecific genetic diversity. 
-                This eDNA approach offers a non-invasive, cost-effective, and sensitive method for monitoring marine mammal populations, especially for rare, elusive, 
-                or threatened species that are challenging to detect using traditional visual and acoustic methods. However, challenges remain in optimizing sampling strategies, 
-                assay design, and data interpretation to maximize the reliability and accuracy of eDNA-based monitoring programs for marine mammal assessment and conservation.")
+              typically ranging from coastal waters to open ocean environments. These samples are then processed to extract both intracellular and 
+              extracellular DNA shed by marine mammals into their surroundings, which can include skin cells, feces, urine, and other bodily fluids. 
+              Once the DNA is extracted, it undergoes amplification using polymerase chain reaction (PCR) techniques targeting specific genetic markers, 
+              such as mitochondrial DNA (mtDNA) genes like the control region (D-loop), 12s rRNA gene, 16s rRNA gene, or cytochrome b.
+              The amplified DNA sequences are then analyzed to detect the presence of target species, 
+              assess biodiversity by identifying multiple species simultaneously through eDNA metabarcoding 
+              using universal primers coupled with next-generation sequencing (NGS), and characterize intraspecific genetic diversity. 
+              This eDNA approach offers a non-invasive, cost-effective, and sensitive method for monitoring marine mammal populations, especially for rare, elusive, 
+              or threatened species that are challenging to detect using traditional visual and acoustic methods. However, challenges remain in optimizing sampling strategies, 
+              assay design, and data interpretation to maximize the reliability and accuracy of eDNA-based monitoring programs for marine mammal assessment and conservation."),
+              div(style = "margin-bottom: 20px;"), # Empty div for spacing
+              div("Suarez-Bregua, Paula, et al. “Environmental DNA (Edna) for Monitoring Marine Mammals: Challenges and Opportunities.” Frontiers, Frontiers, 5 Sept. 2022, www.frontiersin.org/articles/10.3389/fmars.2022.987774/full.")
           ),
           actionButton("next_button", "Next Page")
       ),
-      size = 'l',
+      size = 'm',
       easyClose = TRUE,
       footer = NULL,
       class = "custom-modal" # Add custom class to the modal dialog
@@ -411,17 +413,19 @@ server <- function(input, output, session) {
     showModal(modalDialog(
       title = "CalCOFI Actual Cruise Track: 2001RL Example",
       div(class = "custom-modal-content",
-          div(img(src = "2001Ancil_North_actual.png", height = 950, width = 700)),
+          div(img(src = "2001Ancil_North_actual.png", style = "height: 75vh; width: 40vw;")), # Adjusted size using vh and vw units
           div(style = "margin-bottom: 20px;"), # Empty div for spacing
-          div(style = "width: 900px; margin: 0 auto;",
+          div(style = "width: 40vw; margin: 0 auto;",
               div(style = "text-align: left; padding-left: 20px; padding-right: 20px;",
                   "CalCOFI 2001RL sailed on NOAA FSV Reuben Lasker on 04 Jan 2020 at 1400PDT from 10th Avenue Marine Terminal, San Diego. 
-                  All 104 science stations were successfully occupied. CTD casts and various net tows were completed at each science station. 
-                  Underway visual observations of marine mammals were conducted while under transit and sonobuoys deployed before stations as the acoustic component. 
-                  Other underway science included continuous pCO2/pH and meteorological measurements. The cruise ended in San Francisco at Pier 30/32 on 26 Jan 2020 at 1300PDT.")
+              All 104 science stations were successfully occupied. CTD casts and various net tows were completed at each science station. 
+              Underway visual observations of marine mammals were conducted while under transit and sonobuoys deployed before stations as the acoustic component. 
+              Other underway science included continuous pCO2/pH and meteorological measurements. The cruise ended in San Francisco at Pier 30/32 on 26 Jan 2020 at 1300PDT."),
+              div(style = "margin-bottom: 20px;"), # Empty div for spacing
+              div("CalCOFI. 2001RL Cruise Summary. NOAA FSV Reuben Lasker, 04-26 Jan. 2020, 10th Avenue Marine Terminal, San Diego. Chief Scientist: Amy Hays, Technical Coordinator: Angela Klemmedson. CalCOFI, https://calcofi.org/2001rl/.")
           ),
-    ),
-      size = 'l',
+      ),
+      size = 'm',
       easyClose = TRUE,
       footer = NULL,
       class = "custom-modal" # Add custom class to the modal dialog
