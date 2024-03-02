@@ -22,6 +22,10 @@ library(htmltools)
 library(rsconnect)
 library(shinytreeview)
 library(shinyWidgets)
+library(mapview)
+library(webshot)
+#webshot::install_phantomjs() 
+#uncomment the above to install phantomjs() for downloading the map
 
 
 species_list <- data.frame(
