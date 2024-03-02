@@ -302,6 +302,8 @@ ui <- fluidPage(
                             tags$label("UI Settings:")
                           ),
                           themeSelector(),
+                          #downloadButton(outputId = "downloadMap", label = "Download Map")
+                          downloadButton( outputId = "dl")
                         ),
                         
                         
