@@ -518,11 +518,73 @@ server <- function(input, output, session) {
   #     addProviderTiles(providers$CartoDB.Positron, layerId = "base")
   # })
   
+  
   output$mymap <- renderLeaflet({
     leaflet() %>%
       setView(lng = -121, lat = 34, zoom = 6.5) %>%
       addProviderTiles(input$provider)
   })
+  
+  foundational.map <- reactive({
+    
+    leaflet() %>% addTiles('http://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png')
+    
+  }) # end of foundational.map()
+  
+  # render foundational leaflet map
+  output$map <- leaflet::renderLeaflet({
+    
+    # call reactive map
+    foundational.map()
+    
+  }) # end of render leaflet
+  
+  # store the current user-created version
+  # of the Leaflet map for download in 
+  # a reactive expression
+  user.created.map <- reactive({
+    
+    # call the foundational Leaflet map
+    foundational.map() %>%
+      
+      # store the view based on UI
+      setView( lng = input$map_center$lng
+               ,  lat = input$map_center$lat
+               , zoom = input$map_zoom
+      )
+    
+  }) # end of creating user.created.map()
+  
+  
+  
+  # create the output file name
+  # and specify how the download button will take
+  # a screenshot - using the mapview::mapshot() function
+  # and save as a PDF
+  output$dl <- downloadHandler(
+    filename = paste0( Sys.Date()
+                       , "_customLeafletmap"
+                       , ".pdf"
+    )
+    
+    , content = function(file) {
+      mapshot( x = user.created.map()
+               , file = file
+               , cliprect = "viewport" # the clipping rectangle matches the height & width from the viewing port
+               , selfcontained = FALSE # when this was not specified, the function for produced a PDF of two pages: one of the leaflet map, the other a blank page.
+      )
+    } # end of content() function
+  ) # end of downloadHandler() function
+  
+  # # Download handler to capture the current Leaflet map as a JPEG file
+  # output$downloadMap <- downloadHandler(
+  #   filename = function() {
+  #     paste("leaflet_map", input$provider, Sys.Date(), ".jpg", sep = "_")
+  #   },
+  #   content = function(file) {
+  #     mapshot(input$mymap, file = file, format = "jpg")
+  #   }
+  # )
 
   # OBS DATA
   # create reactivity for obs data
