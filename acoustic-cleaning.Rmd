@@ -45,6 +45,29 @@ names(acoustic_detections)[names(acoustic_detections) == "CC.Station"] <- "Stati
 ```
 
 ```{r}
+
+#unique(acoustic_detections['Station'])
+#unique(station['Station'])
+
+# fixing line numbers
+station[station['Line'] == 63.3, 'Line'] = 63
+
+station[station['Line'] == 66.7, 'Line'] = 67
+
+station[station['Line'] == 73.3, 'Line'] = 73
+
+station[station['Line'] == 76.7, 'Line'] = 77
+
+station[station['Line'] == 83.3, 'Line'] = 83
+
+station[station['Line'] == 87.7, 'Line'] = 87
+
+station[station['Line'] == 93.3, 'Line'] = 93
+
+
+```
+
+```{r}
 # Create Effort column by aggregating the sum of hours over line, station, cruise, and year
 data <- aggregate(hours ~  Line + Station + Cruise + Year, data = acoustic_detections, FUN = sum)
 
@@ -96,6 +119,7 @@ data$Cruise <- gsub("[^0-9]+$", "", data$Cruise)
 data
 write.csv(data, "acoustic_station.csv", row.names = FALSE)
 acoustic_detections_mod1
+
 write.csv(acoustic_detections_mod1, "acoustic_detections.csv", row.names = FALSE)
 
 ```

@@ -995,14 +995,30 @@ server <- function(input, output, session) {
       temp <- aggregate(Duration ~ Line + Station + SpeciesName, data = data, FUN = sum)
     }
     
-    #station$Line <- floor(station$Line)
-    #station$Sta <- floor(station$Sta)
+    station_copy <- station
     
-    station <- station[, c('Line','Sta','Lat..dec.','Lon..dec.')]
+    # fixing line numbers
+    station_copy[station_copy['Line'] == 63.3, 'Line'] = 63
     
-    names(station)[names(station) == "Sta"] <- "Station"
-    names(station)[names(station) == "Lon..dec."] <- "Longitude"
-    names(station)[names(station) == "Lat..dec."] <- "Latitude"
+    station_copy[station_copy['Line'] == 66.7, 'Line'] = 67
+    
+    station_copy[station_copy['Line'] == 73.3, 'Line'] = 73
+    
+    station_copy[station_copy['Line'] == 76.7, 'Line'] = 77
+    
+    station_copy[station_copy['Line'] == 83.3, 'Line'] = 83
+    
+    station_copy[station_copy['Line'] == 87.7, 'Line'] = 87
+    
+    station_copy[station_copy['Line'] == 93.3, 'Line'] = 93
+    #station_copy$Line <- floor(station_copy$Line)
+    #station_copy$Sta <- floor(station_copy$Sta)
+    
+    station_copy <- station_copy[, c('Line','Sta','Lat..dec.','Lon..dec.')]
+    
+    names(station_copy)[names(station_copy) == "Sta"] <- "Station"
+    names(station_copy)[names(station_copy) == "Lon..dec."] <- "Longitude"
+    names(station_copy)[names(station_copy) == "Lat..dec."] <- "Latitude"
     
     
     
@@ -1022,7 +1038,7 @@ server <- function(input, output, session) {
     }
     
 
-    transform_data(merge(temp, station, by = c("Station", "Line")))
+    transform_data(merge(temp, station_copy, by = c("Station", "Line")))
     
   })
   
