@@ -93,6 +93,11 @@ adjustSize <- function(value) {
 }
 
 
+normalize_effort <- function(x, na.rm = TRUE) {
+  return((x- min(x)) /(max(x)-min(x)))
+}
+
+
 # import my data, obtained from CalCOFI
 whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
 whale$Season <- trimws(whale$Season)
@@ -658,7 +663,7 @@ server <- function(input, output, session) {
       # Add acoustic effort legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("topleft",
-                  colors = "black",
+                  colors = "gray",
                   labels = "Acoustic Effort",
                   opacity = 1,
                   layerId = "acoustic_effort_legend"
@@ -741,7 +746,7 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-                    colors = "black",
+                    colors = "gray",
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -799,7 +804,7 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-                    colors = "black",
+                    colors = "gray",
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -862,9 +867,9 @@ server <- function(input, output, session) {
           addCircles(
             lng = as.numeric(acousticEffortFilter2()$Longitude),
             lat = as.numeric(acousticEffortFilter2()$Latitude),
-            radius = 5000,  # Adjust the radius as needed
-            color = "black",  # Border color
-            fillColor = "black",  # Fill color
+            radius = normalize_effort(acousticEffortFilter2()$Effort)*6000, # Adjust the radius as needed
+            color = "gray",  # Border color
+            fillColor = "gray",  # Fill color
             popup = paste("Acoustic Effort",
                           "<br>Line:", as.character(acousticEffortFilter2()$Line),
                           "<br>Station:", as.character(acousticEffortFilter2()$Station),
@@ -875,7 +880,7 @@ server <- function(input, output, session) {
             group = "acoustic"
           ) %>%
           addLegend("topleft",
-                    colors = "black",
+                    colors = "gray",
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
