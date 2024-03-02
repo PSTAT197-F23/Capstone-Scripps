@@ -297,19 +297,11 @@ ui <- fluidPage(
                           div(
                             style = "margin-bottom: 10px; text-align: left;",
                             selectInput("provider", label = "Select Map Provider:", 
-<<<<<<< Updated upstream
-                                        choices = c("CartoDB.Positron", "CartoDB.DarkMatter","OpenStreetMap.Mapnik",
-                                                    "Esri.WorldPhysical", "Esri.WorldImagery",
-                                                    "Esri.WorldTerrain", "Esri.NatGeoWorldMap",
-                                                    "USGS.USImageryTopo"),
-                                        selected = "OpenStreetMap.Mapnik"),
-=======
                                         choices = c("CartoDB.Positron", "OpenStreetMap.Mapnik",
                                                     "Esri.NatGeoWorldMap", "Esri.WorldTerrain", 
                                                     "Esri.WorldImagery"), #"CartoDB.DarkMatter", "Esri.WorldPhysical", "Esri.WorldImagery",
                                                                            #"Esri.WorldTerrain","USGS.USImageryTopo" 
                                         selected = "CartoDB.Positron"),
->>>>>>> Stashed changes
                           ),
                           div(
                             style = "margin-bottom: 5px; text-align: left;",
