@@ -923,7 +923,7 @@ server <- function(input, output, session) {
             lng = as.numeric(acousticDetectionFilter2()$Longitude),
             lat = as.numeric(acousticDetectionFilter2()$Latitude),
             icon = musicNoteIcon,
-            popup = paste(acousticDetectionFilter2()$Detections), 
+            popup = paste(gsub("\n", "<br>", acousticDetectionFilter2()$FormattedString)), 
             group = "acoustic_detection"
           ) %>%
           addLegend("topleft",
@@ -1038,7 +1038,23 @@ server <- function(input, output, session) {
     }
     
 
-    transform_data(merge(temp, station_copy, by = c("Station", "Line")))
+    rslt<- transform_data(merge(temp, station_copy, by = c("Station", "Line")))
+    
+    format_detection <- function(detection) {
+      paste(detection[1], ":", detection[2], "hours")
+    }
+    
+    
+    rslt %>%
+      rowwise() %>% 
+      mutate(
+        FormattedString = paste(
+          sprintf("Line %d, Station %s", Line, Station), 
+          paste(sapply(Detections, format_detection), collapse = "\n"), 
+          sep = "\n" 
+        )
+      )
+    
     
   })
   
