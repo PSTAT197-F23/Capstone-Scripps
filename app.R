@@ -339,9 +339,14 @@ ui <- fluidPage(
                       tags$h5("The NOAA CalCOFI Genomic Program (NCOG) has collected envrionmental DNA samples (eDNA) since 2014. Here we used metabarcoding assays to 
                               detect cetacean species from water samples collected at 10, 20, or 40 meters. The 'Display eDNA' function will plot eDNA sampling effort as opaque black circles, and eDNA detections as blue flags. By selecting a detection on the map, more information about that specific detection will pop up.  "), 
                       
+                      tags$h3("UCSB Data Science Capstone"),
+                      tags$h5("The Data Science Capstone is a three-course sequence at the University of California, Santa Barbara (UCSB) in which students engage in project-based learning with data-intensive methodologies with the hopes of making a positive impact on the world. 
+                              As their project, seven students from the program upgraded this Shiny app to implement new data, improve functionality, and enhance user experience."),
+                      
                       tags$h4("Co-authors"),
                       tags$h5("Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, 
-                              Erin Satterthwaite, Brice Semmens, and Simone Baumann-Pickering "),
+                              Erin Satterthwaite, Brice Semmens, Simone Baumann-Pickering,
+                              Luis Barajas, Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan Zhang."),
                       
                       tags$h4("Funding Sources"),
                       tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
