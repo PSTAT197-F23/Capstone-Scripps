@@ -314,7 +314,7 @@ ui <- fluidPage(
                                       label = 'Years', 
                                       min = min(whale$Year, na.rm = TRUE), 
                                       max = max(whale$Year, na.rm = TRUE), 
-                                      value = c(2004, 2006),
+                                      value = c(2004, 2022),
                                       step = 1,
                                       sep = "", 
                                       animate = animationOptions(
