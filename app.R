@@ -95,7 +95,8 @@ species_list <- data.frame(
 )
 
 seasons_dataframe <- whale %>% select('Cruise', 'Season', 'Year') %>%
-  distinct(Cruise, .keep_all = TRUE)
+  distinct(Cruise, .keep_all = TRUE) %>% 
+  mutate(Season = str_to_title(Season))
 
 
 # Defining a function to convert month number to month name
