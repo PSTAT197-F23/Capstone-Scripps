@@ -339,11 +339,11 @@ ui <- fluidPage(
                           # display stations toggle:
                           materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
                           
-                          # display eDNA toggle:
-                          materialSwitch(inputId = "edna", label = "Display eDNA Data", status = "success"),
-                          
                           # display visual effort toggle:
                           materialSwitch(inputId = "viz", label = "Display Visual Effort", status = "danger"),
+                          
+                          # display eDNA toggle:
+                          materialSwitch(inputId = "edna", label = "Display eDNA Data", status = "success"),
                           
                           # display acoustic data toggle:
                           materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
@@ -447,6 +447,7 @@ server <- function(input, output, session) {
   sightingsCleared <- reactiveVal(FALSE)
   ednaCleared <- reactiveVal(FALSE)
   acousticCleared <- reactiveVal(FALSE)
+  vizCleared <- reactiveVal(FALSE)
   
   # info button
   observeEvent(input$info_button, {
@@ -773,6 +774,7 @@ server <- function(input, output, session) {
   observeEvent(input$sightings, {
     sightingsCleared(FALSE)
   })
+  
   
   
   # eDNA effort filter for plotting eDNA effort per cruise. Plot as black circle 
