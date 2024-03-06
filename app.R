@@ -26,6 +26,20 @@ library(shinyWidgets)
 library(purrr)
 
 
+# import my data, obtained from CalCOFI
+whale <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
+whale$Season <- trimws(whale$Season)
+whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
+whale = whale[-1105,]
+station <- read.csv("data/CalCOFIStationOrder.csv")
+edna <- read.csv("data/edna.csv")
+colnames(edna)[colnames(edna) == "year"] ="Year"
+viz <- read.csv("data/CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
+acoustic_detections <- read.csv("data/acoustic_detections.csv")
+station_acoustic <- read.csv("data/acoustic_station.csv") # station data for plotting acoustic detentions
+
+
+
 species_list <- data.frame(
   Suborder = c(rep('Odontocete',16), rep('Mysticete',6), rep('Unidentified',10)),
   Family = c('Delphinidae',
@@ -80,6 +94,9 @@ species_list <- data.frame(
               rep(NA,16))
 )
 
+seasons_dataframe <- whale %>% select('Cruise', 'Season', 'Year') %>%
+  distinct(Cruise, .keep_all = TRUE)
+
 
 # function to scale the dots:
 adjustSize <- function(value) {
@@ -94,66 +111,10 @@ adjustSize <- function(value) {
   }
 }
 
-
-
 normalize_effort <- function(x, na.rm = TRUE) {
   return((x- min(x)) /(max(x)-min(x)))
 }
 
-
-
-# import my data, obtained from CalCOFI
-whale <- read.csv("CalCOFI_2004-2022_CombinedSightings.csv")
-whale$Season <- trimws(whale$Season)
-whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
-whale = whale[-1105,]
-station <- read.csv("CalCOFIStationOrder.csv")
-edna <- read.csv("edna.csv")
-colnames(edna)[colnames(edna) == "year"] ="Year"
-viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
-
-#acoustic <- read.csv("acoustic-ready.csv")
-#acoustic <- acoustic %>%
-#  mutate(SpeciesName = ifelse(is.na(SpeciesName), NA, 
-#                              sapply(SpeciesName, function(x) {
-#                                x <- paste(toupper(substring(x, 1, 1)), tolower(substring(x, 2)), sep="")
-#                                if(x == "Fin") "Fin whale" else x
-#                              }))) 
-
-
-acoustic_detections <- read.csv("acoustic_detections.csv")
-station_acoustic <- read.csv("acoustic_station.csv") # station data for plotting acoustic detentions
-
-
-seasons_dataframe <- data.frame(
-  Season = c(rep("Summer", 18), 
-             rep("Fall", 18), 
-             rep("Winter", 16), 
-             rep("Spring", 15)
-             #rep("Cruise with eDNA data", length(unique(edna$cruise))), 
-             #rep("Cruise without eDNA", length(setdiff(unique(whale$Cruise), unique(edna$cruise)))),
-             #rep("Cruise with acoustic data", length(unique(acoustic$cruise)))
-  ),
-  Cruise_Id = c(unique(whale$Cruise[whale$Season == "summer"]), 
-                unique(whale$Cruise[whale$Season == "fall"]), 
-                unique(whale$Cruise[whale$Season == "winter"]), 
-                unique(whale$Cruise[whale$Season == "spring"])
-                #unique(edna$cruise),
-                #setdiff(unique(whale$Cruise), unique(edna$cruise)),
-                #unique(acoustic$cruise)
-  ))
-
-# Define the data frame for cruises with eDNA data
-# cruise_edna_dataframe <- data.frame(
-#   cruise_with_eDNA = rep("Cruise with eDNA", length(unique(edna$cruise))),
-#   cruise_Id_edna = unique(edna$cruise)
-# )
-
-# # Define custom star marker icon
-# starIcon <- makeIcon(
-#   iconUrl = "http://leafletjs.com/examples/custom-icons/star.png",
-#   iconWidth = 32, iconHeight = 32
-# )
 
 #build the app!
 
@@ -257,19 +218,10 @@ ui <- fluidPage(
                           treecheckInput(
                             inputId =  "all_cruises",
                             label = "Choose Cruise by Season:",
-                            choices = make_tree(seasons_dataframe, c("Season", "Cruise_Id")),
+                            choices = make_tree(seasons_dataframe, c("Season", "Cruise")),
                             width = "100%",
                             borders = TRUE
                           ),
-                          
-                          
-                          # treecheckInput(
-                          #   inputId =  "all_cruises_eDNA",
-                          #   label = "Choose Cruise by eDNA:",
-                          #   choices = make_tree(cruise_edna_dataframe, c("cruise_with_eDNA", "cruise_Id_edna")),
-                          #   width = "100%",
-                          #   borders = TRUE
-                          # ),
                           
                           
                           # display sightings toggle:
@@ -288,10 +240,7 @@ ui <- fluidPage(
                           materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
                           
                           
-                          
-                          
                           # add collapsible checkboxes for suborders and species:
-                          
                           treecheckInput(
                             inputId = "all_species",
                             label = "Choose Species:",
@@ -325,8 +274,7 @@ ui <- fluidPage(
                           ),
                           themeSelector(),
                         ),
-                        
-                        
+
                         
                         mainPanel(
                           tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
@@ -373,14 +321,8 @@ ui <- fluidPage(
                       tags$h4("Funding Sources"),
                       tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
                       tags$h5("Office of Naval Research, US Navy Pacific Fleet"),
-                      
-                      
              )
-             
-             
   )
-  
-  
 )
 
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
@@ -392,8 +334,6 @@ server <- function(input, output, session) {
     leafletProxy("mymap", session) %>%
       setView(lng = -121, lat = 34, zoom = 6.5) # Reset to default view
   })
-  
-
   
   sightingsCleared <- reactiveVal(FALSE)
   ednaCleared <- reactiveVal(FALSE)
@@ -477,10 +417,7 @@ server <- function(input, output, session) {
     ))
   })
   
-  
-  
-  
-  
+
   observeEvent(input$sites, { # when the user selects the display sites input button
     if (input$sites > 0) {
       leafletProxy("mymap", session) %>% # add a layer to the map
@@ -543,19 +480,6 @@ server <- function(input, output, session) {
     }
   })
   
-  # when user selects a suborder from "Choose suborder" dropdown, this observe function will be triggered
-  # if suborder == All, then species_choices can be any of them
-  # if suborder == suborder, then it filters suborder choices based on suborder column 
-  
-  
-  # Update SELECTIZE INPUT
-  
-  #create the base map using leaflet
-  # output$mymap <- renderLeaflet({
-  #   leaflet() %>%
-  #     setView(lng = -121, lat = 34, zoom = 6.5) %>%
-  #     addProviderTiles(providers$CartoDB.Positron, layerId = "base")
-  # })
   
   output$mymap <- renderLeaflet({
     leaflet() %>%
@@ -709,7 +633,6 @@ server <- function(input, output, session) {
       # Add acoustic effort legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("topleft",
-
                   colors = "gray",
                   labels = "Acoustic Effort",
                   opacity = 1,
@@ -793,9 +716,7 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-
                     colors = "gray",
-
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -853,9 +774,7 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-
                     colors = "gray",
-
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -893,7 +812,6 @@ server <- function(input, output, session) {
     ednaCleared(FALSE)
   })
   
-  
   ############################################################
   
   # icon for acoustic detections on map
@@ -901,7 +819,6 @@ server <- function(input, output, session) {
     iconUrl = "assests/music-note-purple.png",
     iconWidth = 35, iconHeight = 35
   )
-  
 
   
   # observe layer for acoustic effort data reactivity
@@ -983,25 +900,6 @@ server <- function(input, output, session) {
       leafletProxy("mymap", session) %>%
         clearGroup("acoustic_detection") # clear existing acoustic detection
 
-     # if (!is.null(acousticDetectionFilter()$longitude)){
-        # Define jitter amount
-        #jitter_amount <- 0.045  # Adjust this value as needed
-        
-        # Apply jitter to longitude and latitude
-        #jittered_lng <- as.numeric(acousticDetectionFilter()$longitude) + runif(length(acousticDetectionFilter()$longitude), -jitter_amount, jitter_amount)
-        #jittered_lat <- as.numeric(acousticDetectionFilter()$latitude) + runif(length(acousticDetectionFilter()$latitude), -jitter_amount, jitter_amount)
-        
-     #   leafletProxy("mymap", session) %>%
-     #     addMarkers(
-      #     lng = as.numeric(acousticDetectionFilter()$longitude),
-      #      lat = as.numeric(acousticDetectionFilter()$latitude),
-       #     icon = musicNoteIcon,
-       #     popup = paste("Acoustic Detection:", as.character(acousticDetectionFilter()$SpeciesName),
-       #                   "<br>Duration (hours):", as.character(acousticDetectionFilter()$duration),
-         #                 "<br>Line:", as.character(acousticDetectionFilter()$line),
-        #                  "<br>Station:", as.character(acousticDetectionFilter()$station)) %>%
-           #   lapply(htmltools::HTML), 
-
       if (!is.null(acousticDetectionFilter2()$Longitude)){
         
         leafletProxy("mymap", session) %>%
@@ -1060,13 +958,8 @@ server <- function(input, output, session) {
     acousticCleared(FALSE)
   })
   
-  
   ################################
   
-
-  
-
-
   
   acousticDetectionFilter2 <- reactive({
     
@@ -1107,10 +1000,6 @@ server <- function(input, output, session) {
     names(station_copy)[names(station_copy) == "Lon..dec."] <- "Longitude"
     names(station_copy)[names(station_copy) == "Lat..dec."] <- "Latitude"
     
-    
-    
-
-    
     transform_data <- function(df) {
 
       df_grouped <- df %>% group_by(Line, Station, Latitude, Longitude)
@@ -1131,7 +1020,6 @@ server <- function(input, output, session) {
       paste(detection[1], ":", detection[2], "hours")
     }
     
-    
     rslt %>%
       rowwise() %>% 
       mutate(
@@ -1150,7 +1038,6 @@ server <- function(input, output, session) {
  #   acousticDetectionFilter2()
  # })
   
-
   
   acousticEffortFilter2 <- reactive({
     data <- filter(station_acoustic, station_acoustic$Cruise %in% input$all_cruises
@@ -1169,11 +1056,6 @@ server <- function(input, output, session) {
  # output$dataset2Table <- renderDataTable({
   #  acousticEffortFilter2()
  # })
-  
-  
-  
-  
-  
 }
 
 # #Finally, we tell R to use the user interface and the server together to build our app!
