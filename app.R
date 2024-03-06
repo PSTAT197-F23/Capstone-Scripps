@@ -107,7 +107,7 @@ seasons_dataframe <- whale %>% select('Cruise', 'Season', 'Year') %>%
   distinct(Cruise, .keep_all = TRUE) %>% 
   mutate(Season = str_to_title(Season))
 
-# Extract year and month from Cruise_Id column
+# Extract year and month from Cruise column for seasons_dataframe
 seasons_dataframe <- mutate(seasons_dataframe,
                             year = paste("20", substr(Cruise, 3, 4), sep = ""),
                             month_num = as.integer(substr(Cruise, 5, 6)))
@@ -123,7 +123,7 @@ seasons_dataframe <- select(seasons_dataframe, -year, -month_num, -month_name)
 
 
 
-# Extract year and month from Cruise_Id column for whale data frame
+# Extract year and month from Cruise column for whale data frame
 whale <- mutate(whale,
                 year = paste("20", substr(Cruise, 3, 4), sep = ""),
                 month_num = as.integer(substr(Cruise, 5, 6)))
@@ -139,7 +139,7 @@ whale <- select(whale, -year, -month_num, -month_name)
 
 
 
-# Extract year and month from Cruise_Id column for edna data frame
+# Extract year and month from cruise column for edna data frame
 edna <- mutate(edna,
                year = paste("20", substr(cruise, 3, 4), sep = ""),
                month_num = as.integer(substr(cruise, 5, 6)))
@@ -155,7 +155,7 @@ edna <- select(edna, -year, -month_num, -month_name)
 
 
 
-# Extract year and month from Cruise_Id column for acoustic_detections data frame
+# Extract year and month from Cruise column for acoustic_detections data frame
 acoustic_detections <- mutate(acoustic_detections,
                               year = paste("20", substr(Cruise, 3, 4), sep = ""),
                               month_num = as.integer(substr(Cruise, 5, 6)))
@@ -171,7 +171,7 @@ acoustic_detections <- select(acoustic_detections, -year, -month_num, -month_nam
 
 
 
-# Extract year and month from Cruise_Id column for station_acoustic data frame
+# Extract year and month from Cruise column for station_acoustic data frame
 station_acoustic <- mutate(station_acoustic,
                            year = paste("20", substr(Cruise, 3, 4), sep = ""),
                            month_num = as.integer(substr(Cruise, 5, 6)))
@@ -184,6 +184,26 @@ station_acoustic <- mutate(station_acoustic, Cruise = paste(month_name, year))
 
 # Drop intermediate columns
 station_acoustic <- select(station_acoustic, -year, -month_num, -month_name)
+
+
+
+# Extract year and month from Cruise column for viz data frame
+viz <- mutate(viz,
+              year = paste("20", substr(cruise, 3, 4), sep = ""),
+              month_num = as.integer(substr(cruise, 5, 6)))
+
+# Convert month number to month name
+viz <- mutate(viz, month_name = sapply(viz$month_num, get_month_name))
+
+# Combine year and month into formatted_date column
+viz <- mutate(viz, cruise = paste(month_name, year))
+
+# Drop intermediate columns
+viz <- select(viz, -year, -month_num, -month_name)
+
+
+
+
 
 
 
