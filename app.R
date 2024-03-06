@@ -22,6 +22,8 @@ library(htmltools)
 library(rsconnect)
 library(shinytreeview)
 library(shinyWidgets)
+#install.packages("purrr")
+library(purrr)
 
 
 species_list <- data.frame(
@@ -78,6 +80,7 @@ species_list <- data.frame(
               rep(NA,16))
 )
 
+
 # function to scale the dots:
 adjustSize <- function(value) {
   if (!is.na(value)){
@@ -86,9 +89,17 @@ adjustSize <- function(value) {
     } 
     else {
       return((log(value) * 2000) + 3750)
+
     }
   }
 }
+
+
+
+normalize_effort <- function(x, na.rm = TRUE) {
+  return((x- min(x)) /(max(x)-min(x)))
+}
+
 
 
 # import my data, obtained from CalCOFI
@@ -100,13 +111,19 @@ station <- read.csv("CalCOFIStationOrder.csv")
 edna <- read.csv("edna.csv")
 colnames(edna)[colnames(edna) == "year"] ="Year"
 viz <- read.csv("CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
-acoustic <- read.csv("acoustic-ready.csv")
+
+#acoustic <- read.csv("acoustic-ready.csv")
 #acoustic <- acoustic %>%
 #  mutate(SpeciesName = ifelse(is.na(SpeciesName), NA, 
 #                              sapply(SpeciesName, function(x) {
 #                                x <- paste(toupper(substring(x, 1, 1)), tolower(substring(x, 2)), sep="")
 #                                if(x == "Fin") "Fin whale" else x
 #                              }))) 
+
+
+acoustic_detections <- read.csv("acoustic_detections.csv")
+station_acoustic <- read.csv("acoustic_station.csv") # station data for plotting acoustic detentions
+
 
 seasons_dataframe <- data.frame(
   Season = c(rep("Summer", 18), 
@@ -214,6 +231,10 @@ ui <- fluidPage(
   #create a navigation bar for the top of the app, and give it a main title
   
   navbarPage("SAEL CalCOFI ShinyApp",
+             #tabPanel("Datasets", 
+             #         dataTableOutput("dataset1Table"), 
+             #         dataTableOutput("dataset2Table")
+             #),
              tabPanel("Species Map",
                       tags$h2("Interactive Cetacean Species Map", align = "center"),
                       tags$h6("Species presence data from CalCOFI."),
@@ -295,6 +316,7 @@ ui <- fluidPage(
                                                     "Esri.NatGeoWorldMap", "Esri.WorldTerrain", 
                                                     "Esri.WorldImagery"), #"CartoDB.DarkMatter", "Esri.WorldPhysical", "Esri.WorldImagery",
                                                                           #"Esri.WorldTerrain","USGS.USImageryTopo" 
+
                                         selected = "CartoDB.Positron"),
                           ),
                           div(
@@ -382,6 +404,7 @@ server <- function(input, output, session) {
     showModal(modalDialog(
       title = "CalCOFI eDNA Sampling",
       div(class = "custom-modal-content",
+
           div(img(src = "edna_poster.jpg", style = "height: 60vh; width: 50vw;")), # Adjusted size using vh and vw units
           div(style = "margin-bottom: 20px;"), # Empty div for spacing
           div(style = "width: 50vw; margin: 0 auto;",
@@ -399,6 +422,7 @@ server <- function(input, output, session) {
               assay design, and data interpretation to maximize the reliability and accuracy of eDNA-based monitoring programs for marine mammal assessment and conservation."),
               div(style = "margin-bottom: 20px;"), # Empty div for spacing
               div("Suarez-Bregua, Paula, et al. “Environmental DNA (Edna) for Monitoring Marine Mammals: Challenges and Opportunities.” Frontiers, Frontiers, 5 Sept. 2022, www.frontiersin.org/articles/10.3389/fmars.2022.987774/full.")
+
           ),
           actionButton("next_button", "Next Page")
       ),
@@ -426,6 +450,27 @@ server <- function(input, output, session) {
           ),
       ),
       size = 'm',
+      easyClose = TRUE,
+      footer = NULL,
+      class = "custom-modal" # Add custom class to the modal dialog
+    ))
+  })
+  
+  observeEvent(input$next_button, {
+    showModal(modalDialog(
+      title = "CalCOFI Actual Cruise Track: 2001RL Example",
+      div(class = "custom-modal-content",
+          div(img(src = "2001Ancil_North_actual.png", height = 950, width = 700)),
+          div(style = "margin-bottom: 20px;"), # Empty div for spacing
+          div(style = "width: 900px; margin: 0 auto;",
+              div(style = "text-align: left; padding-left: 20px; padding-right: 20px;",
+                  "CalCOFI 2001RL sailed on NOAA FSV Reuben Lasker on 04 Jan 2020 at 1400PDT from 10th Avenue Marine Terminal, San Diego. 
+                  All 104 science stations were successfully occupied. CTD casts and various net tows were completed at each science station. 
+                  Underway visual observations of marine mammals were conducted while under transit and sonobuoys deployed before stations as the acoustic component. 
+                  Other underway science included continuous pCO2/pH and meteorological measurements. The cruise ended in San Francisco at Pier 30/32 on 26 Jan 2020 at 1300PDT.")
+          ),
+    ),
+      size = 'l',
       easyClose = TRUE,
       footer = NULL,
       class = "custom-modal" # Add custom class to the modal dialog
@@ -664,7 +709,8 @@ server <- function(input, output, session) {
       # Add acoustic effort legend if it was displayed
       leafletProxy("mymap", session) %>%
         addLegend("topleft",
-                  colors = "black",
+
+                  colors = "gray",
                   labels = "Acoustic Effort",
                   opacity = 1,
                   layerId = "acoustic_effort_legend"
@@ -747,7 +793,9 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-                    colors = "black",
+
+                    colors = "gray",
+
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -805,7 +853,9 @@ server <- function(input, output, session) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
           addLegend("topleft",
-                    colors = "black",
+
+                    colors = "gray",
+
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -852,20 +902,7 @@ server <- function(input, output, session) {
     iconWidth = 35, iconHeight = 35
   )
   
-  # acoustic effort filter for plotting acoustic effort per cruise. Plot as black circle 
-  acousticEffortFilter <- reactive({filter(acoustic, acoustic$cruise %in% input$all_cruises
-                                           & acoustic$SpeciesName %in% input$all_species
-                                           & acoustic$Year >= input$years[1] 
-                                           & acoustic$Year <= input$years[2])})
-  
-  acousticDetectionFilter <- reactive({
-    
-    filter(acoustic, acoustic$cruise %in% input$all_cruises 
-           & acoustic$SpeciesName %in% input$all_species
-           & acoustic$Year >= input$years[1] 
-           & acoustic$Year <= input$years[2])
-    
-  })
+
   
   # observe layer for acoustic effort data reactivity
   observe({
@@ -876,24 +913,35 @@ server <- function(input, output, session) {
     if(input$acoustic > 0) {
       leafletProxy("mymap", session) %>%
         clearGroup("acoustic") # clear existing acoustic first
-      if (!is.null(acousticEffortFilter()$longitude)) {
+      if (!is.null(acousticEffortFilter2())) {
         leafletProxy("mymap", session) %>%
           addCircles(
-            lng = as.numeric(acousticEffortFilter()$longitude),
-            lat = as.numeric(acousticEffortFilter()$latitude),
-            radius = 5000,  # Adjust the radius as needed
-            color = "black",  # Border color
-            fillColor = "black",  # Fill color
+
+          # lng = as.numeric(acousticEffortFilter()$longitude),
+          #  lat = as.numeric(acousticEffortFilter()$latitude),
+           # radius = 5000,  # Adjust the radius as needed
+           # color = "black",  # Border color
+           # fillColor = "black",  # Fill color
+
+            lng = as.numeric(acousticEffortFilter2()$Longitude),
+            lat = as.numeric(acousticEffortFilter2()$Latitude),
+            radius = normalize_effort(acousticEffortFilter2()$Effort)*6000, # Adjust the radius as needed
+            color = "gray",  # Border color
+            fillColor = "gray",  # Fill color
+
             popup = paste("Acoustic Effort",
-                          "<br>Line:", as.character(acousticEffortFilter()$line),
-                          "<br>Station:", as.character(acousticEffortFilter()$station)) %>%
+                          "<br>Line:", as.character(acousticEffortFilter2()$Line),
+                          "<br>Station:", as.character(acousticEffortFilter2()$Station),
+                          "<br>Effort (hours):", as.character(acousticEffortFilter2()$Effort)) %>%
               lapply(htmltools::HTML),
             opacity = 1,
             fillOpacity = 1,
             group = "acoustic"
           ) %>%
           addLegend("topleft",
-                    colors = "black",
+
+                    colors = "gray",
+
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -934,7 +982,8 @@ server <- function(input, output, session) {
     if(input$acoustic > 0) {
       leafletProxy("mymap", session) %>%
         clearGroup("acoustic_detection") # clear existing acoustic detection
-      if (!is.null(acousticDetectionFilter()$longitude)){
+
+     # if (!is.null(acousticDetectionFilter()$longitude)){
         # Define jitter amount
         #jitter_amount <- 0.045  # Adjust this value as needed
         
@@ -942,16 +991,26 @@ server <- function(input, output, session) {
         #jittered_lng <- as.numeric(acousticDetectionFilter()$longitude) + runif(length(acousticDetectionFilter()$longitude), -jitter_amount, jitter_amount)
         #jittered_lat <- as.numeric(acousticDetectionFilter()$latitude) + runif(length(acousticDetectionFilter()$latitude), -jitter_amount, jitter_amount)
         
+     #   leafletProxy("mymap", session) %>%
+     #     addMarkers(
+      #     lng = as.numeric(acousticDetectionFilter()$longitude),
+      #      lat = as.numeric(acousticDetectionFilter()$latitude),
+       #     icon = musicNoteIcon,
+       #     popup = paste("Acoustic Detection:", as.character(acousticDetectionFilter()$SpeciesName),
+       #                   "<br>Duration (hours):", as.character(acousticDetectionFilter()$duration),
+         #                 "<br>Line:", as.character(acousticDetectionFilter()$line),
+        #                  "<br>Station:", as.character(acousticDetectionFilter()$station)) %>%
+           #   lapply(htmltools::HTML), 
+
+      if (!is.null(acousticDetectionFilter2()$Longitude)){
+        
         leafletProxy("mymap", session) %>%
           addMarkers(
-            lng = as.numeric(acousticDetectionFilter()$longitude),
-            lat = as.numeric(acousticDetectionFilter()$latitude),
+            lng = as.numeric(acousticDetectionFilter2()$Longitude),
+            lat = as.numeric(acousticDetectionFilter2()$Latitude),
             icon = musicNoteIcon,
-            popup = paste("Acoustic Detection:", as.character(acousticDetectionFilter()$SpeciesName),
-                          "<br>Duration (hours):", as.character(acousticDetectionFilter()$duration),
-                          "<br>Line:", as.character(acousticDetectionFilter()$line),
-                          "<br>Station:", as.character(acousticDetectionFilter()$station)) %>%
-              lapply(htmltools::HTML), 
+            popup = paste(gsub("\n", "<br>", acousticDetectionFilter2()$FormattedString)), 
+
             group = "acoustic_detection"
           ) %>%
           addLegend("topleft",
@@ -1000,6 +1059,119 @@ server <- function(input, output, session) {
   observeEvent(input$acoustic, {
     acousticCleared(FALSE)
   })
+  
+  
+  ################################
+  
+
+  
+
+
+  
+  acousticDetectionFilter2 <- reactive({
+    
+    data <- filter(acoustic_detections, acoustic_detections$Cruise %in% input$all_cruises 
+           & acoustic_detections$SpeciesName %in% input$all_species
+           & acoustic_detections$Year >= input$years[1] 
+           & acoustic_detections$Year <= input$years[2])
+    
+
+    if(nrow(data) == 0) {
+      temp <- data.frame(Line = character(), Station = character(), SpeciesName = character(), Duration = numeric())
+    } else {
+      temp <- aggregate(Duration ~ Line + Station + SpeciesName, data = data, FUN = sum)
+    }
+    
+    station_copy <- station
+    
+    # fixing line numbers
+    station_copy[station_copy['Line'] == 63.3, 'Line'] = 63
+    
+    station_copy[station_copy['Line'] == 66.7, 'Line'] = 67
+    
+    station_copy[station_copy['Line'] == 73.3, 'Line'] = 73
+    
+    station_copy[station_copy['Line'] == 76.7, 'Line'] = 77
+    
+    station_copy[station_copy['Line'] == 83.3, 'Line'] = 83
+    
+    station_copy[station_copy['Line'] == 87.7, 'Line'] = 87
+    
+    station_copy[station_copy['Line'] == 93.3, 'Line'] = 93
+    #station_copy$Line <- floor(station_copy$Line)
+    #station_copy$Sta <- floor(station_copy$Sta)
+    
+    station_copy <- station_copy[, c('Line','Sta','Lat..dec.','Lon..dec.')]
+    
+    names(station_copy)[names(station_copy) == "Sta"] <- "Station"
+    names(station_copy)[names(station_copy) == "Lon..dec."] <- "Longitude"
+    names(station_copy)[names(station_copy) == "Lat..dec."] <- "Latitude"
+    
+    
+    
+
+    
+    transform_data <- function(df) {
+
+      df_grouped <- df %>% group_by(Line, Station, Latitude, Longitude)
+      
+      df_transformed <- df_grouped %>%
+        summarise(
+          Detections = list(map2(SpeciesName, Duration, ~c(.x, .y))),
+          .groups = 'drop' 
+        )
+      
+      return(df_transformed)
+    }
+    
+
+    rslt<- transform_data(merge(temp, station_copy, by = c("Station", "Line")))
+    
+    format_detection <- function(detection) {
+      paste(detection[1], ":", detection[2], "hours")
+    }
+    
+    
+    rslt %>%
+      rowwise() %>% 
+      mutate(
+        FormattedString = paste(
+          sprintf("Line %d, Station %s", Line, Station), 
+          paste(sapply(Detections, format_detection), collapse = "\n"), 
+          sep = "\n" 
+        )
+      )
+    
+    
+  })
+  
+  # Render dataset1
+ # output$dataset1Table <- renderDataTable({
+ #   acousticDetectionFilter2()
+ # })
+  
+
+  
+  acousticEffortFilter2 <- reactive({
+    data <- filter(station_acoustic, station_acoustic$Cruise %in% input$all_cruises
+                   & station_acoustic$Year >= input$years[1] 
+                   & station_acoustic$Year <= input$years[2])
+    
+    if(nrow(data) == 0) {
+      return(data.frame(Line = character(), Station = character(), Latitude = numeric(), 
+                        Longitude = numeric(), Effort = numeric()))
+    } else {
+      return(aggregate(Effort ~ Line + Station + Latitude + Longitude, data = data, FUN = sum))
+    }
+  })
+  
+  # Render dataset2
+ # output$dataset2Table <- renderDataTable({
+  #  acousticEffortFilter2()
+ # })
+  
+  
+  
   
   
 }
