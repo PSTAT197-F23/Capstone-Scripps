@@ -26,6 +26,15 @@ library(shinyWidgets)
 library(purrr)
 
 
+# Defining a function to convert month number to month name
+get_month_name <- function(month_num) {
+  month_names <- c("January", "February", "March", "April", "May", "June", 
+                   "July", "August", "September", "October", "November", "December")
+  return(month_names[month_num])
+}
+
+
+
 # import my data, obtained from CalCOFI
 whale <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
 whale$Season <- trimws(whale$Season)
@@ -98,14 +107,6 @@ seasons_dataframe <- whale %>% select('Cruise', 'Season', 'Year') %>%
   distinct(Cruise, .keep_all = TRUE) %>% 
   mutate(Season = str_to_title(Season))
 
-
-# Defining a function to convert month number to month name
-get_month_name <- function(month_num) {
-  month_names <- c("January", "February", "March", "April", "May", "June", 
-                   "July", "August", "September", "October", "November", "December")
-  return(month_names[month_num])
-}
-
 # Extract year and month from Cruise_Id column
 seasons_dataframe <- mutate(seasons_dataframe,
                             year = paste("20", substr(Cruise, 3, 4), sep = ""),
@@ -115,10 +116,59 @@ seasons_dataframe <- mutate(seasons_dataframe,
 seasons_dataframe <- mutate(seasons_dataframe, month_name = sapply(seasons_dataframe$month_num, get_month_name))
 
 # Combine year and month into formatted_date column
-seasons_dataframe <- mutate(seasons_dataframe, formatted_date = paste(month_name, year))
+seasons_dataframe <- mutate(seasons_dataframe, Cruise = paste(month_name, year))
 
 # Drop intermediate columns
 seasons_dataframe <- select(seasons_dataframe, -year, -month_num, -month_name)
+
+
+
+# Extract year and month from Cruise_Id column for whale data frame
+whale <- mutate(whale,
+                year = paste("20", substr(Cruise, 3, 4), sep = ""),
+                month_num = as.integer(substr(Cruise, 5, 6)))
+
+# Convert month number to month name
+whale <- mutate(whale, month_name = sapply(whale$month_num, get_month_name))
+
+# Combine year and month into formatted_date column
+whale <- mutate(whale, Cruise = paste(month_name, year))
+
+# Drop intermediate columns
+whale <- select(whale, -year, -month_num, -month_name)
+
+
+
+# Extract year and month from Cruise_Id column for edna data frame
+edna <- mutate(edna,
+               year = paste("20", substr(cruise, 3, 4), sep = ""),
+               month_num = as.integer(substr(cruise, 5, 6)))
+
+# Convert month number to month name
+edna <- mutate(edna, month_name = sapply(edna$month_num, get_month_name))
+
+# Combine year and month into formatted_date column
+edna <- mutate(edna, cruise = paste(month_name, year))
+
+# Drop intermediate columns
+edna <- select(edna, -year, -month_num, -month_name)
+
+
+
+# Extract year and month from Cruise_Id column for acoustic_detections data frame
+acoustic_detections <- mutate(acoustic_detections,
+                              year = paste("20", substr(Cruise, 3, 4), sep = ""),
+                              month_num = as.integer(substr(Cruise, 5, 6)))
+
+# Convert month number to month name
+acoustic_detections <- mutate(acoustic_detections, month_name = sapply(acoustic_detections$month_num, get_month_name))
+
+# Combine year and month into formatted_date column
+acoustic_detections <- mutate(acoustic_detections, Cruise = paste(month_name, year))
+
+# Drop intermediate columns
+acoustic_detections <- select(acoustic_detections, -year, -month_num, -month_name)
+
 
 
 # function to scale the dots:
@@ -241,7 +291,7 @@ ui <- fluidPage(
                           treecheckInput(
                             inputId =  "all_cruises",
                             label = "Choose Cruise by Season:",
-                            choices = make_tree(seasons_dataframe, c("Season", "formatted_date")),
+                            choices = make_tree(seasons_dataframe, c("Season", "Cruise")),
                             width = "100%",
                             borders = TRUE
                           ),
