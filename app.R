@@ -171,6 +171,22 @@ acoustic_detections <- select(acoustic_detections, -year, -month_num, -month_nam
 
 
 
+# Extract year and month from Cruise_Id column for station_acoustic data frame
+station_acoustic <- mutate(station_acoustic,
+                           year = paste("20", substr(Cruise, 3, 4), sep = ""),
+                           month_num = as.integer(substr(Cruise, 5, 6)))
+
+# Convert month number to month name
+station_acoustic <- mutate(station_acoustic, month_name = sapply(station_acoustic$month_num, get_month_name))
+
+# Combine year and month into formatted_date column
+station_acoustic <- mutate(station_acoustic, Cruise = paste(month_name, year))
+
+# Drop intermediate columns
+station_acoustic <- select(station_acoustic, -year, -month_num, -month_name)
+
+
+
 # function to scale the dots:
 adjustSize <- function(value) {
   if (!is.na(value)){
