@@ -98,6 +98,28 @@ seasons_dataframe <- whale %>% select('Cruise', 'Season', 'Year') %>%
   distinct(Cruise, .keep_all = TRUE)
 
 
+# Defining a function to convert month number to month name
+get_month_name <- function(month_num) {
+  month_names <- c("January", "February", "March", "April", "May", "June", 
+                   "July", "August", "September", "October", "November", "December")
+  return(month_names[month_num])
+}
+
+# Extract year and month from Cruise_Id column
+seasons_dataframe <- mutate(seasons_dataframe,
+                            year = paste("20", substr(Cruise, 3, 4), sep = ""),
+                            month_num = as.integer(substr(Cruise, 5, 6)))
+
+# Convert month number to month name
+seasons_dataframe <- mutate(seasons_dataframe, month_name = sapply(seasons_dataframe$month_num, get_month_name))
+
+# Combine year and month into formatted_date column
+seasons_dataframe <- mutate(seasons_dataframe, formatted_date = paste(month_name, year))
+
+# Drop intermediate columns
+seasons_dataframe <- select(seasons_dataframe, -year, -month_num, -month_name)
+
+
 # function to scale the dots:
 adjustSize <- function(value) {
   if (!is.na(value)){
@@ -218,7 +240,7 @@ ui <- fluidPage(
                           treecheckInput(
                             inputId =  "all_cruises",
                             label = "Choose Cruise by Season:",
-                            choices = make_tree(seasons_dataframe, c("Season", "Cruise")),
+                            choices = make_tree(seasons_dataframe, c("Season", "formatted_date")),
                             width = "100%",
                             borders = TRUE
                           ),
