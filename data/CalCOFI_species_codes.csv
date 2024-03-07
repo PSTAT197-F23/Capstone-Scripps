@@ -1,0 +1,35 @@
+speciesCode,speciesName,taxonomy
+Bp,Fin whale,Mysticete
+Bb,Sei whale,Mysticete
+Bm,Blue whale,Mysticete
+Mn,Humpback whale,Mysticete
+Er,Gray whale,Mysticete
+Be,Brydes whale,Mysticete
+Ba,Minke whale,Mysticete
+Dc,Long-beaked common dolphin ,Odontocete
+Dd,Short-beaked common dolphin,Odontocete
+Lo,Pacific white-sided dolphin,Odontocete
+Gg,Rissos dolphin,Odontocete
+Tt,Bottlenose dolphin,Odontocete
+Lb,Northern right whale dolphin,Odontocete
+Sb,Rough toothed dolphin ,Odontocete
+Sc,Striped dolphin,Odontocete
+Oo,Killer whale,Odontocete
+Pm,Sperm whale,Odontocete
+Pp,Harbor porpoise,Odontocete
+Pd,Dalls porpoise,Odontocete
+Zica,Cuviers beaked whale,Odontocete
+Beba,Bairds beaked whale,Odontocete
+Bbo,Bairds beaked whale,Odontocete
+Pc,False killer whale,Odontocete
+Gm,Short-finned pilot whale,Odontocete
+Ulw,Unidentified large whale,Unidentified
+Ud,Unidentified dolphin,Unidentified
+Dsp,Unidentified common dolphin,Unidentified
+Usc,Unidentified small cetacean,Unidentified
+Usw,Unidentified small whale,Unidentified
+Ubw,Unidentified beaked whale,Unidentified
+Unziph,Unidentified ziphid,Unidentified
+Uc,Unidentified cetacean,Unidentified
+Oth,Other,Unidentified
+Uo,Unidentified odontocete,Unidentified
