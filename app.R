@@ -24,6 +24,7 @@ library(shinytreeview)
 library(shinyWidgets)
 #install.packages("purrr")
 library(purrr)
+library(shinydashboard)
 
 
 # Defining a function to convert month number to month name
@@ -215,7 +216,7 @@ adjustSize <- function(value) {
     } 
     else {
       return((log(value) * 2000) + 3750)
-
+      
     }
   }
 }
@@ -271,7 +272,7 @@ ui <- fluidPage(
         margin-left: -1px; /* Adjust icon position */
       }
     "),
-    tags$style(HTML("
+               tags$style(HTML("
       .custom-modal .modal-dialog {
         width: 60%; /* Set the width */
         height: 40%; /* Set the height */
@@ -300,139 +301,119 @@ ui <- fluidPage(
   theme = shinytheme("flatly"),
   #create a navigation bar for the top of the app, and give it a main title
   
-  navbarPage("SAEL CalCOFI ShinyApp",
-             #tabPanel("Datasets", 
-             #         dataTableOutput("dataset1Table"), 
-             #         dataTableOutput("dataset2Table")
-             #),
-             tabPanel("Species Map",
-                      tags$h2("Interactive Cetacean Species Map", align = "center"),
-                      tags$h6("Species presence data from CalCOFI."),
-                      sidebarLayout(
-                        sidebarPanel(id = "sidebar-container",
-                          sliderInput(inputId = 'years', 
-                                      label = 'Years', 
-                                      min = min(whale$Year, na.rm = TRUE), 
-                                      max = max(whale$Year, na.rm = TRUE), 
-                                      value = c(2004, 2022),
-                                      step = 1,
-                                      sep = "", 
-                                      animate = animationOptions(
-                                        interval = 500,
-                                        loop = FALSE,
-                                        playButton = icon("play", "fa-2x"),
-                                        pauseButton = icon("pause", "fa-2x")
-                                      )
-                          ),
-                          treecheckInput(
-                            inputId =  "all_cruises",
-                            label = "Choose Cruise by Season:",
-                            choices = make_tree(seasons_dataframe, c("Season", "Cruise")),
-                            width = "100%",
-                            borders = TRUE
-                          ),
-                          
-                          
-                          # display sightings toggle:
-                          materialSwitch(inputId = "sightings", label = "Display Sightings", value = TRUE, status = "primary"),
-                          
-                          # display stations toggle:
-                          materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
-                          
-                          # display visual effort toggle:
-                          materialSwitch(inputId = "viz", label = "Display Visual Effort", status = "danger"),
-                          
-                          # display eDNA toggle:
-                          materialSwitch(inputId = "edna", label = "Display eDNA Data", status = "success"),
-                          
-                          # display acoustic data toggle:
-                          materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
-                          
-                          
-                          # add collapsible checkboxes for suborders and species:
-                          treecheckInput(
-                            inputId = "all_species",
-                            label = "Choose Species:",
-                            choices = make_tree(species_list, c('Suborder', 'Family', 'Species')),
-                            width = '100%',
-                            borders = TRUE
-                          ),
-                          # Add reset map zoom button here
-                          div(
-                            style = "margin-bottom: 5px; text-align: left;",
-                            tags$label("Map Settings:")
-                          ),
-                          div(
-                            style = "margin-bottom: 10px; text-align: left;",  # Increase margin for more space
-                            actionButton("resetZoom", "Reset Map", width = '150px',
-                                         style = 'border-color: #565655; background-color: #007bff; padding: 3px')
-                          ),
-                          div(
-                            style = "margin-bottom: 10px; text-align: left;",
-                            selectInput("provider", label = "Select Map Provider:", 
-                                        choices = c("CartoDB.Positron", "OpenStreetMap.Mapnik",
-                                                    "Esri.NatGeoWorldMap", "Esri.WorldTerrain", 
-                                                    "Esri.WorldImagery"), #"CartoDB.DarkMatter", "Esri.WorldPhysical", "Esri.WorldImagery",
-                                                                          #"Esri.WorldTerrain","USGS.USImageryTopo" 
+  dashboardPage(skin="blue",
+  dashboardHeader(title="SAEL CalCOFI ShinyApp"),
+  dashboardSidebar(width = 300,
+                   sidebarMenu(
+                     HTML(paste0(
+                       "<br>",
+                       "<a target='_blank'><img style = 'display: block; margin-left: auto; margin-right: auto;' src='CalCofi Logo.png' width = '186'></a>",
+                       "<br>")),
+                     menuItem("Home", tabName="info", icon = icon("home")),
+                     menuItem("Species Map", tabName="map", icon = icon("thumbtack"))
+                     
+                   )),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "info",
+              includeMarkdown("Capstone-Scripps/more_information.Rmd"),
+              HTML('<img src="edna_poster.jpg", height="600",width="100 style="float:left" usemap="#edna_map">',
+                   '<map name="edna_map">',
+                   '<area shape="rect" coords="40,10,440,180" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
+                   '<area shape="rect" coords="150,400,800,550" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
+                   '<area shape="rect" coords="540,0,730,80" href="https://calcofi.org/data/marine-ecosystem-data/seabirds/" title="CalCofi Seabirds">',
+                   '<area shape="rect" coords="500,130,770,320" href="https://calcofi.org/data/marine-ecosystem-data/marine-mammals/" title="CalCofi Marine Mammals">',
+                   '</map>'
+                   )
+              ),
+      tabItem(tabName = "map",
+              #leafletOutput("mymap"),
+              sidebarLayout(
+                sidebarPanel(id = "sidebar-container",
+                             sliderInput(inputId = 'years',
+                                         label = 'Years',
+                                         min = min(whale$Year, na.rm = TRUE),
+                                         max = max(whale$Year, na.rm = TRUE),
+                                         value = c(2004, 2022),
+                                         step = 1,
+                                         sep = "",
+                                         animate = animationOptions(
+                                           interval = 500,
+                                           loop = FALSE,
+                                           playButton = icon("play", "fa-2x"),
+                                           pauseButton = icon("pause", "fa-2x")
+                                         )
+                             ),
+                             treecheckInput(
+                               inputId =  "all_cruises",
+                               label = "Choose Cruise by Season:",
+                               choices = make_tree(seasons_dataframe, c("Season", "Cruise")),
+                               width = "100%",
+                               borders = TRUE
+                             ),
 
-                                        selected = "CartoDB.Positron"),
-                          ),
-                          div(
-                            style = "margin-bottom: 5px; text-align: left;",
-                            tags$label("UI Settings:")
-                          ),
-                          themeSelector(),
-                        ),
 
-                        
-                        mainPanel(
-                          tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-                          
-                          leafletOutput(outputId = "mymap")),
-                        
-                      )
-             ),
-             
-             tabPanel("More information",
-                      tags$h1("Data description"),
-                      tags$h5('California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on
-                              the CalCOFI website:'), 
-                      tags$a(href="https://calcofi.org/","https://calcofi.org/", style='color:#FFFFFF'),
-                      tags$h5("The purpose of this Shiny App is to provide scientists with an interactive tool to 
-                              visualize marine mammal data collected onboard CalCOFI. Here we integrate multiple datastreams, 
-                              highlighting how marine mammal visual sightings and eDNA detections are represented through time and space. 
-                              Please stay tuned for the addition of acoustic detections in a future release. By integrating visual, acoustic, and genetic sampling methods, 
-                              we hope to better understand the detection capabilities of each method for detecting marine mammals in their environment."),
-                      
-                      
-                      
-                      tags$h3("CalCOFI marine mammal visual survey data"),
-                      tags$h5("Marine mammal visual line-transect surveys have been conducted on quarterly CalCOFI cruises since 2004. Visual surveys are 
-                              conducted during daylight hours while the ship is in transit between CalCOFI stations. More information about visual
-                              survey protocol can be found in Campbell et al. (2015):"),
-                      tags$a(href="https://doi.org/10.1016/j.dsr2.2014.10.008","https://doi.org/10.1016/j.dsr2.2014.10.008", style='color:#FFFFFF'),
-                      tags$h5("Per-cruise marine mammal visual survey effort is visible by clicking 'Display Visual Effort'. Additionally, sighting group size estimates are visible by selecting a species from the drop-down menu, 
-                              where circle size on the map is proportional to group size. Only cetacean sightings are included in this interactive map. By selecting a sighting on the map, more information will pop up about that specific sighting."),
-                      
-                      tags$h3("CalCOFI marine mammal eDNA data"),
-                      tags$h5("The NOAA CalCOFI Genomic Program (NCOG) has collected envrionmental DNA samples (eDNA) since 2014. Here we used metabarcoding assays to 
-                              detect cetacean species from water samples collected at 10, 20, or 40 meters. The 'Display eDNA' function will plot eDNA sampling effort as opaque black circles, and eDNA detections as blue flags. By selecting a detection on the map, more information about that specific detection will pop up.  "), 
-                      
-                      tags$h3("UCSB Data Science Capstone"),
-                      tags$h5("The Data Science Capstone is a three-course sequence at the University of California, Santa Barbara (UCSB) in which students engage in project-based learning with data-intensive methodologies with the hopes of making a positive impact on the world. 
-                              As their project, seven students from the program upgraded this Shiny app to implement new data, improve functionality, and enhance user experience."),
-                      
-                      tags$h4("Co-authors"),
-                      tags$h5("Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, 
-                              Erin Satterthwaite, Brice Semmens, Simone Baumann-Pickering,
-                              Luis Barajas, Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan Zhang."),
-                      
-                      tags$h4("Funding Sources"),
-                      tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
-                      tags$h5("Office of Naval Research, US Navy Pacific Fleet"),
-             )
-  )
-)
+                             # display sightings toggle:
+                             materialSwitch(inputId = "sightings", label = "Display Sightings", value = TRUE, status = "primary"),
+
+                             # display stations toggle:
+                             materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
+
+                             # display visual effort toggle:
+                             materialSwitch(inputId = "viz", label = "Display Visual Effort", status = "danger"),
+
+                             # display eDNA toggle:
+                             materialSwitch(inputId = "edna", label = "Display eDNA Data", status = "success"),
+
+                             # display acoustic data toggle:
+                             materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
+
+
+                             # add collapsible checkboxes for suborders and species:
+                             treecheckInput(
+                               inputId = "all_species",
+                               label = "Choose Species:",
+                               choices = make_tree(species_list, c('Suborder', 'Family', 'Species')),
+                               width = '100%',
+                               borders = TRUE
+                             ),
+                             # Add reset map zoom button here
+                             div(
+                               style = "margin-bottom: 5px; text-align: left;",
+                               tags$label("Map Settings:")
+                             ),
+                             div(
+                               style = "margin-bottom: 10px; text-align: left;",  # Increase margin for more space
+                               actionButton("resetZoom", "Reset Map", width = '150px',
+                                            style = 'border-color: #565655; background-color: #007bff; padding: 3px')
+                             ),
+                             div(
+                               style = "margin-bottom: 10px; text-align: left;",
+                               selectInput("provider", label = "Select Map Provider:",
+                                           choices = c("CartoDB.Positron", "OpenStreetMap.Mapnik",
+                                                       "Esri.NatGeoWorldMap", "Esri.WorldTerrain",
+                                                       "Esri.WorldImagery"), #"CartoDB.DarkMatter", "Esri.WorldPhysical", "Esri.WorldImagery",
+                                           #"Esri.WorldTerrain","USGS.USImageryTopo"
+
+                                           selected = "CartoDB.Positron"),
+                             ),
+                             div(
+                               style = "margin-bottom: 5px; text-align: left;",
+                               tags$label("UI Settings:")
+                             ),
+                             themeSelector(),
+                                        ),
+                mainPanel(
+                  tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
+                  
+                  leafletOutput(outputId = "mymap"))
+              )
+      )
+    )
+  )))
+
+
+
 
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
 server <- function(input, output, session) {
@@ -454,7 +435,7 @@ server <- function(input, output, session) {
     showModal(modalDialog(
       title = "CalCOFI eDNA Sampling",
       div(class = "custom-modal-content",
-
+          
           div(img(src = "edna_poster.jpg", style = "height: 60vh; width: 50vw;")), # Adjusted size using vh and vw units
           div(style = "margin-bottom: 20px;"), # Empty div for spacing
           div(style = "width: 50vw; margin: 0 auto;",
@@ -472,7 +453,7 @@ server <- function(input, output, session) {
               assay design, and data interpretation to maximize the reliability and accuracy of eDNA-based monitoring programs for marine mammal assessment and conservation."),
               div(style = "margin-bottom: 20px;"), # Empty div for spacing
               div("Suarez-Bregua, Paula, et al. “Environmental DNA (Edna) for Monitoring Marine Mammals: Challenges and Opportunities.” Frontiers, Frontiers, 5 Sept. 2022, www.frontiersin.org/articles/10.3389/fmars.2022.987774/full.")
-
+              
           ),
           actionButton("next_button", "Next Page")
       ),
@@ -519,7 +500,7 @@ server <- function(input, output, session) {
                   Underway visual observations of marine mammals were conducted while under transit and sonobuoys deployed before stations as the acoustic component. 
                   Other underway science included continuous pCO2/pH and meteorological measurements. The cruise ended in San Francisco at Pier 30/32 on 26 Jan 2020 at 1300PDT.")
           ),
-    ),
+      ),
       size = 'l',
       easyClose = TRUE,
       footer = NULL,
@@ -527,7 +508,7 @@ server <- function(input, output, session) {
     ))
   })
   
-
+  
   observeEvent(input$sites, { # when the user selects the display sites input button
     if (input$sites > 0) {
       leafletProxy("mymap", session) %>% # add a layer to the map
@@ -596,7 +577,7 @@ server <- function(input, output, session) {
       setView(lng = -121, lat = 34, zoom = 6.5) %>%
       addProviderTiles(input$provider)
   })
-
+  
   # OBS DATA
   # create reactivity for obs data
   # reactive expression filters dataset based on input conditions and returns filtered subset of the data
@@ -930,7 +911,7 @@ server <- function(input, output, session) {
     iconUrl = "assests/music-note-purple.png",
     iconWidth = 35, iconHeight = 35
   )
-
+  
   
   # observe layer for acoustic effort data reactivity
   observe({
@@ -944,19 +925,19 @@ server <- function(input, output, session) {
       if (!is.null(acousticEffortFilter2())) {
         leafletProxy("mymap", session) %>%
           addCircles(
-
-          # lng = as.numeric(acousticEffortFilter()$longitude),
-          #  lat = as.numeric(acousticEffortFilter()$latitude),
-           # radius = 5000,  # Adjust the radius as needed
-           # color = "black",  # Border color
-           # fillColor = "black",  # Fill color
-
+            
+            # lng = as.numeric(acousticEffortFilter()$longitude),
+            #  lat = as.numeric(acousticEffortFilter()$latitude),
+            # radius = 5000,  # Adjust the radius as needed
+            # color = "black",  # Border color
+            # fillColor = "black",  # Fill color
+            
             lng = as.numeric(acousticEffortFilter2()$Longitude),
             lat = as.numeric(acousticEffortFilter2()$Latitude),
             radius = normalize_effort(acousticEffortFilter2()$Effort)*6000, # Adjust the radius as needed
             color = "gray",  # Border color
             fillColor = "gray",  # Fill color
-
+            
             popup = paste("Acoustic Effort",
                           "<br>Line:", as.character(acousticEffortFilter2()$Line),
                           "<br>Station:", as.character(acousticEffortFilter2()$Station),
@@ -967,9 +948,9 @@ server <- function(input, output, session) {
             group = "acoustic"
           ) %>%
           addLegend("topleft",
-
+                    
                     colors = "gray",
-
+                    
                     labels = "Acoustic Effort",
                     opacity = 1,
                     layerId = "acoustic_effort_legend"
@@ -1010,7 +991,7 @@ server <- function(input, output, session) {
     if(input$acoustic > 0) {
       leafletProxy("mymap", session) %>%
         clearGroup("acoustic_detection") # clear existing acoustic detection
-
+      
       if (!is.null(acousticDetectionFilter2()$Longitude)){
         
         leafletProxy("mymap", session) %>%
@@ -1019,7 +1000,7 @@ server <- function(input, output, session) {
             lat = as.numeric(acousticDetectionFilter2()$Latitude),
             icon = musicNoteIcon,
             popup = paste(gsub("\n", "<br>", acousticDetectionFilter2()$FormattedString)), 
-
+            
             group = "acoustic_detection"
           ) %>%
           addLegend("topleft",
@@ -1075,11 +1056,11 @@ server <- function(input, output, session) {
   acousticDetectionFilter2 <- reactive({
     
     data <- filter(acoustic_detections, acoustic_detections$Cruise %in% input$all_cruises 
-           & acoustic_detections$SpeciesName %in% input$all_species
-           & acoustic_detections$Year >= input$years[1] 
-           & acoustic_detections$Year <= input$years[2])
+                   & acoustic_detections$SpeciesName %in% input$all_species
+                   & acoustic_detections$Year >= input$years[1] 
+                   & acoustic_detections$Year <= input$years[2])
     
-
+    
     if(nrow(data) == 0) {
       temp <- data.frame(Line = character(), Station = character(), SpeciesName = character(), Duration = numeric())
     } else {
@@ -1112,7 +1093,7 @@ server <- function(input, output, session) {
     names(station_copy)[names(station_copy) == "Lat..dec."] <- "Latitude"
     
     transform_data <- function(df) {
-
+      
       df_grouped <- df %>% group_by(Line, Station, Latitude, Longitude)
       
       df_transformed <- df_grouped %>%
@@ -1124,7 +1105,7 @@ server <- function(input, output, session) {
       return(df_transformed)
     }
     
-
+    
     rslt<- transform_data(merge(temp, station_copy, by = c("Station", "Line")))
     
     format_detection <- function(detection) {
@@ -1145,9 +1126,9 @@ server <- function(input, output, session) {
   })
   
   # Render dataset1
- # output$dataset1Table <- renderDataTable({
- #   acousticDetectionFilter2()
- # })
+  # output$dataset1Table <- renderDataTable({
+  #   acousticDetectionFilter2()
+  # })
   
   
   acousticEffortFilter2 <- reactive({
@@ -1164,9 +1145,9 @@ server <- function(input, output, session) {
   })
   
   # Render dataset2
- # output$dataset2Table <- renderDataTable({
+  # output$dataset2Table <- renderDataTable({
   #  acousticEffortFilter2()
- # })
+  # })
 }
 
 # #Finally, we tell R to use the user interface and the server together to build our app!
