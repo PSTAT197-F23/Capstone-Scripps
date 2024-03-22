@@ -25,6 +25,7 @@ library(shinyWidgets)
 #install.packages("purrr")
 library(purrr)
 library(shinydashboard)
+library(DT)
 
 
 # Defining a function to convert month number to month name
@@ -42,7 +43,7 @@ whale$Season <- trimws(whale$Season)
 whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
 whale = whale[-1105,]
 station <- read.csv("data/CalCOFIStationOrder.csv")
-edna <- read.csv("data/edna.csv")
+edna <- read.csv("data/edna-processed.csv")
 colnames(edna)[colnames(edna) == "year"] ="Year"
 viz <- read.csv("data/CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
 acoustic_detections <- read.csv("data/acoustic_detections.csv")
@@ -327,7 +328,7 @@ ui <- fluidPage(
                    )
               ),
       tabItem(tabName = "map",
-              #leafletOutput("mymap"),
+              # DTOutput("myTable"), for testing, dont remove plsssssssssssssss :)
               sidebarLayout(
                 sidebarPanel(id = "sidebar-container",
                              sliderInput(inputId = 'years',
@@ -417,6 +418,10 @@ ui <- fluidPage(
 
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
 server <- function(input, output, session) {
+  
+  #output$myTable <- renderDT({ # for testing, dont REMOVE >:(
+  #  insert data set
+  #})
   
   
   observeEvent(input$resetZoom, {
@@ -764,9 +769,38 @@ server <- function(input, output, session) {
                                        & edna$Year <= input$years[2])})
   
   
-  ednaDetectionFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises & edna$SpeciesName!="NA" 
+  ednaDetectionFilter <- reactive({
+      data <- filter(edna, edna$cruise %in% input$all_cruises 
+                                          & edna$SpeciesName %in% input$all_species
                                           & edna$Year >= input$years[1] 
                                           & edna$Year <= input$years[2])
+      
+      transform_data <- function(df) {
+        
+        df_grouped <- df %>% group_by(line, station, latitude, longitude)
+        
+        df_transformed <- df_grouped %>%
+          summarise(
+            Detections = list(SpeciesName),
+            .groups = 'drop' 
+          )
+        
+        return(df_transformed)
+      }
+      
+      format_species <- function(species_string) {
+        if (length(species_string) == 1) {
+          return(species_string)
+        }
+        combined_string <- paste(species_string, collapse = ", ")
+        return(combined_string)
+      }
+      
+      rslt <- transform_data(data)
+      
+      rslt$FormattedDetections <- sapply(rslt$Detections, format_species, USE.NAMES = FALSE)
+      
+      return(rslt)
     
   })
   
@@ -847,7 +881,7 @@ server <- function(input, output, session) {
             lng = as.numeric(ednaDetectionFilter()$longitude),
             lat = as.numeric(ednaDetectionFilter()$latitude),
             icon = greenHelixIcon,
-            popup = paste("eDNA Detection:",as.character(ednaDetectionFilter()$SpeciesName),
+            popup = paste("eDNA Detection:",as.character(ednaDetectionFilter()$FormattedDetections),
                           "<br>Sample Depth (m):", as.character(ednaDetectionFilter()$depth),
                           "<br>Line:",as.character(ednaDetectionFilter()$line),
                           "<br>Station:",as.character(ednaDetectionFilter()$station)) %>%
@@ -1125,11 +1159,6 @@ server <- function(input, output, session) {
     
   })
   
-  # Render dataset1
-  # output$dataset1Table <- renderDataTable({
-  #   acousticDetectionFilter2()
-  # })
-  
   
   acousticEffortFilter2 <- reactive({
     data <- filter(station_acoustic, station_acoustic$Cruise %in% input$all_cruises
@@ -1144,10 +1173,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Render dataset2
-  # output$dataset2Table <- renderDataTable({
-  #  acousticEffortFilter2()
-  # })
+
 }
 
 # #Finally, we tell R to use the user interface and the server together to build our app!
