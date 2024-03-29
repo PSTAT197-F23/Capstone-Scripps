@@ -397,12 +397,11 @@ ui <- fluidPage(
                       tags$h1("Data description"),
                       tags$h5('California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on
                               the CalCOFI website:'), 
-                      tags$a(href="https://calcofi.org/","https://calcofi.org/", style='color:#FFFFFF'),
+                      tags$a(href="https://calcofi.org/","https://calcofi.org/"),
                       tags$h5("The purpose of this Shiny App is to provide scientists with an interactive tool to 
                               visualize marine mammal data collected onboard CalCOFI. Here we integrate multiple datastreams, 
-                              highlighting how marine mammal visual sightings and eDNA detections are represented through time and space. 
-                              Please stay tuned for the addition of acoustic detections in a future release. By integrating visual, acoustic, and genetic sampling methods, 
-                              we hope to better understand the detection capabilities of each method for detecting marine mammals in their environment."),
+                              highlighting how marine mammal visual sightings, acoustic detections, and environmental DNA detections are represented through time and space. 
+                              By integrating visual, acoustic, and genetic sampling methods, we hope to better understand the detection capabilities of each method for detecting marine mammals in their environment."),
                       
                       
                       
@@ -410,7 +409,7 @@ ui <- fluidPage(
                       tags$h5("Marine mammal visual line-transect surveys have been conducted on quarterly CalCOFI cruises since 2004. Visual surveys are 
                               conducted during daylight hours while the ship is in transit between CalCOFI stations. More information about visual
                               survey protocol can be found in Campbell et al. (2015):"),
-                      tags$a(href="https://doi.org/10.1016/j.dsr2.2014.10.008","https://doi.org/10.1016/j.dsr2.2014.10.008", style='color:#FFFFFF'),
+                      tags$a(href="https://doi.org/10.1016/j.dsr2.2014.10.008","https://doi.org/10.1016/j.dsr2.2014.10.008"),
                       tags$h5("Per-cruise marine mammal visual survey effort is visible by clicking 'Display Visual Effort'. Additionally, sighting group size estimates are visible by selecting a species from the drop-down menu, 
                               where circle size on the map is proportional to group size. Only cetacean sightings are included in this interactive map. By selecting a sighting on the map, more information will pop up about that specific sighting."),
                       
@@ -423,9 +422,10 @@ ui <- fluidPage(
                               As their project, seven students from the program upgraded this Shiny app to implement new data, improve functionality, and enhance user experience."),
                       
                       tags$h4("Co-authors"),
-                      tags$h5("Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, 
-                              Erin Satterthwaite, Brice Semmens, Simone Baumann-Pickering,
-                              Luis Barajas, Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan Zhang."),
+                      tags$h5("Luis Barajas, Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan Zhang, 
+                              Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, 
+                              Erin Satterthwaite, Brice Semmens, Simone Baumann-Pickering
+                              "),
                       
                       tags$h4("Funding Sources"),
                       tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
