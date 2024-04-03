@@ -355,7 +355,7 @@ ui <- fluidPage(
 
 
                              # display sightings toggle:
-                             materialSwitch(inputId = "sightings", label = "Display Sightings", value = TRUE, status = "primary"),
+                             materialSwitch(inputId = "sightings", label = "Display Sightings", status = "primary"),
 
                              # display stations toggle:
                              materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
@@ -673,7 +673,18 @@ server <- function(input, output, session) {
     iconUrl = "https://cdn-icons-png.flaticon.com/512/922/922105.png",
     iconWidth = 35, iconHeight = 35
   )
+
+  # icon for eDNA efforts on map
+  blackHelixIcon <- makeIcon(
+    iconUrl = "https://cdn-icons-png.flaticon.com/512/620/620401.png",
+    iconWidth = 35, iconHeight = 35
+  )
   
+  # alternate icon for eDNA efforts on map (gray)
+  # blackHelixIcon <- makeIcon(
+  #   iconUrl = "https://cdn-icons-png.freepik.com/512/4102/4102105.png",
+  #   iconWidth = 35, iconHeight = 35
+  # )
   
   # observe layer for obs data reactivity
   observe({
@@ -815,19 +826,15 @@ server <- function(input, output, session) {
         clearGroup("edna") # clear existing edna first
       if (!is.null(ednaEffortFilter()$longitude)) {
         leafletProxy("mymap", session) %>%
-          addCircles(
+          addMarkers(
             lng = as.numeric(ednaEffortFilter()$longitude),
             lat = as.numeric(ednaEffortFilter()$latitude),
-            radius = 5000,  # Adjust the radius as needed
-            color = "black",  # Border color
-            fillColor = "black",  # Fill color
+            icon = blackHelixIcon,
             popup = paste("eDNA Effort",
                           "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
                           "<br>Line:", as.character(ednaEffortFilter()$line),
                           "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
               lapply(htmltools::HTML),
-            opacity = 1,
-            fillOpacity = 1,
             group = "edna"
           ) %>%
           clearControls() %>%
