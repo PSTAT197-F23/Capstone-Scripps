@@ -26,6 +26,9 @@ library(shinyWidgets)
 library(purrr)
 library(shinydashboard)
 library(DT)
+library(htmlwidgets)
+
+jsfile <- "https://rawgit.com/rowanwins/leaflet-easyPrint/gh-pages/dist/bundle.js"
 
 
 # Defining a function to convert month number to month name
@@ -405,13 +408,13 @@ ui <- fluidPage(
                              themeSelector(),
                                         ),
                 mainPanel(
-                  tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-                  
-                  leafletOutput(outputId = "mymap"))
+                  tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"), #this map size only applies to the interactive map
+                  tags$head(tags$script(src = jsfile)), #jsfile contains the easyprint function to download map with labels
+                  leafletOutput(outputId = "mymap", width="100%", height="auto") #this map size is only applied to the downloaded map
               )
       )
     )
-  )))
+  ))))
 
 
 
@@ -577,10 +580,21 @@ server <- function(input, output, session) {
   })
   
   
+  
   output$mymap <- renderLeaflet({
     leaflet() %>%
       setView(lng = -121, lat = 34, zoom = 6.5) %>%
-      addProviderTiles(input$provider)
+      addProviderTiles(input$provider) %>%
+      onRender(
+        "function(el, x) {
+            L.easyPrint({
+              sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
+              filename: 'mymap',
+              exportOnly: true,
+              hideControlContainer: false
+            }).addTo(this);
+            }"
+      )
   })
   
   # OBS DATA
