@@ -411,6 +411,8 @@ ui <- fluidPage(
                   tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"), #this map size only applies to the interactive map
                   tags$head(tags$script(src = jsfile)), #jsfile contains the easyprint function to download map with labels
                   leafletOutput(outputId = "mymap", width="100%", height="auto") #this map size is only applied to the downloaded map
+                  #Using height = 'auto' causes the inconsistency in the downloaded map size
+                  #However, setting the height to be dynamic is the only way to capture the current window size.
               )
       )
     )
@@ -587,6 +589,8 @@ server <- function(input, output, session) {
       addProviderTiles(input$provider) %>%
       onRender(
         "function(el, x) {
+            this.zoomIn(1); // Increase the zoom level by 1
+            this.zoomOut(1); //Atempt to resolve edge case
             L.easyPrint({
               sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
               filename: 'mymap',
