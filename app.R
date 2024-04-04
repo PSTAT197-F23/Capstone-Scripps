@@ -28,7 +28,7 @@ library(shinydashboard)
 library(DT)
 library(htmlwidgets)
 
-jsfile <- "https://rawgit.com/rowanwins/leaflet-easyPrint/gh-pages/dist/bundle.js"
+jsfile <- "bundle.js" # the bundle.js file is in the `www` directory, pls do not change the directory name
 
 
 # Defining a function to convert month number to month name
