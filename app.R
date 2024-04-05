@@ -26,6 +26,9 @@ library(shinyWidgets)
 library(purrr)
 library(shinydashboard)
 library(DT)
+library(htmlwidgets)
+
+jsfile <- "bundle.js" # the bundle.js file is in the `www` directory, pls do not change the directory name
 
 
 # Defining a function to convert month number to month name
@@ -42,6 +45,9 @@ whale <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
 whale$Season <- trimws(whale$Season)
 whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
 whale = whale[-1105,]
+whale = subset(whale, DecLat < 39) # restrict latitude values to CalCOFI cruise area
+whale = subset(whale, DecLong < -113) # restrict longitude values
+whale = whale[-2064,] # removing inland bottlenose dolphin sighting 
 station <- read.csv("data/CalCOFIStationOrder.csv")
 edna <- read.csv("data/edna-processed.csv")
 colnames(edna)[colnames(edna) == "year"] ="Year"
@@ -355,7 +361,7 @@ ui <- fluidPage(
 
 
                              # display sightings toggle:
-                             materialSwitch(inputId = "sightings", label = "Display Sightings", value = TRUE, status = "primary"),
+                             materialSwitch(inputId = "sightings", label = "Display Sightings", status = "primary"),
 
                              # display stations toggle:
                              materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
@@ -405,13 +411,15 @@ ui <- fluidPage(
                              themeSelector(),
                                         ),
                 mainPanel(
-                  tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-                  
-                  leafletOutput(outputId = "mymap"))
+                  tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"), #this map size only applies to the interactive map
+                  tags$head(tags$script(src = jsfile)), #jsfile contains the easyprint function to download map with labels
+                  leafletOutput(outputId = "mymap", height="auto") #this map size is only applied to the downloaded map
+                  #Using height = 'auto' causes the inconsistency in the downloaded map size
+                  #However, setting the height to be dynamic is the only way to capture the current window size.
               )
       )
     )
-  )))
+  ))))
 
 
 
@@ -626,10 +634,25 @@ server <- function(input, output, session) {
   })
   
   
+  
   output$mymap <- renderLeaflet({
     leaflet() %>%
       setView(lng = -121, lat = 34, zoom = 6.5) %>%
-      addProviderTiles(input$provider)
+      addProviderTiles(input$provider) %>%
+      onRender(
+        "function(el, x) {
+            this.zoomIn(1); // Increase the zoom level by 1
+            this.zoomOut(1); //Atempt to resolve edge case
+            var newCenter = L.latLng(this.getCenter().lat, this.getCenter().lng - 0.1);
+            this.setView(newCenter, this.getZoom());
+            L.easyPrint({
+              sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
+              filename: 'mymap',
+              exportOnly: true,
+              hideControlContainer: false
+            }).addTo(this);
+            }"
+      )
   })
   
   # OBS DATA
@@ -722,7 +745,18 @@ server <- function(input, output, session) {
     iconUrl = "https://cdn-icons-png.flaticon.com/512/922/922105.png",
     iconWidth = 35, iconHeight = 35
   )
+
+  # icon for eDNA efforts on map
+  blackHelixIcon <- makeIcon(
+    iconUrl = "https://cdn-icons-png.flaticon.com/512/620/620401.png",
+    iconWidth = 35, iconHeight = 35
+  )
   
+  # alternate icon for eDNA efforts on map (gray)
+  # blackHelixIcon <- makeIcon(
+  #   iconUrl = "https://cdn-icons-png.freepik.com/512/4102/4102105.png",
+  #   iconWidth = 35, iconHeight = 35
+  # )
   
   # observe layer for obs data reactivity
   observe({
@@ -864,19 +898,15 @@ server <- function(input, output, session) {
         clearGroup("edna") # clear existing edna first
       if (!is.null(ednaEffortFilter()$longitude)) {
         leafletProxy("mymap", session) %>%
-          addCircles(
+          addMarkers(
             lng = as.numeric(ednaEffortFilter()$longitude),
             lat = as.numeric(ednaEffortFilter()$latitude),
-            radius = 5000,  # Adjust the radius as needed
-            color = "black",  # Border color
-            fillColor = "black",  # Fill color
+            icon = blackHelixIcon,
             popup = paste("eDNA Effort",
                           "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
                           "<br>Line:", as.character(ednaEffortFilter()$line),
                           "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
               lapply(htmltools::HTML),
-            opacity = 1,
-            fillOpacity = 1,
             group = "edna"
           ) %>%
           clearControls() %>%
