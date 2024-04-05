@@ -4,7 +4,7 @@
 # last udpated: 10/13/23
 
 # load the libraries
-# remotes::install_github("dreamRs/shinytreeview")
+remotes::install_github("dreamRs/shinytreeview")
 library(shiny)
 library(shinyjs)
 library(shinyBS)
@@ -26,6 +26,9 @@ library(shinyWidgets)
 library(purrr)
 library(shinydashboard)
 library(DT)
+library(htmlwidgets)
+
+jsfile <- "bundle.js" # the bundle.js file is in the `www` directory, pls do not change the directory name
 
 
 # Defining a function to convert month number to month name
@@ -42,6 +45,9 @@ whale <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
 whale$Season <- trimws(whale$Season)
 whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
 whale = whale[-1105,]
+whale = subset(whale, DecLat < 39) # restrict latitude values to CalCOFI cruise area
+whale = subset(whale, DecLong < -113) # restrict longitude values
+whale = whale[-2064,] # removing inland bottlenose dolphin sighting 
 station <- read.csv("data/CalCOFIStationOrder.csv")
 edna <- read.csv("data/edna-processed.csv")
 colnames(edna)[colnames(edna) == "year"] ="Year"
@@ -405,19 +411,70 @@ ui <- fluidPage(
                              themeSelector(),
                                         ),
                 mainPanel(
-                  tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-                  
-                  leafletOutput(outputId = "mymap"))
+                  tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"), #this map size only applies to the interactive map
+                  tags$head(tags$script(src = jsfile)), #jsfile contains the easyprint function to download map with labels
+                  leafletOutput(outputId = "mymap", height="auto") #this map size is only applied to the downloaded map
+                  #Using height = 'auto' causes the inconsistency in the downloaded map size
+                  #However, setting the height to be dynamic is the only way to capture the current window size.
               )
       ),
       tabItem(tabName = "moreinfo",
               includeMarkdown("scripts/more_info_page.Rmd")
-      )
-      )
-  )))
+
+    )
+  ))))
 
 
 
+
+                        mainPanel(
+                          tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
+                          
+                          leafletOutput(outputId = "mymap"))
+                        
+                      
+             
+             
+             tabPanel("More information",
+                      tags$h1("Data description"),
+                      tags$h5('California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on
+                              the CalCOFI website:'), 
+                      tags$a(href="https://calcofi.org/","https://calcofi.org/"),
+                      tags$h5("The purpose of this Shiny App is to provide scientists with an interactive tool to 
+                              visualize marine mammal data collected onboard CalCOFI. Here we integrate multiple datastreams, 
+                              highlighting how marine mammal visual sightings, acoustic detections, and environmental DNA detections are represented through time and space. 
+                              By integrating visual, acoustic, and genetic sampling methods, we hope to better understand the detection capabilities of each method for detecting marine mammals in their environment."),
+                      
+                      
+                      
+                      tags$h3("CalCOFI marine mammal visual survey data"),
+                      tags$h5("Marine mammal visual line-transect surveys have been conducted on quarterly CalCOFI cruises since 2004. Visual surveys are 
+                              conducted during daylight hours while the ship is in transit between CalCOFI stations. More information about visual
+                              survey protocol can be found in Campbell et al. (2015):"),
+                      tags$a(href="https://doi.org/10.1016/j.dsr2.2014.10.008","https://doi.org/10.1016/j.dsr2.2014.10.008"),
+                      tags$h5("Per-cruise marine mammal visual survey effort is visible by clicking 'Display Visual Effort'. Additionally, sighting group size estimates are visible by selecting a species from the drop-down menu, 
+                              where circle size on the map is proportional to group size. Only cetacean sightings are included in this interactive map. By selecting a sighting on the map, more information will pop up about that specific sighting."),
+                      
+                      tags$h3("CalCOFI marine mammal eDNA data"),
+                      tags$h5("The NOAA CalCOFI Genomic Program (NCOG) has collected envrionmental DNA samples (eDNA) since 2014. Here we used metabarcoding assays to 
+                              detect cetacean species from water samples collected at 10, 20, or 40 meters. The 'Display eDNA' function will plot eDNA sampling effort as opaque black circles, and eDNA detections as blue flags. By selecting a detection on the map, more information about that specific detection will pop up.  "), 
+                      
+                      tags$h3("UCSB Data Science Capstone"),
+                      tags$h5("The Data Science Capstone is a three-course sequence at the University of California, Santa Barbara (UCSB) in which students engage in project-based learning with data-intensive methodologies with the hopes of making a positive impact on the world. 
+                              As their project, seven students from the program upgraded this Shiny app to implement new data, improve functionality, and enhance user experience."),
+                      
+                      tags$h4("Co-authors"),
+                      tags$h5("Luis Barajas, Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan Zhang, 
+                              Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, 
+                              Erin Satterthwaite, Brice Semmens, Simone Baumann-Pickering
+                              "),
+                      
+                      tags$h4("Funding Sources"),
+                      tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
+                      tags$h5("Office of Naval Research, US Navy Pacific Fleet"),
+             )
+  
+)
 
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
 server <- function(input, output, session) {
@@ -580,10 +637,25 @@ server <- function(input, output, session) {
   })
   
   
+  
   output$mymap <- renderLeaflet({
     leaflet() %>%
       setView(lng = -121, lat = 34, zoom = 6.5) %>%
-      addProviderTiles(input$provider)
+      addProviderTiles(input$provider) %>%
+      onRender(
+        "function(el, x) {
+            this.zoomIn(1); // Increase the zoom level by 1
+            this.zoomOut(1); //Atempt to resolve edge case
+            var newCenter = L.latLng(this.getCenter().lat, this.getCenter().lng - 0.1);
+            this.setView(newCenter, this.getZoom());
+            L.easyPrint({
+              sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
+              filename: 'mymap',
+              exportOnly: true,
+              hideControlContainer: false
+            }).addTo(this);
+            }"
+      )
   })
   
   # OBS DATA
