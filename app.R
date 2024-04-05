@@ -317,13 +317,12 @@ ui <- fluidPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "info",
-              includeMarkdown("Capstone-Scripps/Welcome_Page.Rmd"),
+              #includeMarkdown("Capstone-Scripps/Welcome_Page.Rmd"),
               HTML(
-                '<center><img src="edna_poster.jpg", height="600",width="100 style="float:left" usemap="#edna_map">',
+                '<center><img src="opening_infographic.jpg", height="710", style="float:left" usemap="#edna_map">',
                    '<map name="edna_map">',
-                   '<area shape="rect" coords="40,10,440,180" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
-                   '<area shape="rect" coords="150,400,800,550" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
-                   '<area shape="rect" coords="540,0,730,80" href="https://calcofi.org/data/marine-ecosystem-data/seabirds/" title="CalCofi Seabirds">',
+                   '<area shape="rect" coords="40,10,520,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
+                   '<area shape="rect" coords="50,330,385,520" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
                    '<area shape="rect" coords="500,130,770,320" href="https://calcofi.org/data/marine-ecosystem-data/marine-mammals/" title="CalCofi Marine Mammals">',
                    '</map></center>'
                    )
