@@ -317,9 +317,9 @@ ui <- fluidPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "info",
-              #includeMarkdown("Capstone-Scripps/Welcome_Page.Rmd"),
+              includeMarkdown("scripts/welcome_page.Rmd"),
               HTML(
-                '<center><img src="opening_infographic.jpg", height="710", style="float:left" usemap="#edna_map">',
+                '<center><img src="opening_infographic.jpg", height="710", usemap="#edna_map">',
                    '<map name="edna_map">',
                    '<area shape="rect" coords="40,10,520,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
                    '<area shape="rect" coords="50,330,385,520" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
@@ -411,7 +411,7 @@ ui <- fluidPage(
               )
       ),
       tabItem(tabName = "moreinfo",
-              includeMarkdown("Capstone-Scripps/More_Information_Page.Rmd")
+              includeMarkdown("scripts/more_info_page.Rmd")
       )
       )
   )))
