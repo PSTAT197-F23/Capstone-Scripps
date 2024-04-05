@@ -45,6 +45,9 @@ whale <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
 whale$Season <- trimws(whale$Season)
 whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
 whale = whale[-1105,]
+whale = subset(whale, DecLat < 39) # restrict latitude values to CalCOFI cruise area
+whale = subset(whale, DecLong < -113) # restrict longitude values
+whale = whale[-2064,] # removing inland bottlenose dolphin sighting 
 station <- read.csv("data/CalCOFIStationOrder.csv")
 edna <- read.csv("data/edna-processed.csv")
 colnames(edna)[colnames(edna) == "year"] ="Year"
