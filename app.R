@@ -470,8 +470,8 @@ ui <- fluidPage(
                       tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
                       tags$h5("Office of Naval Research, US Navy Pacific Fleet"),
              )
-  
-)
+
+
 
 # #Next, we add the server. This is where we will actually create all of our plots, and add reactivity to our inputs and outputs.
 server <- function(input, output, session) {
