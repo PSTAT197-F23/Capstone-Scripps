@@ -317,20 +317,20 @@ ui <- fluidPage(
                        "<a target='_blank'><img style = 'display: block; margin-left: auto; margin-right: auto;' src='CalCofi Logo.png' width = '186'></a>",
                        "<br>")),
                      menuItem("Home", tabName="info", icon = icon("home")),
-                     menuItem("Species Map", tabName="map", icon = icon("thumbtack"))
-                     
+                     menuItem("Species Map", tabName="map", icon = icon("thumbtack")),
+                     menuItem("More Information", tabName="moreinfo", icon = icon("bell"))
                    )),
   dashboardBody(
     tabItems(
       tabItem(tabName = "info",
-              includeMarkdown("Capstone-Scripps/more_information.Rmd"),
-              HTML('<img src="edna_poster.jpg", height="600",width="100 style="float:left" usemap="#edna_map">',
+              includeMarkdown("scripts/welcome_page.Rmd"),
+              HTML(
+                '<center><img src="opening_infographic.jpg", height="710", usemap="#edna_map">',
                    '<map name="edna_map">',
-                   '<area shape="rect" coords="40,10,440,180" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
-                   '<area shape="rect" coords="150,400,800,550" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
-                   '<area shape="rect" coords="540,0,730,80" href="https://calcofi.org/data/marine-ecosystem-data/seabirds/" title="CalCofi Seabirds">',
+                   '<area shape="rect" coords="40,10,520,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
+                   '<area shape="rect" coords="50,330,385,520" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
                    '<area shape="rect" coords="500,130,770,320" href="https://calcofi.org/data/marine-ecosystem-data/marine-mammals/" title="CalCofi Marine Mammals">',
-                   '</map>'
+                   '</map></center>'
                    )
               ),
       tabItem(tabName = "map",
@@ -417,7 +417,10 @@ ui <- fluidPage(
                   #Using height = 'auto' causes the inconsistency in the downloaded map size
                   #However, setting the height to be dynamic is the only way to capture the current window size.
               )
-      )
+      ),
+      tabItem(tabName = "moreinfo",
+              includeMarkdown("scripts/more_info_page.Rmd")
+
     )
   ))))
 
