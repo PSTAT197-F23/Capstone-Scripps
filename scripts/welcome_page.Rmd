@@ -1,0 +1,21 @@
+# **Welcome!**
+
+California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on the [CalCOFI website](https://calcofi.org/","https://calcofi.org/).
+
+The purpose of this Shiny App is to provide scientists with an interactive tool to visualize marine mammal data collected onboard CalCOFI. Here we integrate multiple datastreams, highlighting how marine mammal visual sightings and eDNA detections are represented through time and space. Please stay tuned for the addition of acoustic detections in a future release. By integrating visual, acoustic, and genetic sampling methods, we hope to better understand the detection capabilities of each method for detecting marine mammals in their environment
+
+## **How is CalCOFI Data Collected?**
+
+Below is an interactive infographic that details the sampling processes for collecting visual, eDNA, and bioacoustic data. 
+
+<br/>
+
+
+<center>
+
+#### **Click or hover on different parts of the visual to learn more about them!**
+
+</center>
+
+
+
