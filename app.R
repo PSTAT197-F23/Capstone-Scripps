@@ -325,7 +325,7 @@ ui <- fluidPage(
     tabItems(
       tabItem(tabName = "info",
               includeMarkdown("scripts/welcome_page.Rmd"),
-              HTML('<center><img src="opening_infographic.jpg", height="710", usemap="#edna_map">',
+              HTML('<center><img src="opening_infographic.png", height="710", usemap="#edna_map">',
                    '<map name="edna_map">',
                    '<area shape="rect" coords="40,10,520,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
                    '<area shape="rect" coords="50,330,385,520" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
