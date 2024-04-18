@@ -639,7 +639,7 @@ server <- function(input, output, session) {
   
   output$mymap <- renderLeaflet({
     leaflet() %>%
-      setView(lng = -121, lat = 34, zoom = 6.5) %>%
+      setView(lng = -121, lat = 34, zoom = 7.5) %>%
       addProviderTiles(input$provider) %>%
       onRender(
         "function(el, x) {
