@@ -4,7 +4,7 @@
 # last udpated: 10/13/23
 
 # load the libraries
-remotes::install_github("dreamRs/shinytreeview")
+# remotes::install_github("dreamRs/shinytreeview")
 library(shiny)
 library(shinyjs)
 library(shinyBS)
