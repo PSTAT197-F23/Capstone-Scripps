@@ -324,7 +324,7 @@ ui <- fluidPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "info",
-              includeMarkdown("www/welcome_page.Rmd"),
+              includeMarkdown("data/welcome_page.Rmd"),
               HTML('<center><img src="opening_infographic.png", height="710", usemap="#edna_map">',
                    '<map name="edna_map">',
                    '<area shape="rect" coords="40,10,520,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
@@ -420,7 +420,7 @@ ui <- fluidPage(
       )
     ),
     tabItem(tabName = "moreinfo",
-            includeMarkdown("www/more_info_page.Rmd"))
+            includeMarkdown("data/more_info_page.Rmd"))
   ))))
 
 
