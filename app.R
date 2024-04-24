@@ -899,15 +899,31 @@ server <- function(input, output, session) {
       leafletProxy("mymap", session) %>%
         clearGroup("edna") # clear existing edna first
       if (!is.null(ednaEffortFilter()$longitude)) {
+        #get coordinates of detections
+        detection_coords <- data.frame( 
+          lng = as.numeric(ednaDetectionFilter()$longitude),
+          lat = as.numeric(ednaDetectionFilter()$latitude)
+        )
+        #get coordinates of effort
+        effort_coords <- data.frame(
+          lng = as.numeric(ednaEffortFilter()$longitude),
+          lat = as.numeric(ednaEffortFilter()$latitude)
+        )
+        #find coordinates where detections and efforts overlap
+        overlap_coords <- merge(detection_coords, effort_coords, by = c("lng", "lat"), all = FALSE) 
+        
+        #filter effort markers only where there's no overlap with detections
+        effort_markers <- ednaEffortFilter()[!paste(ednaEffortFilter()$longitude, ednaEffortFilter()$latitude) %in% paste(overlap_coords$lng, overlap_coords$lat), ]
+        #add filtered "no overlap" effort markers
         leafletProxy("mymap", session) %>%
           addMarkers(
-            lng = as.numeric(ednaEffortFilter()$longitude),
-            lat = as.numeric(ednaEffortFilter()$latitude),
+            lng = as.numeric(effort_markers$longitude),
+            lat = as.numeric(effort_markers$latitude),
             icon = blackHelixIcon,
             popup = paste("eDNA Effort",
-                          "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
-                          "<br>Line:", as.character(ednaEffortFilter()$line),
-                          "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
+                          "<br>Sample Depth (m):", as.character(effort_markers$depth),
+                          "<br>Line:", as.character(effort_markers$line),
+                          "<br>Station:", as.character(effort_markers$station)) %>%
               lapply(htmltools::HTML),
             group = "edna"
           ) %>%
@@ -917,7 +933,9 @@ server <- function(input, output, session) {
                     labels = "eDNA Effort",
                     opacity = 1,
                     layerId = "edna_effort_legend"
-          )}
+          )
+      }
+  
       # Check if acoustic legends are currently displayed
       if (input$acoustic > 0) {
         # Add acoustic effort legend if it was displayed
