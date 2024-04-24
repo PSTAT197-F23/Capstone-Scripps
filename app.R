@@ -324,7 +324,18 @@ ui <- fluidPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "info",
-              includeMarkdown("data/welcome_page.Rmd"),
+              #includeMarkdown("data/welcome_page.Rmd"),
+              HTML('<body>
+                    <h1>Welcome!</h1>
+                    <p>California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on the <a href="https://calcofi.org/">CalCOFI website</a>.</p>
+                    <p>The purpose of this Shiny App is to provide scientists with an interactive tool to visualize marine mammal data collected onboard CalCOFI. Here we integrate multiple datastreams, highlighting how marine mammal visual sightings and eDNA detections are represented through time and space. Please stay tuned for the addition of acoustic detections in a future release. By integrating visual, acoustic, and genetic sampling methods, we hope to better understand the detection capabilities of each method for detecting marine mammals in their environment.</p>
+                    <h2>How is CalCOFI Data Collected?</h2>
+                    <div class="infographic">
+                      <p>Below is an interactive infographic that details the sampling processes for collecting visual, eDNA, and bioacoustic data.</p>
+                      <div style="margin-bottom: 30px;"></div> <!-- This will create space -->
+                      <p style="text-align: center; font-weight: bold;">Click or hover on different parts of the visual to learn more about them!</p>
+                    </div>
+                    </body>'),
               HTML('<center><img src="opening_infographic.png", height="710", usemap="#edna_map">',
                    '<map name="edna_map">',
                    '<area shape="rect" coords="40,10,480,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
@@ -422,7 +433,58 @@ ui <- fluidPage(
       )
     ),
     tabItem(tabName = "moreinfo",
-            includeMarkdown("data/more_info_page.Rmd"))
+            #includeMarkdown("data/more_info_page.Rmd")),
+            HTML('<div id="calcofi-marine-mammal-visual-survey-data" class="section level3">
+                  <h3><strong>CalCOFI Marine Mammal Visual Survey Data</strong></h3>
+                  <p>Marine mammal visual line-transect surveys have been conducted on
+                  quarterly CalCOFI cruises since 2004. Visual surveys are conducted
+                  during daylight hours while the ship is in transit between CalCOFI
+                  stations. More information about visual survey protocol can be found in
+                  <a href="https://doi.org/10.1016/j.dsr2.2014.10.008%22,%22https://doi.org/10.1016/j.dsr2.2014.10.008">Campbell
+                  et al. (2015)</a>. Per-cruise marine mammal visual survey effort is
+                  visible by clicking ‘Display Visual Effort’. Additionally, sighting
+                  group size estimates are visible by selecting a species from the
+                  drop-down menu, where circle size on the map is proportional to group
+                  size. Only cetacean sightings are included in this interactive map. By
+                  selecting a sighting on the map, more information will pop up about that
+                  specific sighting.</p>
+                  <p><br /></p>
+                  </div>
+                  <div id="calcofi-marine-mammal-edna-data" class="section level3">
+                  <h3><strong>CalCOFI Marine Mammal eDNA Data</strong></h3>
+                  <p>The NOAA CalCOFI Genomic Program (NCOG) has collected envrionmental
+                  DNA samples (eDNA) since 2014. Here we used metabarcoding assays to
+                  detect cetacean species from water samples collected at 10, 20, or 40
+                  meters. The ‘Display eDNA’ function will plot eDNA sampling effort as
+                  opaque black circles, and eDNA detections as blue flags. By selecting a
+                  detection on the map, more information about that specific detection
+                  will pop up.</p>
+                  <p><br /></p>
+                  </div>
+                  <div id="ucsb-data-science-capstone" class="section level3">
+                  <h3><strong>UCSB Data Science Capstone</strong></h3>
+                  <p>The Data Science Capstone is a three-course sequence at the
+                  University of California, Santa Barbara (UCSB) in which students engage
+                  in project-based learning with data-intensive methodologies with the
+                  hopes of making a positive impact on the world. As their project, seven
+                  students from the program upgraded this Shiny app to implement new data,
+                  improve functionality, and enhance user experience.</p>
+                  <p><br /></p>
+                  </div>
+                  <div id="co-authors" class="section level3">
+                  <h3><strong>Co-authors</strong></h3>
+                  <p>Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, Erin
+                  Satterthwaite, Brice Semmens, Simone Baumann-Pickering, Luis Barajas,
+                  Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan
+                  Zhang.</p>
+                  <p><br /></p>
+                  </div>
+                  <div id="funding-sources" class="section level3">
+                  <h3><strong>Funding Sources</strong></h3>
+                  <p>This material is based upon research supported by the Office of Naval
+                  Research under Award Number (N00014-22-1-2719).</p>
+                  <p>Office of Naval Research, US Navy Pacific Fleet</p>
+                  </div>'))
   ))))
 
 
