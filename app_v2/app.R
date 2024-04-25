@@ -4,7 +4,7 @@
 # last udpated: 10/13/23
 
 # load the libraries
-# remotes::install_github("dreamRs/shinytreeview")
+#remotes::install_github("dreamRs/shinytreeview")
 library(shiny)
 library(shinyjs)
 library(shinyBS)
@@ -309,171 +309,169 @@ ui <- fluidPage(
   #create a navigation bar for the top of the app, and give it a main title
   
   dashboardPage(skin="blue",
-  dashboardHeader(title="SAEL CalCOFI ShinyApp"),
-  dashboardSidebar(width = 300,
-                   sidebarMenu(
-                     HTML(paste0(
-                       "<br>",
-                       "<a target='_blank'><img style = 'display: block; margin-left: auto; margin-right: auto;' src='CalCofi Logo.png' width = '186'></a>",
-                       "<br>")),
-                     menuItem("Home", tabName="info", icon = icon("home")),
-                     menuItem("Species Map", tabName="map", icon = icon("thumbtack")),
-                     menuItem("More Information", tabName="moreinfo", icon=icon("bell"))
-                     
-                   )),
-  dashboardBody(
-    tabItems(
-      tabItem(tabName = "info",
-              includeMarkdown("data/welcome_page.Rmd"),
-              HTML('<center><img src="opening_infographic.png", height="710", usemap="#edna_map">',
-                   '<map name="edna_map">',
-                   '<area shape="rect" coords="40,10,480,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
-                   '<area shape="rect" coords="480,80,550,200" href="https://www.sciencedirect.com/science/article/pii/S0967064514002690" title="Visual Observers">',
-                   '<area shape="rect" coords="50,250,200,587" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
-                   '<area shape="rect" coords="500,130,770,320" href="https://voicesinthesea.ucsd.edu/" title="Voices in the Sea">',
-                   '<area shape="rect" coords="300,380,920,680" href="https://voicesinthesea.ucsd.edu/" title="Voices in the Sea">',
-                   '</map></center>'
-                   )
-              ),
-      tabItem(tabName = "map",
-              # DTOutput("myTable"), for testing, dont remove plsssssssssssssss :)
-              sidebarLayout(
-                sidebarPanel(id = "sidebar-container",
-                             sliderInput(inputId = 'years',
-                                         label = 'Years',
-                                         min = min(whale$Year, na.rm = TRUE),
-                                         max = max(whale$Year, na.rm = TRUE),
-                                         value = c(2004, 2022),
-                                         step = 1,
-                                         sep = "",
-                                         animate = animationOptions(
-                                           interval = 500,
-                                           loop = FALSE,
-                                           playButton = icon("play", "fa-2x"),
-                                           pauseButton = icon("pause", "fa-2x")
-                                         )
-                             ),
-                             treecheckInput(
-                               inputId =  "all_cruises",
-                               label = "Choose Cruise by Season:",
-                               choices = make_tree(seasons_dataframe, c("Season", "Cruise")),
-                               width = "100%",
-                               borders = TRUE
-                             ),
-
-
-                             # display sightings toggle:
-                             materialSwitch(inputId = "sightings", label = "Display Sightings", status = "primary"),
-
-                             # display stations toggle:
-                             materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
-
-                             # display visual effort toggle:
-                             materialSwitch(inputId = "viz", label = "Display Visual Effort", status = "danger"),
-
-                             # display eDNA toggle:
-                             materialSwitch(inputId = "edna", label = "Display eDNA Data", status = "success"),
-
-                             # display acoustic data toggle:
-                             materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
-
-
-                             # add collapsible checkboxes for suborders and species:
-                             treecheckInput(
-                               inputId = "all_species",
-                               label = "Choose Species:",
-                               choices = make_tree(species_list, c('Suborder', 'Family', 'Species')),
-                               width = '100%',
-                               borders = TRUE
-                             ),
-                             # Add reset map zoom button here
-                             div(
-                               style = "margin-bottom: 5px; text-align: left;",
-                               tags$label("Map Settings:")
-                             ),
-                             div(
-                               style = "margin-bottom: 10px; text-align: left;",  # Increase margin for more space
-                               actionButton("resetZoom", "Reset Map", width = '150px',
-                                            style = 'border-color: #565655; background-color: #007bff; padding: 3px')
-                             ),
-                             div(
-                               style = "margin-bottom: 10px; text-align: left;",
-                               selectInput("provider", label = "Select Map Provider:",
-                                           choices = c("CartoDB.Positron", "OpenStreetMap.Mapnik",
-                                                       "Esri.NatGeoWorldMap", "Esri.WorldTerrain",
-                                                       "Esri.WorldImagery"), #"CartoDB.DarkMatter", "Esri.WorldPhysical", "Esri.WorldImagery",
-                                           #"Esri.WorldTerrain","USGS.USImageryTopo"
-
-                                           selected = "CartoDB.Positron"),
-                             ),
-                             div(
-                               style = "margin-bottom: 5px; text-align: left;",
-                               tags$label("UI Settings:")
-                             ),
-                             themeSelector(),
-                                        ),
-                mainPanel(
-                  tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"), #this map size only applies to the interactive map
-                  tags$head(tags$script(src = jsfile)), #jsfile contains the easyprint function to download map with labels
-                  leafletOutput(outputId = "mymap", height="auto") #this map size is only applied to the downloaded map
-                  #Using height = 'auto' causes the inconsistency in the downloaded map size
-                  #However, setting the height to be dynamic is the only way to capture the current window size.
-              )
-      )
-    ),
-    tabItem(tabName = "moreinfo",
-            includeMarkdown("data/more_info_page.Rmd"))
-  ))))
+                dashboardHeader(title="SAEL CalCOFI ShinyApp"),
+                dashboardSidebar(width = 300,
+                                 sidebarMenu(
+                                   HTML(paste0(
+                                     "<br>",
+                                     "<a target='_blank'><img style = 'display: block; margin-left: auto; margin-right: auto;' src='CalCofi Logo.png' width = '186'></a>",
+                                     "<br>")),
+                                   menuItem("Home", tabName="info", icon = icon("home")),
+                                   menuItem("Species Map", tabName="map", icon = icon("thumbtack")),
+                                   menuItem("More Information", tabName="moreinfo", icon=icon("bell"))
+                                   
+                                 )),
+                dashboardBody(
+                  tabItems(
+                    tabItem(tabName = "info",
+                            includeMarkdown("scripts/welcome_page.Rmd"),
+                            HTML('<center><img src="opening_infographic.png", height="710", usemap="#edna_map">',
+                                 '<map name="edna_map">',
+                                 '<area shape="rect" coords="40,10,520,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
+                                 '<area shape="rect" coords="50,330,385,520" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
+                                 '<area shape="rect" coords="500,130,770,320" href="https://calcofi.org/data/marine-ecosystem-data/marine-mammals/" title="CalCofi Marine Mammals">',
+                                 '</map></center>'
+                            )
+                    ),
+                    tabItem(tabName = "map",
+                            # DTOutput("myTable"), for testing, dont remove plsssssssssssssss :)
+                            sidebarLayout(
+                              sidebarPanel(id = "sidebar-container",
+                                           sliderInput(inputId = 'years',
+                                                       label = 'Years',
+                                                       min = min(whale$Year, na.rm = TRUE),
+                                                       max = max(whale$Year, na.rm = TRUE),
+                                                       value = c(2004, 2022),
+                                                       step = 1,
+                                                       sep = "",
+                                                       animate = animationOptions(
+                                                         interval = 500,
+                                                         loop = FALSE,
+                                                         playButton = icon("play", "fa-2x"),
+                                                         pauseButton = icon("pause", "fa-2x")
+                                                       )
+                                           ),
+                                           treecheckInput(
+                                             inputId =  "all_cruises",
+                                             label = "Choose Cruise by Season:",
+                                             choices = make_tree(seasons_dataframe, c("Season", "Cruise")),
+                                             width = "100%",
+                                             borders = TRUE
+                                           ),
+                                           
+                                           
+                                           # display sightings toggle:
+                                           materialSwitch(inputId = "sightings", label = "Display Sightings", status = "primary"),
+                                           
+                                           # display stations toggle:
+                                           materialSwitch(inputId = "sites", label = "Display Stations", status = "warning"),
+                                           
+                                           # display visual effort toggle:
+                                           materialSwitch(inputId = "viz", label = "Display Visual Effort", status = "danger"),
+                                           
+                                           # display eDNA toggle:
+                                           materialSwitch(inputId = "edna", label = "Display eDNA Data", status = "success"),
+                                           
+                                           # display acoustic data toggle:
+                                           materialSwitch(inputId = "acoustic", label = "Display Acoustic Data", status = "info"),
+                                           
+                                           
+                                           # add collapsible checkboxes for suborders and species:
+                                           treecheckInput(
+                                             inputId = "all_species",
+                                             label = "Choose Species:",
+                                             choices = make_tree(species_list, c('Suborder', 'Family', 'Species')),
+                                             width = '100%',
+                                             borders = TRUE
+                                           ),
+                                           # Add reset map zoom button here
+                                           div(
+                                             style = "margin-bottom: 5px; text-align: left;",
+                                             tags$label("Map Settings:")
+                                           ),
+                                           div(
+                                             style = "margin-bottom: 10px; text-align: left;",  # Increase margin for more space
+                                             actionButton("resetZoom", "Reset Map", width = '150px',
+                                                          style = 'border-color: #565655; background-color: #007bff; padding: 3px')
+                                           ),
+                                           div(
+                                             style = "margin-bottom: 10px; text-align: left;",
+                                             selectInput("provider", label = "Select Map Provider:",
+                                                         choices = c("CartoDB.Positron", "OpenStreetMap.Mapnik",
+                                                                     "Esri.NatGeoWorldMap", "Esri.WorldTerrain",
+                                                                     "Esri.WorldImagery"), #"CartoDB.DarkMatter", "Esri.WorldPhysical", "Esri.WorldImagery",
+                                                         #"Esri.WorldTerrain","USGS.USImageryTopo"
+                                                         
+                                                         selected = "CartoDB.Positron"),
+                                           ),
+                                           div(
+                                             style = "margin-bottom: 5px; text-align: left;",
+                                             tags$label("UI Settings:")
+                                           ),
+                                           themeSelector(),
+                              ),
+                              mainPanel(
+                                tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"), #this map size only applies to the interactive map
+                                tags$head(tags$script(src = jsfile)), #jsfile contains the easyprint function to download map with labels
+                                leafletOutput(outputId = "mymap", height="auto") #this map size is only applied to the downloaded map
+                                #Using height = 'auto' causes the inconsistency in the downloaded map size
+                                #However, setting the height to be dynamic is the only way to capture the current window size.
+                              )
+                            )
+                    ),
+                    tabItem(tabName = "moreinfo",
+                            includeMarkdown("scripts/more_info_page.Rmd"))
+                  ))))
 
 
 
 
-                        mainPanel(
-                          tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
-                          
-                          leafletOutput(outputId = "mymap"))
-                        
-                      
-             
-             
-             tabPanel("More information",
-                      tags$h1("Data description"),
-                      tags$h5('California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on
+mainPanel(
+  tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"),
+  
+  leafletOutput(outputId = "mymap"))
+
+
+
+
+tabPanel("More information",
+         tags$h1("Data description"),
+         tags$h5('California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on
                               the CalCOFI website:'), 
-                      tags$a(href="https://calcofi.org/","https://calcofi.org/"),
-                      tags$h5("The purpose of this Shiny App is to provide scientists with an interactive tool to 
+         tags$a(href="https://calcofi.org/","https://calcofi.org/"),
+         tags$h5("The purpose of this Shiny App is to provide scientists with an interactive tool to 
                               visualize marine mammal data collected onboard CalCOFI. Here we integrate multiple datastreams, 
                               highlighting how marine mammal visual sightings, acoustic detections, and environmental DNA detections are represented through time and space. 
                               By integrating visual, acoustic, and genetic sampling methods, we hope to better understand the detection capabilities of each method for detecting marine mammals in their environment."),
-                      
-                      
-                      
-                      tags$h3("CalCOFI marine mammal visual survey data"),
-                      tags$h5("Marine mammal visual line-transect surveys have been conducted on quarterly CalCOFI cruises since 2004. Visual surveys are 
+         
+         
+         
+         tags$h3("CalCOFI marine mammal visual survey data"),
+         tags$h5("Marine mammal visual line-transect surveys have been conducted on quarterly CalCOFI cruises since 2004. Visual surveys are 
                               conducted during daylight hours while the ship is in transit between CalCOFI stations. More information about visual
                               survey protocol can be found in Campbell et al. (2015):"),
-                      tags$a(href="https://doi.org/10.1016/j.dsr2.2014.10.008","https://doi.org/10.1016/j.dsr2.2014.10.008"),
-                      tags$h5("Per-cruise marine mammal visual survey effort is visible by clicking 'Display Visual Effort'. Additionally, sighting group size estimates are visible by selecting a species from the drop-down menu, 
+         tags$a(href="https://doi.org/10.1016/j.dsr2.2014.10.008","https://doi.org/10.1016/j.dsr2.2014.10.008"),
+         tags$h5("Per-cruise marine mammal visual survey effort is visible by clicking 'Display Visual Effort'. Additionally, sighting group size estimates are visible by selecting a species from the drop-down menu, 
                               where circle size on the map is proportional to group size. Only cetacean sightings are included in this interactive map. By selecting a sighting on the map, more information will pop up about that specific sighting."),
-                      
-                      tags$h3("CalCOFI marine mammal eDNA data"),
-                      tags$h5("The NOAA CalCOFI Genomic Program (NCOG) has collected envrionmental DNA samples (eDNA) since 2014. Here we used metabarcoding assays to 
+         
+         tags$h3("CalCOFI marine mammal eDNA data"),
+         tags$h5("The NOAA CalCOFI Genomic Program (NCOG) has collected envrionmental DNA samples (eDNA) since 2014. Here we used metabarcoding assays to 
                               detect cetacean species from water samples collected at 10, 20, or 40 meters. The 'Display eDNA' function will plot eDNA sampling effort as opaque black circles, and eDNA detections as blue flags. By selecting a detection on the map, more information about that specific detection will pop up.  "), 
-                      
-                      tags$h3("UCSB Data Science Capstone"),
-                      tags$h5("The Data Science Capstone is a three-course sequence at the University of California, Santa Barbara (UCSB) in which students engage in project-based learning with data-intensive methodologies with the hopes of making a positive impact on the world. 
+         
+         tags$h3("UCSB Data Science Capstone"),
+         tags$h5("The Data Science Capstone is a three-course sequence at the University of California, Santa Barbara (UCSB) in which students engage in project-based learning with data-intensive methodologies with the hopes of making a positive impact on the world. 
                               As their project, seven students from the program upgraded this Shiny app to implement new data, improve functionality, and enhance user experience."),
-                      
-                      tags$h4("Co-authors"),
-                      tags$h5("Luis Barajas, Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan Zhang, 
+         
+         tags$h4("Co-authors"),
+         tags$h5("Luis Barajas, Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan Zhang, 
                               Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, 
                               Erin Satterthwaite, Brice Semmens, Simone Baumann-Pickering
                               "),
-                      
-                      tags$h4("Funding Sources"),
-                      tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
-                      tags$h5("Office of Naval Research, US Navy Pacific Fleet"),
-             )
+         
+         tags$h4("Funding Sources"),
+         tags$h5("This material is based upon research supported by the Office of Naval Research under Award Number (N00014-22-1-2719)"),
+         tags$h5("Office of Naval Research, US Navy Pacific Fleet"),
+)
 
 
 
@@ -641,7 +639,7 @@ server <- function(input, output, session) {
   
   output$mymap <- renderLeaflet({
     leaflet() %>%
-      setView(lng = -121, lat = 34, zoom = 7.5) %>%
+      setView(lng = -121, lat = 34, zoom = 6.5) %>%
       addProviderTiles(input$provider) %>%
       onRender(
         "function(el, x) {
@@ -749,7 +747,7 @@ server <- function(input, output, session) {
     iconUrl = "https://cdn-icons-png.flaticon.com/512/922/922105.png",
     iconWidth = 35, iconHeight = 35
   )
-
+  
   # icon for eDNA efforts on map
   blackHelixIcon <- makeIcon(
     iconUrl = "https://cdn-icons-png.flaticon.com/512/620/620401.png",
@@ -857,37 +855,37 @@ server <- function(input, output, session) {
   
   
   ednaDetectionFilter <- reactive({
-      data <- filter(edna, edna$cruise %in% input$all_cruises 
-                                          & edna$SpeciesName %in% input$all_species
-                                          & edna$Year >= input$years[1] 
-                                          & edna$Year <= input$years[2])
+    data <- filter(edna, edna$cruise %in% input$all_cruises 
+                   & edna$SpeciesName %in% input$all_species
+                   & edna$Year >= input$years[1] 
+                   & edna$Year <= input$years[2])
+    
+    transform_data <- function(df) {
       
-      transform_data <- function(df) {
-        
-        df_grouped <- df %>% group_by(line, station, latitude, longitude)
-        
-        df_transformed <- df_grouped %>%
-          summarise(
-            Detections = list(SpeciesName),
-            .groups = 'drop' 
-          )
-        
-        return(df_transformed)
+      df_grouped <- df %>% group_by(line, station, latitude, longitude)
+      
+      df_transformed <- df_grouped %>%
+        summarise(
+          Detections = list(SpeciesName),
+          .groups = 'drop' 
+        )
+      
+      return(df_transformed)
+    }
+    
+    format_species <- function(species_string) {
+      if (length(species_string) == 1) {
+        return(species_string)
       }
-      
-      format_species <- function(species_string) {
-        if (length(species_string) == 1) {
-          return(species_string)
-        }
-        combined_string <- paste(species_string, collapse = ", ")
-        return(combined_string)
-      }
-      
-      rslt <- transform_data(data)
-      
-      rslt$FormattedDetections <- sapply(rslt$Detections, format_species, USE.NAMES = FALSE)
-      
-      return(rslt)
+      combined_string <- paste(species_string, collapse = ", ")
+      return(combined_string)
+    }
+    
+    rslt <- transform_data(data)
+    
+    rslt$FormattedDetections <- sapply(rslt$Detections, format_species, USE.NAMES = FALSE)
+    
+    return(rslt)
     
   })
   
@@ -901,31 +899,15 @@ server <- function(input, output, session) {
       leafletProxy("mymap", session) %>%
         clearGroup("edna") # clear existing edna first
       if (!is.null(ednaEffortFilter()$longitude)) {
-        #get coordinates of detections
-        detection_coords <- data.frame( 
-          lng = as.numeric(ednaDetectionFilter()$longitude),
-          lat = as.numeric(ednaDetectionFilter()$latitude)
-        )
-        #get coordinates of effort
-        effort_coords <- data.frame(
-          lng = as.numeric(ednaEffortFilter()$longitude),
-          lat = as.numeric(ednaEffortFilter()$latitude)
-        )
-        #find coordinates where detections and efforts overlap
-        overlap_coords <- merge(detection_coords, effort_coords, by = c("lng", "lat"), all = FALSE) 
-        
-        #filter effort markers only where there's no overlap with detections
-        effort_markers <- ednaEffortFilter()[!paste(ednaEffortFilter()$longitude, ednaEffortFilter()$latitude) %in% paste(overlap_coords$lng, overlap_coords$lat), ]
-        #add filtered "no overlap" effort markers
         leafletProxy("mymap", session) %>%
           addMarkers(
-            lng = as.numeric(effort_markers$longitude),
-            lat = as.numeric(effort_markers$latitude),
+            lng = as.numeric(ednaEffortFilter()$longitude),
+            lat = as.numeric(ednaEffortFilter()$latitude),
             icon = blackHelixIcon,
             popup = paste("eDNA Effort",
-                          "<br>Sample Depth (m):", as.character(effort_markers$depth),
-                          "<br>Line:", as.character(effort_markers$line),
-                          "<br>Station:", as.character(effort_markers$station)) %>%
+                          "<br>Sample Depth (m):", as.character(ednaEffortFilter()$depth),
+                          "<br>Line:", as.character(ednaEffortFilter()$line),
+                          "<br>Station:", as.character(ednaEffortFilter()$station)) %>%
               lapply(htmltools::HTML),
             group = "edna"
           ) %>%
@@ -935,9 +917,7 @@ server <- function(input, output, session) {
                     labels = "eDNA Effort",
                     opacity = 1,
                     layerId = "edna_effort_legend"
-          )
-      }
-  
+          )}
       # Check if acoustic legends are currently displayed
       if (input$acoustic > 0) {
         # Add acoustic effort legend if it was displayed
@@ -1050,7 +1030,7 @@ server <- function(input, output, session) {
   
   # observe layer for acoustic effort data reactivity
   observe({
-    pal = colorFactor(palette = species_to_color, levels = species_levels)
+    pal = colorFactor(palette = species_to_color, levels = as.factor(unique(whale$SpeciesName)))
     values = obsFilter()$SpeciesName
     
     req(input$acoustic > 0)  # Require input$acoustic to be greater than 0 to proceed
@@ -1274,7 +1254,7 @@ server <- function(input, output, session) {
     }
   })
   
-
+  
 }
 
 # #Finally, we tell R to use the user interface and the server together to build our app!
