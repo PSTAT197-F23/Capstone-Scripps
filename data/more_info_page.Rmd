@@ -18,7 +18,7 @@ The Data Science Capstone is a three-course sequence at the University of Califo
 
 ### **Co-authors**
 
-Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, Erin Satterthwaite, Brice Semmens, Simone Baumann-Pickering, Luis Barajas, Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan Zhang.
+Luis Barajas, Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, Puyuan Zhang, Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, Erin Satterthwaite, Brice Semmens, and Simone Baumann-Pickering.
 
 <br/>
 
