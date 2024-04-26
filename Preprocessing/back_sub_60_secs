@@ -1,0 +1,147 @@
+# %%
+# this jupiter notebook is for using opensoundscape to visualize spectrograms from training data or original annotations 
+
+# %%
+import opensoundscape
+import glob
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import sklearn
+import librosa
+import torch
+import random
+import sys
+from PIL import Image
+from scipy.ndimage import median_filter
+from sklearn.preprocessing import StandardScaler
+from PIL import Image as im 
+from pathlib import Path
+import cv2
+
+# %%
+def draw_img(ax, img_vector, h=141, w=601):
+    """
+    1. takes img_vector,
+    2. reshapes into right dimensions,
+    3. draws the resulting image
+    """
+    
+    
+    ax.imshow( (img_vector).reshape(h,w), cmap=plt.cm.gray)
+    
+    plt.xticks(())
+    plt.yticks(())
+
+def draw_img_single(img_vector, h=141, w=601):
+    """
+    1. takes img_vector,
+    2. reshapes into right dimensions,
+    3. draws the resulting image
+    """
+    
+    
+    plt.imshow( (img_vector).reshape(h,w), cmap=plt.cm.gray)
+    
+    plt.xticks(())
+    plt.yticks(())
+
+# %%
+# load datasets
+annotations = pd.read_csv('C:/Users/joon4/OneDrive/Desktop/LotsOfStuff/modified_annotations.csv')
+unique_annotation = annotations.drop_duplicates(subset=['spectrogram_path'])
+
+annotations_modded = annotations.copy()
+
+annotations_modded["spectrogram_path"] = annotations["spectrogram_path"].str.replace('LotsOfStuff', 'Processed_Training_Images', regex=False)
+
+annotations_modded.to_csv("C:/Users/joon4/OneDrive/Desktop/Processed_Training_Images/modified_annotations.csv", index=False)
+
+
+# %%
+
+data_matrix = []
+
+for index, row in unique_annotation.iterrows():
+
+    image = Image.open(row['spectrogram_path'])
+
+    pixel_values = np.array(list(image.getdata()))
+
+    data_matrix.append(pixel_values)
+
+stacked_specs = np.vstack(data_matrix)
+
+
+
+# %%
+scaler = StandardScaler(with_std=False)
+data_matrix_mod1 = scaler.fit_transform(stacked_specs)
+original_data = data_matrix_mod1
+
+# %%
+U, S, T = np.linalg.svd(original_data, full_matrices=False)
+
+US = U*S
+
+svd_data = US @ T
+
+svd_data_scaled = scaler.inverse_transform(svd_data)
+
+# %%
+
+signal_enhanced_features = np.zeros_like(T)
+
+for i in range(len(T)):
+
+    feature = np.copy(T[i].reshape((141, 601)))
+
+    feature = median_filter(feature, size = 3)
+
+    for j in range(feature.shape[1]):
+        column = feature[:, j]
+        percentile_value = np.percentile(column, 10)
+        feature[:, j] = column - percentile_value
+        feature[:, j][feature[:, j] < 0] = 0
+
+    signal_enhanced_features[i] = feature.flatten()
+
+# %%
+matrix = US[:, 0:150] @ signal_enhanced_features[0:150, :]
+matrix = US @ signal_enhanced_features
+matrix_scaled = scaler.inverse_transform(matrix)
+matrix_scaled = np.where(matrix_scaled < 0, 0, matrix_scaled)
+
+# %%
+matr_sub = np.zeros_like(matrix_scaled)
+
+
+for i in range(len(matrix_scaled)):
+
+    spec = np.copy(matrix_scaled[i].reshape((141, 601)))
+
+    for j in range(spec.shape[1]):
+        column = spec[:, j]
+        percentile_value = np.percentile(column, 60)
+        spec[:, j] = column - percentile_value
+        spec[:, j][spec[:, j] < 0] = 0
+
+    matr_sub[i] = spec.flatten()
+
+# %%
+directory_path = "C:/Users/joon4/OneDrive/Desktop/Processed_Training_Images"
+
+filenames = unique_annotation["spectrogram_path"].apply(lambda x: os.path.basename(x)).reset_index(drop=True)
+
+for i in range(len(matr_sub)):
+
+    processed_image = matr_sub[i].reshape(141, 601)
+
+    image = Image.fromarray(processed_image.astype(np.uint8), 'L')
+
+    image.save(Path(directory_path) / Path(filenames[i]))
+
+
+
+
