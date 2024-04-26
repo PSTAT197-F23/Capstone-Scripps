@@ -992,7 +992,7 @@ server <- function(input, output, session) {
   
   # icon for acoustic detections on map
   musicNoteIcon <- makeIcon(
-    iconUrl = "assests/music-note-purple.png",
+    iconUrl = "www/music-note-purple.png",
     iconWidth = 35, iconHeight = 35
   )
   
