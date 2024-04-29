@@ -1,0 +1,55 @@
+# **CalCOFI Bioacoustics**
+
+Bioacoustics refers to the study of the sounds produced by marine mammals and their underwater acoustic environment. Bioacoustic studies of marine mammals involve the collection, analysis, and interpretation of these sounds to gain insights into various aspects of their behavior, ecology, and conservation.
+
+
+<br/>
+<center>
+  <img src="fin_whale_40_hz.png" height="300" width="750">
+###### *Fin Whale 40 Hz Pulse, marked by deep red spots*
+</center>
+<br/>
+
+
+## **How is Bioacoustic Data Collected and Visualized?**
+
+CalCOFI ships deploy sonobuoys at varying depths to record marine mammal acoustics for hours at a time. These devices typically pick up 2000 samples of sound waves per second. A series of Fourier transforms are then applied to short, overlapping segments of the recorded signals to convert the data from the time domain (amplitude varying with time) to the frequency domain. Additional features of the sound wave can then be extracted such as a signal's frequency spectrum and magnitude. Using this acquired information, a spectrogram is constructed by piecing together the audio segments into one continuous plot that provides a time-varying representation of a signal's frequency content. Duration is on the x-axis, frequency is on the y-axis, and magnitude is represented by color. The end product is a colorful visual capture of recorded sound that contains anything from whale songs to white noise from ships, as you can see in the figure above.
+
+<br/><center>
+#### **Listen to actual recordings by pressing the play buttons!**
+</center>
+
+
+<center>
+<div style="display: flex; justify-content: center;">
+<div style="display: flex;">
+  <figure style="margin-right: 20px;">
+    <img src="blue_whale_B_call.png" height="200" width="450">
+    <figcaption><em>Blue Whale B Call</em><figcaption>
+  </figure>
+  <figure>
+    <img src="fin_whale_pulse.png" height="200" width="450">
+    <figcaption><em>Fin Whale Pulse</em><figcaption>
+  </figure>
+</div>
+</center>
+
+
+<center>
+<div style="display: flex;">
+  <audio controls style="margin-left: 160px;">
+    <source src="ringtoneBlue.mp3" type="audio/mp3">
+  </audio>
+  <audio controls style="margin-left: 180px;">
+    <source src="ringtoneFin.mp3" type="audio/mp3">
+  </audio>
+</div>
+</center>
+
+<br/><br/>
+
+## **Faster r-CNN Deep Learning Model**
+
+Explain model and go through preprocessing pipeline here.
+
+<br/>
