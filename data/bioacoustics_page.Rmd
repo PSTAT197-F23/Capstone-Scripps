@@ -6,7 +6,9 @@ Bioacoustics refers to the study of the sounds produced by marine mammals and th
 <br/>
 <center>
   <img src="fin_whale_40_hz.png" height="300" width="750">
+  
 ###### *Fin Whale 40 Hz Pulse, marked by deep red spots*
+
 </center>
 <br/>
 
