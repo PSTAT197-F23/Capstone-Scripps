@@ -31,32 +31,30 @@ library(htmlwidgets)
 jsfile <- "bundle.js" # the bundle.js file is in the `www` directory, pls do not change the directory name
 
 
-# Defining a function to convert month number to month name
-get_month_name <- function(month_num) {
-  month_names <- c("January", "February", "March", "April", "May", "June", 
-                   "July", "August", "September", "October", "November", "December")
-  return(month_names[month_num])
-}
 
+# IMPORT DATA, obtained from CalCOFI:
+source("data-cleaning.R")  # import data cleaning functions
 
+whale_raw <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
+cleaned_whale <- clean_whale(whale_raw)
+new_raw <- read.csv("data/CC-202311.txt", header = TRUE, na.strings = "NA")
+cleaned_new <- clean_new_sightings(new_raw)
+whale <- rbind(cleaned_whale, cleaned_new)  # merge both datasets into 'whale'
 
-# import my data, obtained from CalCOFI
-whale <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
-whale$Season <- trimws(whale$Season)
-whale$Year <- as.numeric(format(as.POSIXct(whale$DateTimeLocal, format = "%m/%d/%Y %H:%M"), format='%Y'))
-whale = whale[-1105,]
-whale = subset(whale, DecLat < 39) # restrict latitude values to CalCOFI cruise area
-whale = subset(whale, DecLong < -113) # restrict longitude values
-whale = whale[-2064,] # removing inland bottlenose dolphin sighting 
 station <- read.csv("data/CalCOFIStationOrder.csv")
-edna <- read.csv("data/edna-processed.csv")
-colnames(edna)[colnames(edna) == "year"] ="Year"
-viz <- read.csv("data/CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
-acoustic_detections <- read.csv("data/acoustic_detections.csv")
-station_acoustic <- read.csv("data/acoustic_station.csv") # station data for plotting acoustic detentions
+edna_raw <- read.csv("data/edna-processed.csv")
+edna <- clean_edna(edna_raw)
+viz_raw <- read.csv("data/CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
+viz <- clean_viz(viz_raw)
+
+acoustic_raw <- read.csv("data/acoustic_detections.csv")
+acoustic_detections <- clean_acoustic(acoustic_raw)
+
+station_acoustic_raw <- read.csv("data/acoustic_station.csv") # station data for plotting acoustic detentions
+station_acoustic <- clean_acoustic(station_acoustic_raw)
 
 
-
+# create dataframes for checkboxes:
 species_list <- data.frame(
   Suborder = c(rep('Odontocete',16), rep('Mysticete',6), rep('Unidentified',10)),
   Family = c('Delphinidae',
@@ -115,122 +113,6 @@ seasons_dataframe <- whale %>% select('Cruise', 'Season', 'Year') %>%
   distinct(Cruise, .keep_all = TRUE) %>% 
   mutate(Season = str_to_title(Season))
 
-# Extract year and month from Cruise column for seasons_dataframe
-seasons_dataframe <- mutate(seasons_dataframe,
-                            year = paste("20", substr(Cruise, 3, 4), sep = ""),
-                            month_num = as.integer(substr(Cruise, 5, 6)))
-
-# Convert month number to month name
-seasons_dataframe <- mutate(seasons_dataframe, month_name = sapply(seasons_dataframe$month_num, get_month_name))
-
-# Combine year and month into formatted_date column
-seasons_dataframe <- mutate(seasons_dataframe, Cruise = paste(month_name, year))
-
-# Drop intermediate columns
-seasons_dataframe <- select(seasons_dataframe, -year, -month_num, -month_name)
-
-
-
-# Extract year and month from Cruise column for whale data frame
-whale <- mutate(whale,
-                year = paste("20", substr(Cruise, 3, 4), sep = ""),
-                month_num = as.integer(substr(Cruise, 5, 6)))
-
-# Convert month number to month name
-whale <- mutate(whale, month_name = sapply(whale$month_num, get_month_name))
-
-# Combine year and month into formatted_date column
-whale <- mutate(whale, Cruise = paste(month_name, year))
-
-# Drop intermediate columns
-whale <- select(whale, -year, -month_num, -month_name)
-
-
-
-# Extract year and month from cruise column for edna data frame
-edna <- mutate(edna,
-               year = paste("20", substr(cruise, 3, 4), sep = ""),
-               month_num = as.integer(substr(cruise, 5, 6)))
-
-# Convert month number to month name
-edna <- mutate(edna, month_name = sapply(edna$month_num, get_month_name))
-
-# Combine year and month into formatted_date column
-edna <- mutate(edna, cruise = paste(month_name, year))
-
-# Drop intermediate columns
-edna <- select(edna, -year, -month_num, -month_name)
-
-
-
-# Extract year and month from Cruise column for acoustic_detections data frame
-acoustic_detections <- mutate(acoustic_detections,
-                              year = paste("20", substr(Cruise, 3, 4), sep = ""),
-                              month_num = as.integer(substr(Cruise, 5, 6)))
-
-# Convert month number to month name
-acoustic_detections <- mutate(acoustic_detections, month_name = sapply(acoustic_detections$month_num, get_month_name))
-
-# Combine year and month into formatted_date column
-acoustic_detections <- mutate(acoustic_detections, Cruise = paste(month_name, year))
-
-# Drop intermediate columns
-acoustic_detections <- select(acoustic_detections, -year, -month_num, -month_name)
-
-
-
-# Extract year and month from Cruise column for station_acoustic data frame
-station_acoustic <- mutate(station_acoustic,
-                           year = paste("20", substr(Cruise, 3, 4), sep = ""),
-                           month_num = as.integer(substr(Cruise, 5, 6)))
-
-# Convert month number to month name
-station_acoustic <- mutate(station_acoustic, month_name = sapply(station_acoustic$month_num, get_month_name))
-
-# Combine year and month into formatted_date column
-station_acoustic <- mutate(station_acoustic, Cruise = paste(month_name, year))
-
-# Drop intermediate columns
-station_acoustic <- select(station_acoustic, -year, -month_num, -month_name)
-
-
-
-# Extract year and month from Cruise column for viz data frame
-viz <- mutate(viz,
-              year = paste("20", substr(cruise, 3, 4), sep = ""),
-              month_num = as.integer(substr(cruise, 5, 6)))
-
-# Convert month number to month name
-viz <- mutate(viz, month_name = sapply(viz$month_num, get_month_name))
-
-# Combine year and month into formatted_date column
-viz <- mutate(viz, cruise = paste(month_name, year))
-
-# Drop intermediate columns
-viz <- select(viz, -year, -month_num, -month_name)
-
-
-
-
-
-
-
-# function to scale the dots:
-adjustSize <- function(value) {
-  if (!is.na(value)){
-    if (value < 10) {
-      return(4750 + (1000 * log(value)))
-    } 
-    else {
-      return((log(value) * 2000) + 3750)
-      
-    }
-  }
-}
-
-normalize_effort <- function(x, na.rm = TRUE) {
-  return((x- min(x)) /(max(x)-min(x)))
-}
 
 
 #build the app!
@@ -343,7 +225,8 @@ ui <- fluidPage(
                                          label = 'Years',
                                          min = min(whale$Year, na.rm = TRUE),
                                          max = max(whale$Year, na.rm = TRUE),
-                                         value = c(2004, 2022),
+                                         value = c(min(whale$Year, na.rm = TRUE), 
+                                                   max(whale$Year, na.rm = TRUE)),
                                          step = 1,
                                          sep = "",
                                          animate = animationOptions(
@@ -551,7 +434,7 @@ server <- function(input, output, session) {
   })
   
   # add reactive filter for visual effort per cruise
-  vizFilter <- reactive({filter(viz, viz$cruise %in% input$all_cruises
+  vizFilter <- reactive({filter(viz, viz$Cruise %in% input$all_cruises
                                 & viz$Year >= input$years[1] 
                                 & viz$Year <= input$years[2])})
   
@@ -800,13 +683,13 @@ server <- function(input, output, session) {
   
   
   # eDNA effort filter for plotting eDNA effort per cruise. Plot as black circle 
-  ednaEffortFilter <- reactive({filter(edna, edna$cruise %in% input$all_cruises 
+  ednaEffortFilter <- reactive({filter(edna, edna$Cruise %in% input$all_cruises 
                                        & edna$Year >= input$years[1] 
                                        & edna$Year <= input$years[2])})
   
   
   ednaDetectionFilter <- reactive({
-      data <- filter(edna, edna$cruise %in% input$all_cruises 
+      data <- filter(edna, edna$Cruise %in% input$all_cruises 
                                           & edna$SpeciesName %in% input$all_species
                                           & edna$Year >= input$years[1] 
                                           & edna$Year <= input$years[2])
