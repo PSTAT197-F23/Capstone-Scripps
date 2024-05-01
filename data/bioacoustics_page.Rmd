@@ -5,9 +5,9 @@ Bioacoustics refers to the study of the sounds produced by marine mammals and th
 
 <br/>
 <center>
-  <img src="fin_whale_40_hz.png" height="300" width="750">
+  <img src="CC0808SB02_0815213000_second_60_to_120.png" height="300" width="750">
   
-###### *Fin Whale 40 Hz Pulse, marked by deep red spots*
+###### *Spectrogram with all identifiable calls present*
 
 </center>
 <br/>
@@ -15,7 +15,7 @@ Bioacoustics refers to the study of the sounds produced by marine mammals and th
 
 ## **How is Bioacoustic Data Collected and Visualized?**
 
-CalCOFI ships deploy sonobuoys at varying depths to record marine mammal acoustics for hours at a time. These devices typically pick up 2000 samples of sound waves per second. A series of Fourier transforms are then applied to short, overlapping segments of the recorded signals to convert the data from the time domain (amplitude varying with time) to the frequency domain. Additional features of the sound wave can then be extracted such as a signal's frequency spectrum and magnitude. Using this acquired information, a spectrogram is constructed by piecing together the audio segments into one continuous plot that provides a time-varying representation of a signal's frequency content. Duration is on the x-axis, frequency is on the y-axis, and magnitude is represented by color. The end product is a colorful visual capture of recorded sound that contains anything from whale songs to white noise from ships, as you can see in the figure above.
+CalCOFI ships deploy sonobuoys at varying depths to record marine mammal acoustics for hours at a time. These devices typically pick up 2000 samples of sound waves per second, which are saved as wav files for further manipulation. A series of Fourier transforms are then applied to short, overlapping segments of the recorded signals to convert the data from the time domain (amplitude varying with time) to the frequency domain. Additional features of the sound wave can then be extracted such as a signal's frequency spectrum and magnitude. Using this acquired information, a spectrogram is constructed by piecing together the audio segments into one continuous plot that provides a time-varying representation of a signal's frequency content. Duration is on the x-axis, frequency is on the y-axis, and magnitude is represented by color. The end product is a colorful visual capture of recorded sound that contains anything from whale songs to white noise from ships, as you can see in the figure above.
 
 <br/><center>
 #### **Listen to actual recordings by pressing the play buttons!**
@@ -55,3 +55,26 @@ CalCOFI ships deploy sonobuoys at varying depths to record marine mammal acousti
 Explain model and go through preprocessing pipeline here.
 
 <br/>
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results="show")
+#install.packages('reticulate')
+library(reticulate)
+
+use_python("/Library/Frameworks/Python.framework/Versions/3.10/bin/python3")
+```
+
+## **Testing**
+
+```{python eval=TRUE}
+import numpy as np
+
+arr = np.array([1, 2, 3, 4, 5])
+
+print(arr)
+
+print(type(arr))
+```
+
+
+
