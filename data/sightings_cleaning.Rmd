@@ -1,0 +1,25 @@
+---
+title: "sightings-cleaning"
+output: html_document
+date: "2024-05-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load libs
+library(dplyr)
+library(tidyr)
+
+# load data
+acoustic_detections <- read.csv("CC-202311.csv")
+# Filter the dataframe to include only observations where the column "ev" equals "SIT"
+filtered_data <- subset(acoustic_detections, ev == "SIT")
+filtered_data <- subset(filtered_data, X1 == "CETA")
+# Drop the column "EID" from the filtered dataframe
+filtered_data <- subset(filtered_data, select = -EID)
+#station <- read.csv("CalCOFIStationOrder.csv")
+
+```
