@@ -33,7 +33,7 @@ jsfile <- "bundle.js" # the bundle.js file is in the `www` directory, pls do not
 
 
 # IMPORT DATA, obtained from CalCOFI:
-source("data-cleaning.R")  # import data cleaning functions
+source("data/data-cleaning.R")  # import data cleaning functions
 
 whale_raw <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
 cleaned_whale <- clean_whale(whale_raw)
