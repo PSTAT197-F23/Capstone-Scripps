@@ -7,7 +7,7 @@ Bioacoustics refers to the study of the sounds produced by marine mammals and th
 <center>
   <img src="CC0808SB02_0815213000_second_60_to_120.png" height="300" width="750">
   
-###### *Spectrogram with all identifiable calls present*
+###### *Spectrogram with all identifiable calls present (blue whale A, B, and D calls / fin whale 20 hz and 40 hz calls)*
 
 </center>
 <br/>
@@ -52,29 +52,95 @@ CalCOFI ships deploy sonobuoys at varying depths to record marine mammal acousti
 
 ## **Faster r-CNN Deep Learning Model**
 
-Explain model and go through preprocessing pipeline here.
+A faster r-CNN ResNet-50 model was built to automate the identification of whale calls and classify them given spectrograms transformed from wav files of collected bioacoustic data as input. Although functional, imperfect accuracy was likely due to the abundance of noise and insignificant signals scattered throughout the data as shown below. These factors made it difficult for the model to distinguish between the actual calls and undesired visuals.
 
-<br/>
+<center>
+  <img src="random noisy spectrogram" height="300" width="750">
+  
+###### *Spectrogram with a bunch of noise*
 
-```{r setup, include=FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(echo = TRUE, results="show")
-#install.packages('reticulate')
-library(reticulate)
+</center>
 
-use_python("/Library/Frameworks/Python.framework/Versions/3.10/bin/python3")
-```
+The solution was to produce a preprocessing pipeline that would eliminate this noise, and consequently, increase both model runtime efficiency and classification accuracy. The following is a small scale demonstration of the final pipeline with code and output examples:
 
-## **Testing**
+
+### **Step 1: Resizing the Data**
 
 ```{python eval=TRUE}
-import numpy as np
-
-arr = np.array([1, 2, 3, 4, 5])
-
-print(arr)
-
-print(type(arr))
+def draw_img(ax, img_vector, h=141, w=601):
+    """
+    1. takes img_vector,
+    2. reshapes into right dimensions,
+    3. draws the resulting image
+    """
+    ax.imshow( (img_vector).reshape(h,w), cmap=plt.cm.gray)
+    plt.xticks(())
+    plt.yticks(())
 ```
+
+### **Step 2: Vectorizing/Stacking the Images**
+
+```{python eval=TRUE}
+for index, row in unique_annotation.iterrows():
+    image = Image.open(row['spectrogram_path'])
+    pixel_values = np.array(list(image.getdata()))
+    data_matrix.append(pixel_values)
+    
+stacked_specs = np.vstack(data_matrix)
+```
+
+### **Step 3: Singular Value Decomposition**
+
+```{python eval=TRUE}
+U, S, T = np.linalg.svd(original_data, full_matrices=False)
+US = U*S
+
+svd_data = US @ T
+svd_data_scaled = scaler.inverse_transform(svd_data)
+```
+
+### **Step 4: Median Filtering and Background Subtraction**
+
+```{python eval=TRUE}
+for i in range(len(T)):
+    feature = np.copy(T[i].reshape((141, 601)))
+    feature = median_filter(feature, size = 3)
+
+    for j in range(feature.shape[1]):
+        column = feature[:, j]
+        percentile_value = np.percentile(column, 10)
+        feature[:, j] = column - percentile_value
+        feature[:, j][feature[:, j] < 0] = 0
+        
+    signal_enhanced_features[i] = feature.flatten()
+```
+
+### **Step 5: Reconstruction**
+
+```{python eval=TRUE}
+matrix = US[:, 0:150] @ signal_enhanced_features[0:150, :]
+matrix = US @ signal_enhanced_features
+matrix_scaled = scaler.inverse_transform(matrix)
+matrix_scaled = np.where(matrix_scaled < 0, 0, matrix_scaled)
+```
+
+### **Step 6: Background Subtraction on Reconstruction**
+
+```{python eval=TRUE}
+matr_sub = np.zeros_like(matrix_scaled)
+
+for i in range(len(matrix_scaled)):
+    spec = np.copy(matrix_scaled[i].reshape((141, 601)))
+
+    for j in range(spec.shape[1]):
+        column = spec[:, j]
+        percentile_value = np.percentile(column, 60)
+        spec[:, j] = column - percentile_value
+        spec[:, j][spec[:, j] < 0] = 0
+
+    matr_sub[i] = spec.flatten()
+```
+
 
 
 
