@@ -1,0 +1,133 @@
+
+
+
+
+
+# STATION:
+```{r}
+station <- read.csv("data/CalCOFIStationOrder.csv")
+```
+
+
+# EDNA:
+```{r}
+edna <- read.csv("data/edna-processed.csv")
+
+## Create Cruise column:
+#edna <- mutate(edna, Cruise = paste(month.name[as.integer(substr(cruise, 5, 6))], year))
+
+clean_edna <- function(data){
+  cleaned <- data %>% 
+    mutate(CruiseName = paste(month.name[as.integer(substr(cruise, 5, 6))], year))
+}
+
+cleaned_edna<-clean_edna(edna)
+```
+
+
+# VIZ:
+```{r}
+viz <- read.csv("data/CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
+
+viz <- mutate(viz, cruise = paste(month.name[as.integer(substr(Cruise, 5, 6))], 
+                             substr(Cruise, 3, 6)))
+
+clean_viz <- function(data){
+  cleaned <- data %>% mutate(viz, cruise = paste(month.name[as.integer(substr(Cruise, 5, 6))], 
+                             substr(Cruise, 3, 6)))
+}
+```
+
+
+
+# ACOUSTIC:
+```{r}
+# load raw data
+acoustic_detections <- read.csv("data/acoustic-raw.csv")
+
+# subset station data
+station <- station[, c('Line','Sta','Lat..dec.','Lon..dec.')]
+
+# rename columns
+names(station)[names(station) == "Sta"] <- "Station"
+names(station)[names(station) == "Lon..dec."] <- "Longitude"
+names(station)[names(station) == "Lat..dec."] <- "Latitude"
+
+# change data types
+acoustic_detections$CC.Station <-as.numeric(acoustic_detections$CC.Station)
+acoustic_detections$CC.Line <- as.numeric(acoustic_detections$CC.Line)
+acoustic_detections$Hour.spans <- as.numeric(acoustic_detections$Hour.spans)
+
+# rename columns
+names(acoustic_detections)[names(acoustic_detections) == "Hour.spans"] <- "hours"
+names(acoustic_detections)[names(acoustic_detections) == "CC.Line"] <- "Line"
+names(acoustic_detections)[names(acoustic_detections) == "CC.Station"] <- "Station"
+
+# fixing line numbers
+station[station['Line'] == 63.3, 'Line'] = 63
+station[station['Line'] == 66.7, 'Line'] = 67
+station[station['Line'] == 73.3, 'Line'] = 73
+station[station['Line'] == 76.7, 'Line'] = 77
+station[station['Line'] == 83.3, 'Line'] = 83
+station[station['Line'] == 87.7, 'Line'] = 87
+station[station['Line'] == 93.3, 'Line'] = 93
+
+# Create Effort column by aggregating the sum of hours over line, station, cruise, and year
+data <- aggregate(hours ~  Line + Station + Cruise + Year, data = acoustic_detections, FUN = sum)
+
+# rename column
+names(data)[names(data) == "hours"] <- "Effort"
+
+# merge data with station
+data <- merge(data, station, by = c("Line", "Station"))
+
+# subset columns
+acoustic_detections_mod1 <- acoustic_detections[, c('Year', 'Cruise', 'Season', 'Line', 'Station', 'Spp..Detected', 'hours')]
+
+# rename columns
+names(acoustic_detections_mod1)[names(acoustic_detections_mod1) == "Spp..Detected"] <- "SpeciesName"
+names(acoustic_detections_mod1)[names(acoustic_detections_mod1) == "hours"] <- "Duration"
+
+# split detections into multiple obs
+split_whales <- strsplit(trimws(acoustic_detections_mod1$SpeciesName), ",\\s*")
+acoustic_detections_mod1 <- acoustic_detections_mod1 %>%
+  mutate(whale_split = split_whales) %>%
+  unnest(whale_split)
+
+# subset columns
+acoustic_detections_mod1 <- acoustic_detections_mod1[, c('Year', 'Cruise', 'Season', 'Line', 'Station', 'whale_split', 'Duration')]
+
+# rename column
+names(acoustic_detections_mod1)[names(acoustic_detections_mod1) == "whale_split"] <- "SpeciesName"
+
+# fix value errors
+acoustic_detections_mod1$SpeciesName <- gsub("Fin", "Fin whale", acoustic_detections_mod1$SpeciesName)
+
+acoustic_detections_mod1$SpeciesName <- gsub("Blue", "Blue whale", acoustic_detections_mod1$SpeciesName)
+
+acoustic_detections_mod1$SpeciesName <- gsub("Humpback", "Humpback whale", acoustic_detections_mod1$SpeciesName)
+
+acoustic_detections_mod1$SpeciesName <- gsub("FIn", "Fin whale", acoustic_detections_mod1$SpeciesName)
+
+acoustic_detections_mod1$Cruise <- gsub("[^0-9]+$", "", acoustic_detections_mod1$Cruise)
+data$Cruise <- gsub("[^0-9]+$", "", data$Cruise)
+
+write.csv(data, "acoustic_station.csv", row.names = FALSE)
+write.csv(acoustic_detections_mod1, "acoustic_detections.csv", row.names = FALSE)
+```
+
+
+
+
+
+
+
+```{r}
+# seasons dataframe (for cruise aggregation)
+seasons_dataframe <- whale %>% select('Cruise', 'Season', 'Year') %>% 
+  distinct(Cruise, .keep_all = TRUE) %>%  
+  mutate(Season = str_to_title(Season))
+```
+
+
+
