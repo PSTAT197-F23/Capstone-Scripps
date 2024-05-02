@@ -83,6 +83,36 @@ clean_viz <- function(data){
   return(cleaned)
 }
 
+clean_new_viz <- function(new_data) {
+  # This function returns year, season, cruise, and start/end cordinates from the input data
+  # These coluns are the only ones used for visualizing effort in the app.R script
+  cleaned <- new_data %>%
+    filter(ev == 'SIT' | ev == 'UPD') %>% # get sightings events
+    select(cruise, when, X, Y, X34, X35) %>% # select relevant columns
+    mutate(Year = str_sub(when, 1, 4)) %>% # create year column
+    filter(when != "when") %>% # remove 'when' obs
+    mutate(Year = as.numeric(Year)) %>% # convert year to numeric
+    mutate(X34 = ifelse(is_numeric(X34), X34, NA)) %>% # remove comments from X34
+    mutate(X35 = ifelse(is_numeric(X35), X35, NA)) %>% # remove comments from X34
+    mutate(
+      X = as.numeric(X),
+      Y = as.numeric(Y),
+      X34 = as.numeric(X34),
+      X35 = as.numeric(X35),
+      Season = as.character(sapply(as.integer(substr(when, 6, 7)), get_season))
+    ) %>% # make cordinates numeric
+    select(-when) %>% # remove when column
+    rename(
+      StartLon = X,
+      StartLat = Y,
+      EndLon = X34,
+      EndLat = X35,
+      Cruise = cruise
+    ) # rename columns
+  
+  cleaned
+}
+
 ###########################
 # ACOUSTIC:
 clean_acoustic <- function(data){
@@ -126,4 +156,9 @@ adjustSize <- function(value) {
 ## normalize effort function:
 normalize_effort <- function(x, na.rm = TRUE) {
   return((x- min(x)) /(max(x)-min(x)))
+}
+
+## function to check if a string contains only numeric characters
+is_numeric <- function(x) {
+  grepl("^[0-9]+$", x)
 }
