@@ -55,9 +55,9 @@ CalCOFI ships deploy sonobuoys at varying depths to record marine mammal acousti
 A faster r-CNN ResNet-50 model was built to automate the identification of whale calls and classify them given spectrograms transformed from wav files of collected bioacoustic data as input. Although functional, imperfect accuracy was likely due to the abundance of noise and insignificant signals scattered throughout the data as shown below. These factors made it difficult for the model to distinguish between the actual calls and undesired visuals.
 
 <center>
-  <img src="random noisy spectrogram" height="300" width="750">
+  <img src="CC0711-SB13-071110-201000_second_120_to_180.png" height="300" width="750">
   
-###### *Spectrogram with a bunch of noise*
+###### *Noisy spectrogram containing fin whale 40 Hz pulse*
 
 </center>
 
@@ -65,7 +65,7 @@ The solution was to produce a preprocessing pipeline that would eliminate this n
 
 
 ### **Step 1: Vectorizing/Stacking the Images**
-We first iterate through our csv file of annotations which contains the locations of all the spectrogram images (png files) in the user's computer along with their respective bounding boxes and classifications. Each image is converted into a NumPy array that consists of the image's pixel values depending on color. Higher values correspond to brighter colors, and lower values correspond to darker colors. The arrays are then appended to a data frame. Finally, we apply numpy.vstack to this data frame to stack the sequence of input arrays vertically to make a single array.
+We first iterate through our csv file of annotations which contains the locations of all the spectrogram images (png files) in the user's computer along with their respective bounding boxes and classifications. Each image is converted into a NumPy array that consists of the image's pixel values dependent on color intensity. Higher values correspond to brighter colors and lower values correspond to darker colors. The arrays are then appended to a data frame. Finally, we apply numpy.vstack to this data frame to stack the sequence of input arrays vertically to make a single array. An example of an unmodified spectrogram from the original dataset is shown below.
 
 ```{python eval=TRUE}
 #annotations saved in 'unique_annotation' variable
@@ -78,10 +78,16 @@ for index, row in unique_annotation.iterrows():
     
 original_data = np.vstack(data_matrix)
 ```
+<center>
+  <figure>
+    <img src="step_1_image_original.png" height="200" width="450">
+    <figcaption><em>Blue Whale B call (unprocessed)</em><figcaption>
+  </figure>
+</center>
 <br/>
 
 ### **Step 2: Singular Value Decomposition**
-Due to the nature of the basis vectors on which the pixel values for each spectrogram are uniquely determined, we found a sound justification to safely apply a principal component projection to the training set. Singular value decomposition of the matrix was then done to separate the data's covariance matrix into three sub-matrices that together comprise the original data: U (eigenvector matrix), S (eigenvalue matrix), and T (coefficient matrix). 
+Due to the nature of the basis vectors on which the pixel values for each spectrogram are uniquely determined, we found a sound justification to safely apply a principal component projection to the training set. Singular value decomposition of the matrix was then done to separate the data's covariance matrix into three sub-matrices that together comprise the original data: U (eigenvector matrix), S (eigenvalue matrix), and T (feature matrix). Below is an example of features extracted from matrix T for a single spectrogram. In theory, combining those 10 separate components into one image would construct something very closely resembling the original observation.
 
 ```{python eval=TRUE}
 U, S, T = np.linalg.svd(original_data, full_matrices=False)
@@ -89,11 +95,22 @@ US = U*S
 
 svd_data = US @ T
 svd_data_scaled = scaler.inverse_transform(svd_data)
+
+for i in range(0, 10):
+    one_face = T[i]
+    plt.subplot(2, 5, i + 1)
+    draw_img_single(one_face)
 ```
+<center>
+  <figure>
+    <img src="step_2_image.png" height="200" width="450">
+    <figcaption><em>10 sub-spectrograms for one observation</em><figcaption>
+  </figure>
+</center>
 <br/>
 
 ### **Step 3: Median Filtering and Background Subtraction**
-We then hypothesized that the eigen-components extracted from the covariance matrix which represented the sub-spectrograms responsible for reconstructing the originals would separate the artifacts and white noise problem frequencies into separate, more consistently distributed spectrograms. Assuming this was the case, we performed a time-domain background subtraction on the principal spectrogram features from matrix T along with median blurring with the common kernel size of 3. This would remove the artifacts and white noise from the spectrograms while minimizing the damage done to the signal pixel values, thereby allowing us to use the filtered principal components to reconstruct more manageable spectrogram observations.
+With the artifacts and white noise problem frequencies spread across separate, more consistently distributed spectrograms, we performed a time-domain background subtraction on the principal spectrogram features from matrix T along with median blurring with the common kernel size of 3. This would remove the artifacts and white noise from the spectrograms while minimizing the damage done to the signal pixel values, thereby allowing us to use the filtered principal components to reconstruct more manageable spectrogram observations.
 
 ```{python eval=TRUE}
 for i in range(len(T)):
@@ -107,7 +124,18 @@ for i in range(len(T)):
         feature[:, j][feature[:, j] < 0] = 0
         
     signal_enhanced_features[i] = feature.flatten()
+    
+for i in range(0, 10):
+    one_face = signal_enhanced_features[i]
+    plt.subplot(2, 5, i + 1)
+    draw_img_single(one_face)
 ```
+<center>
+  <figure>
+    <img src="step_3_image.png" height="200" width="450">
+    <figcaption><em>Signal enhanced features</em><figcaption>
+  </figure>
+</center>
 <br/>
 
 ### **Step 4: Reconstruction**
@@ -122,7 +150,7 @@ matrix_scaled = np.where(matrix_scaled < 0, 0, matrix_scaled)
 <br/>
 
 ### **Step 5: Background Subtraction on Reconstruction**
-We lastly apply simple column-wise subtraction of the median value to these reconstructions which results in a much cleaner deletion of excess noise while maintaining the integrity of the whale calls as labeled for each observation.
+We lastly apply simple column-wise subtraction of the median value to these reconstructions which results in a much cleaner deletion of excess noise while maintaining the integrity of the whale calls as labeled for each observation. Below are a few examples of the finalized preprocessed images.
 
 ```{python eval=TRUE}
 matr_sub = np.zeros_like(matrix_scaled)
@@ -138,6 +166,19 @@ for i in range(len(matrix_scaled)):
 
     matr_sub[i] = spec.flatten()
 ```
+<center>
+  <figure>
+    <img src="step_5_image_final.png" height="200" width="450">
+    <figcaption><em>Blue Whale B call (preprocessed)</em><figcaption>
+  </figure>
+</center>
+<br/>
+<center>
+  <figure>
+    <img src="step_5_image_comp.png" height="300" width="750">
+    <figcaption><em>Before and after preprocessing comparison of fin whale 40 Hz pulse</em><figcaption>
+  </figure>
+</center>
 <br/>
 
 ```{python eval=TRUE}
@@ -146,7 +187,7 @@ for i in range(len(matr_sub)):
     image = Image.fromarray(processed_image.astype(np.uint8), 'L')
     image.save(Path(directory_path) / Path(filenames[i]))
 ```
-The final preprocessed arrays are converted back into images and are saved to the specified directory path from the user, ready to be used for model training.
+The final preprocessed arrays are converted back into images and saved to the directory path specified by the user, ready to be used for model training.
 <br/>
 
 
