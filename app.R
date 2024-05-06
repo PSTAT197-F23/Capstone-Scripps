@@ -200,6 +200,7 @@ ui <- fluidPage(
                        "<br>")),
                      menuItem("Home", tabName="info", icon = icon("home")),
                      menuItem("Species Map", tabName="map", icon = icon("thumbtack")),
+                     menuItem("Bioacoustics", tabName="bioacoustics", icon = icon("music")),
                      menuItem("More Information", tabName="moreinfo", icon=icon("bell"))
                      
                    )),
@@ -304,6 +305,8 @@ ui <- fluidPage(
               )
       )
     ),
+    tabItem(tabName = "bioacoustics",
+            includeMarkdown("data/bioacoustics_page.Rmd")),
     tabItem(tabName = "moreinfo",
             includeMarkdown("data/more_info_page.Rmd"))
   ))))
