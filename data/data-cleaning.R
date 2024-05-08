@@ -87,9 +87,10 @@ clean_new_viz <- function(new_data) {
   # This function returns year, season, cruise, and start/end cordinates from the input data
   # These coluns are the only ones used for visualizing effort in the app.R script
   cleaned <- new_data %>%
-    filter(ev == 'SIT' | ev == 'UPD') %>% # get sightings events
-    select(cruise, when, X, Y, X34, X35) %>% # select relevant columns
+    filter(ev == 'EFF') %>% # get effort events
+    select(cruise, when, X, Y, X2, X34, X35) %>% # select relevant columns
     mutate(Year = str_sub(when, 1, 4)) %>% # create year column
+    filter(X2 == "0") %>% # get observations with transect effort ON
     filter(when != "when") %>% # remove 'when' obs
     mutate(Year = as.numeric(Year)) %>% # convert year to numeric
     mutate(X34 = ifelse(is_numeric(X34), X34, NA)) %>% # remove comments from X34
