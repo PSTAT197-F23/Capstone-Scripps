@@ -35,11 +35,7 @@ jsfile <- "bundle.js" # the bundle.js file is in the `www` directory, pls do not
 # IMPORT DATA, obtained from CalCOFI:
 source("data/data-cleaning.R")  # import data cleaning functions
 
-whale_raw <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
-cleaned_whale <- clean_whale(whale_raw)
-new_raw <- read.csv("data/CC-202311.txt", header = TRUE, na.strings = "NA")
-cleaned_new <- clean_new_sightings(new_raw)
-whale <- rbind(cleaned_whale, cleaned_new)  # merge both datasets into 'whale'
+whale <- read.csv("data/whale.csv")
 
 station <- read.csv("data/CalCOFIStationOrder.csv")
 edna_raw <- read.csv("data/edna-processed.csv")
