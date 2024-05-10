@@ -65,16 +65,6 @@ clean_new_sightings <- function(new_sightings){
 }
 
 
-# create/save the merged 'whale' dataset
-whale_raw <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
-cleaned_whale <- clean_whale(whale_raw)
-new_raw <- read.csv("data/CC-202311.txt", header = TRUE, na.strings = "NA")
-cleaned_new <- clean_new_sightings(new_raw)
-
-whale <- rbind(cleaned_whale, cleaned_new)   # merge both datasets into 'whale'
-write.csv(whale, "data/whale.csv", col.names = TRUE)  # export whale dataset
-
-
 ###########################
 # EDNA:
 clean_edna <- function(data){
