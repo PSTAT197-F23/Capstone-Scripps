@@ -3,7 +3,7 @@
 # clean whale dataset:
 clean_whale <- function(dataset){
   cleaned = subset(dataset, DecLat < 39)  # restrict latitude values
-  cleaned = subset(dataset, DecLong < -113)  # restrict longitude values
+  cleaned = subset(cleaned, DecLong < -113)  # restrict longitude values
   cleaned = cleaned[-1105,]
   cleaned = cleaned[-2064,]  # removing inland bottlenose dolphin sighting 
   cleaned <- cleaned %>% 
