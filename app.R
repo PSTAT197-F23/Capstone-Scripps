@@ -207,7 +207,17 @@ ui <- fluidPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "info",
-              includeMarkdown("data/welcome_page.Rmd"),
+              HTML('<body>
+                    <h1>Welcome!</h1>
+                    <p>California Cooperative Oceanic Fisheries Investigation (CalCOFI) has been conducting marine ecosystem surveys in the California Current since 1949. More information about the CalCOFI program can be found on the <a href="https://calcofi.org/">CalCOFI website</a>.</p>
+                    <p>The purpose of this Shiny App is to provide scientists with an interactive tool to visualize marine mammal data collected onboard CalCOFI. Here we integrate multiple datastreams, highlighting how marine mammal visual sightings and eDNA detections are represented through time and space. Please stay tuned for the addition of acoustic detections in a future release. By integrating visual, acoustic, and genetic sampling methods, we hope to better understand the detection capabilities of each method for detecting marine mammals in their environment.</p>
+                    <h2>How is CalCOFI Data Collected?</h2>
+                    <div class="infographic">
+                      <p>Below is an interactive infographic that details the sampling processes for collecting visual, eDNA, and bioacoustic data.</p>
+                      <div style="margin-bottom: 30px;"></div> <!-- This will create space -->
+                      <p style="text-align: center; font-weight: bold;">Click or hover on different parts of the visual to learn more about them!</p>
+                    </div>
+                    </body>'),
               HTML('<center><img src="opening_infographic.png", height="710", usemap="#edna_map">',
                    '<map name="edna_map">',
                    '<area shape="rect" coords="40,10,480,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
@@ -306,7 +316,173 @@ ui <- fluidPage(
       )
     ),
     tabItem(tabName = "bioacoustics",
-            includeMarkdown("data/bioacoustics_page.Rmd")),
+            HTML("<h1><strong>CalCOFI Bioacoustics</strong></h1>
+                   
+                   <p>Bioacoustics refers to the study of the sounds produced by marine mammals and their underwater acoustic environment. Bioacoustic studies of marine mammals involve the collection, analysis, and interpretation of these sounds to gain insights into various aspects of their behavior, ecology, and conservation.</p>
+                   
+                   <br/>
+                   <center>
+                   <img src='CC0808SB02_0815213000_second_60_to_120.png' height='300' width='750'>
+                   
+                   <h6><em>Spectrogram with all identifiable calls present (blue whale A, B, and D calls / fin whale 20 hz and 40 hz calls)</em></h6>
+                   </center>
+                   <br/>
+                   <h2><strong>How is Bioacoustic Data Collected and Visualized?</strong></h2>
+
+<p>CalCOFI ships deploy sonobuoys at varying depths to record marine mammal acoustics for hours at a time. These devices typically pick up 2000 samples of sound waves per second, which are saved as wav files for further manipulation. A series of Fourier transforms are then applied to short, overlapping segments of the recorded signals to convert the data from the time domain (amplitude varying with time) to the frequency domain. Additional features of the sound wave can then be extracted such as a signal's frequency spectrum and magnitude. Using this acquired information, a spectrogram is constructed by piecing together the audio segments into one continuous plot that provides a time-varying representation of a signal's frequency content. Duration is on the x-axis, frequency is on the y-axis, and magnitude is represented by color. The end product is a colorful visual capture of recorded sound that contains anything from whale songs to white noise from ships, as you can see in the figure above.</p>
+
+<br/><center>
+<h4>Listen to actual recordings by pressing the play buttons!</h4>
+</center>
+                 <center>
+<div style='display: flex; justify-content: center;'>
+<div style='display: flex;'>
+  <figure style='margin-right: 20px;'>
+    <img src='blue_whale_B_call.png' height='200' width='450'>
+    <figcaption><em>Blue Whale B Call</em></figcaption>
+  </figure>
+  <figure>
+    <img src='fin_whale_pulse.png' height='200' width='450'>
+    <figcaption><em>Fin Whale Pulse</em></figcaption>
+  </figure>
+</div>
+</center>
+
+<center>
+<div style='display: flex;'>
+  <audio controls style='margin-left: 160px;'>
+    <source src='ringtoneBlue.mp3' type='audio/mp3'>
+  </audio>
+  <audio controls style='margin-left: 180px;'>
+    <source src='ringtoneFin.mp3' type='audio/mp3'>
+  </audio>
+</div>
+</center>
+
+<br/><br/>
+<h2><strong>Faster r-CNN Deep Learning Model</strong></h2>
+
+<p>A faster r-CNN ResNet-50 model was built to automate the identification of whale calls and classify them given spectrograms transformed from wav files of collected bioacoustic data as input. Although functional, imperfect accuracy was likely due to the abundance of noise and insignificant signals scattered throughout the data as shown below. These factors made it difficult for the model to distinguish between the actual calls and undesired visuals.</p>
+
+<center>
+  <img src='CC0711-SB13-071110-201000_second_120_to_180.png' height='300' width='750'>
+  
+  <h6><em>Noisy spectrogram containing fin whale 40 Hz pulse</em></h6>
+</center>
+<p>The solution was to produce a preprocessing pipeline that would eliminate this noise, and consequently, increase both model runtime efficiency and classification accuracy. The following is a small scale demonstration of the final pipeline with code and output examples:</p>
+                 <h3><strong>Step 1: Vectorizing/Stacking the Images</strong></h3>
+                   
+                   <p>We first iterate through our csv file of annotations which contains the locations of all the spectrogram images (png files) in the user's computer along with their respective bounding boxes and classifications. Each image is converted into a NumPy array that consists of the image's pixel values dependent on color intensity. Higher values correspond to brighter colors and lower values correspond to darker colors. The arrays are then appended to a data frame. Finally, we apply numpy.vstack to this data frame to stack the sequence of input arrays vertically to make a single array. An example of an unmodified spectrogram from the original dataset is shown below.</p>
+<pre><code>
+#annotations saved in 'unique_annotation' variable
+#images navigated to via 'spectrogram_path'
+
+for index, row in unique_annotation.iterrows():
+    image = Image.open(row['spectrogram_path'])
+    pixel_values = np.array(list(image.getdata()))
+    data_matrix.append(pixel_values)
+    
+original_data = np.vstack(data_matrix)</code></pre>
+<center>
+  <figure>
+    <img src='step_1_image_original.png' height='200' width='450'>
+    <figcaption><em>Blue Whale B call (unprocessed)</em><figcaption>
+  </figure>
+</center>
+<br/>
+<h3><strong>Step 2: Singular Value Decomposition</strong></h3>
+<p>Due to the nature of the basis vectors on which the pixel values for each spectrogram are uniquely determined, we found a sound justification to safely apply a principal component projection to the training set. Singular value decomposition of the matrix was then done to separate the data's covariance matrix into three sub-matrices that together comprise the original data: U (eigenvector matrix), S (eigenvalue matrix), and T (feature matrix). Below is an example of features extracted from matrix T for a single spectrogram. In theory, combining those 10 separate components into one image would construct something very closely resembling the original observation.</p>
+<pre><code>
+U, S, T = np.linalg.svd(original_data, full_matrices=False)
+US = U*S
+
+svd_data = US @ T
+svd_data_scaled = scaler.inverse_transform(svd_data)
+
+for i in range(0, 10):
+    one_face = T[i]
+    plt.subplot(2, 5, i + 1)
+    draw_img_single(one_face)
+</code></pre>
+<center>
+  <figure>
+    <img src='step_2_image.png' height='200' width='450'>
+    <figcaption><em>10 sub-spectrograms for one observation</em><figcaption>
+  </figure>
+</center>
+<br/>
+<h3><strong>Step 3: Median Filtering and Background Subtraction</strong></h3>
+<p>With the artifacts and white noise problem frequencies spread across separate, more consistently distributed spectrograms, we performed a time-domain background subtraction on the principal spectrogram features from matrix T along with median blurring with the common kernel size of 3. This would remove the artifacts and white noise from the spectrograms while minimizing the damage done to the signal pixel values, thereby allowing us to use the filtered principal components to reconstruct more manageable spectrogram observations.</p>
+<pre><code>
+for i in range(len(T)):
+    feature = np.copy(T[i].reshape((141, 601)))
+    feature = median_filter(feature, size = 3)
+
+    for j in range(feature.shape[1]):
+        column = feature[:, j]
+        percentile_value = np.percentile(column, 10)
+        feature[:, j] = column - percentile_value
+        feature[:, j][feature[:, j] < 0] = 0
+        
+    signal_enhanced_features[i] = feature.flatten()
+    
+for i in range(0, 10):
+    one_face = signal_enhanced_features[i]
+    plt.subplot(2, 5, i + 1)
+    draw_img_single(one_face)
+</code></pre>
+<center>
+  <figure>
+    <img src='step_3_image.png' height='200' width='450'>
+    <figcaption><em>Signal enhanced features</em><figcaption>
+  </figure>
+</center>
+<br/>
+<h3><strong>Step 4: Reconstruction</strong></h3>
+<p>We reconstruct the full spectrogram images by combining the original U and S matrices from Step 2 with the 'signal_enhanced_features' created in Step 3. This time, however, we keep only the first 150 principal components as those were sufficient in creating reconstructions of the original images that resembled them almost perfectly. The procured reconstructions contained minimal to no remnants of the undesirable vertical artifacts and much more uniformly distributed white noise with significantly fewer features for the model to have to analyze.</p>
+<pre><code>
+matrix = US[:, 0:150] @ signal_enhanced_features[0:150, :]
+matrix = US @ signal_enhanced_features
+matrix_scaled = scaler.inverse_transform(matrix)
+matrix_scaled = np.where(matrix_scaled < 0, 0, matrix_scaled)
+</code></pre>
+<h3><strong>Step 5: Background Subtraction on Reconstruction</strong></h3>
+<p>We lastly apply simple column-wise subtraction of the median value to these reconstructions which results in a much cleaner deletion of excess noise while maintaining the integrity of the whale calls as labeled for each observation. Below are a few examples of the finalized preprocessed images.</p>
+<pre><code>
+matr_sub = np.zeros_like(matrix_scaled)
+
+for i in range(len(matrix_scaled)):
+    spec = np.copy(matrix_scaled[i].reshape((141, 601)))
+
+    for j in range(spec.shape[1]):
+        column = spec[:, j]
+        percentile_value = np.percentile(column, 60)
+        spec[:, j] = column - percentile_value
+        spec[:, j][spec[:, j] < 0] = 0
+
+    matr_sub[i] = spec.flatten()
+</code></pre>
+<center>
+  <figure>
+    <img src='step_5_image_final.png' height='200' width='450'>
+    <figcaption><em>Blue Whale B call (preprocessed)</em><figcaption>
+  </figure>
+</center>
+<br/>
+<center>
+  <figure>
+    <img src='step_5_image_comp.png' height='300' width='750'>
+    <figcaption><em>Before and after preprocessing comparison of fin whale 40 Hz pulse</em><figcaption>
+  </figure>
+</center>
+<br/>
+<pre><code>
+for i in range(len(matr_sub)):
+    processed_image = matr_sub[i].reshape(141, 601)
+    image = Image.fromarray(processed_image.astype(np.uint8), 'L')
+    image.save(Path(directory_path) / Path(filenames[i]))
+</code></pre>
+<p>The final preprocessed arrays are converted back into images and saved to the directory path specified by the user, ready to be used for model training.</p>")),
     tabItem(tabName = "moreinfo",
             includeMarkdown("data/more_info_page.Rmd"))
   ))))
