@@ -5,8 +5,9 @@ account: sael-mna
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 10166030
-bundleId: 8610441
+bundleId: 8611429
 url: https://sael-mna.shinyapps.io/calcofi_shinyapp/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: UCSB_DS_OOC_Poster.pdf
