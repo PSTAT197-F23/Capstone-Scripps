@@ -524,12 +524,20 @@ for i in range(len(matr_sub)):
                   </div>
                   <div id="co-authors" class="section level3">
                   <h3><strong>Co-authors</strong></h3>
-                  <p>Michaela Alksne, Lauren Baggett, Julie Dinasquet, Bryce Ellman, Erin
-                  Satterthwaite, Brice Semmens, Simone Baumann-Pickering, Luis Barajas,
-                  Sam Guimte, Justin Kim, Kaitlyn Lee, Yoobin Won, Ryan Yee, and Puyuan
-                  Zhang.</p>
+                  <p>Luis Barajas<sup>1</sup>, Sam Guimte<sup>1</sup>, Justin Kim<sup>1</sup>, 
+                  Kaitlyn Lee<sup>1</sup>, Yoobin Won<sup>1</sup>, Ryan Yee<sup>1</sup>, 
+                  Puyuan Zhang<sup>1</sup>, Michaela Alksne<sup>2</sup>, Lauren Baggett
+                  <sup>2</sup>, Julie Dinasquet<sup>2</sup>, Bryce Ellman<sup>2</sup>, 
+                  Erin Satterthwaite<sup>2</sup>, Brice Semmens<sup>2</sup>, 
+                  Simone Baumann-Pickering<sup>2</sup>.</p>
                   <p><br /></p>
                   </div>
+                  <div id="affilations" class="section level3">
+                  <h3><strong>Affiliations</strong></h3>
+                  <p><sup>1</sup>UC Santa Barbara, Santa Barbara, California 93106.</p>
+                  <p><sup>2</sup>Scripps Institution of Oceanography, 8622 Kennel Way, La Jolla, CA 92037.</p>
+                  <p><br /></p>
+                  <div>
                   <div id="funding-sources" class="section level3">
                   <h3><strong>Funding Sources</strong></h3>
                   <p>This material is based upon research supported by the Office of Naval
