@@ -35,22 +35,22 @@ jsfile <- "bundle.js" # the bundle.js file is in the `www` directory, pls do not
 # IMPORT DATA, obtained from CalCOFI:
 source("data/data-cleaning.R")  # import data cleaning functions
 
-whale_raw <- read.csv("data/CalCOFI_2004-2022_CombinedSightings.csv")
-cleaned_whale <- clean_whale(whale_raw)
-new_raw <- read.csv("data/CC-202311.txt", header = TRUE, na.strings = "NA")
-cleaned_new <- clean_new_sightings(new_raw)
-whale <- rbind(cleaned_whale, cleaned_new)  # merge both datasets into 'whale'
+
+new_raw <- read.csv("data/whale_visual_data/new-marine-mammal-data/CC-202311.txt", header = TRUE, na.strings = "NA")
+whale <- read.csv("data/whale_visual_data/whale.csv")
 
 station <- read.csv("data/CalCOFIStationOrder.csv")
-edna_raw <- read.csv("data/edna-processed.csv")
+
+edna_raw <- read.csv("data/edna_data/edna-processed.csv")
 edna <- clean_edna(edna_raw)
-viz_raw <- read.csv("data/CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
+
+viz_raw <- read.csv("data/whale_visual_data/CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
 viz <- bind_rows(clean_viz(viz_raw), clean_new_viz(new_raw))
 
-acoustic_raw <- read.csv("data/acoustic_detections.csv")
+acoustic_raw <- read.csv("data/acoustic_data/acoustic_detections.csv")
 acoustic_detections <- clean_acoustic(acoustic_raw)
 
-station_acoustic_raw <- read.csv("data/acoustic_station.csv") # station data for plotting acoustic detentions
+station_acoustic_raw <- read.csv("data/acoustic_data/acoustic_station.csv") # station data for plotting acoustic detentions
 station_acoustic <- clean_acoustic(station_acoustic_raw)
 
 
