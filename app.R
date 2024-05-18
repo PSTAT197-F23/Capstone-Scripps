@@ -44,8 +44,7 @@ station <- read.csv("data/CalCOFIStationOrder.csv")
 edna_raw <- read.csv("data/edna_data/edna-processed.csv")
 edna <- clean_edna(edna_raw)
 
-viz_raw <- read.csv("data/whale_visual_data/CalCOFI_2004-2021_Effort_OnTransectOnEffortONLY_MNA.csv")
-viz <- bind_rows(clean_viz(viz_raw), clean_new_viz(new_raw))
+viz <- read.csv("data/whale_visual_data/transect.csv")
 
 acoustic_raw <- read.csv("data/acoustic_data/acoustic_detections.csv")
 acoustic_detections <- clean_acoustic(acoustic_raw)
