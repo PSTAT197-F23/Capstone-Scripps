@@ -837,6 +837,9 @@ server <- function(input, output, session) {
   html_legend <- "<img src='https://cdn-icons-png.flaticon.com/512/922/922105.png'
   style='width:20px;height:20px;'> eDNA Detection"
   
+  acoustic_legend <- "<img src='music-note-purple.png'
+  style='width:20px;height:20px;'> Acoustic Detection"
+  
   
   # alternate icon for eDNA efforts on map (gray)
   # blackHelixIcon <- makeIcon(
@@ -910,12 +913,13 @@ server <- function(input, output, session) {
       
       # Add acoustic detection legend if it was displayed
       leafletProxy("mymap", session) %>%
-        addLegend("topleft",
-                  colors = "#6D00BE",
-                  labels = "Acoustic Detection",
-                  opacity = 1,
-                  layerId = "acoustic_detection_legend"
-        ) # This might seem counter intuitive, but it is to 
+        addControl(html = acoustic_legend, position = "topleft", layerId = "acoustic_legend")
+        # addLegend("topleft",
+        #           colors = "#6D00BE",
+        #           labels = "Acoustic Detection",
+        #           opacity = 1,
+        #           layerId = "acoustic_detection_legend"
+        # ) # This might seem counter intuitive, but it is to 
       # take care of the edge case where selecting all will clear acoustic legends.
     }
     
@@ -1043,12 +1047,13 @@ server <- function(input, output, session) {
         
         # Add acoustic detection legend if it was displayed
         leafletProxy("mymap", session) %>%
-          addLegend("topleft",
-                    colors = "#6D00BE",
-                    labels = "Acoustic Detection",
-                    opacity = 1,
-                    layerId = "acoustic_detection_legend"
-          ) # This might seem counter intuitive, but it is to 
+          addControl(html = acoustic_legend, position = "topleft", layerId = "acoustic_legend")
+          # addLegend("topleft",
+          #           colors = "#6D00BE",
+          #           labels = "Acoustic Detection",
+          #           opacity = 1,
+          #           layerId = "acoustic_detection_legend"
+          # ) # This might seem counter intuitive, but it is to 
         # take care of the edge case where selecting all will clear eDNA legends.
       }
       # Add sightings legend if it was displayed
@@ -1104,12 +1109,13 @@ server <- function(input, output, session) {
         
         # Add acoustic detection legend if it was displayed
         leafletProxy("mymap", session) %>%
-          addLegend("topleft",
-                    colors = "#6D00BE",
-                    labels = "Acoustic Detection",
-                    opacity = 1,
-                    layerId = "acoustic_detection_legend"
-          ) # This might seem counter intuitive, but it is to 
+          addControl(html = acoustic_legend, position = "topleft", layerId = "acoustic_legend")
+          # addLegend("topleft",
+          #           colors = "#6D00BE",
+          #           labels = "Acoustic Detection",
+          #           opacity = 1,
+          #           layerId = "acoustic_detection_legend"
+          # ) # This might seem counter intuitive, but it is to 
         # take care of the edge case where selecting all will clear eDNA legends.
       }
       # Add sightings legend if it was displayed
@@ -1235,12 +1241,13 @@ server <- function(input, output, session) {
             
             group = "acoustic_detection"
           ) %>%
-          addLegend("topleft",
-                    colors = "#6D00BE",
-                    labels = "Acoustic Detection",
-                    opacity = 1,
-                    layerId = "acoustic_detection_legend"
-          )
+          addControl(html = acoustic_legend, position = "topleft", layerId = "acoustic_legend")
+          # addLegend("topleft",
+          #           colors = "#6D00BE",
+          #           labels = "Acoustic Detection",
+          #           opacity = 1,
+          #           layerId = "acoustic_detection_legend"
+          # )
       }
       if (input$edna > 0) {
         # Add eDNA effort legend if it was displayed
