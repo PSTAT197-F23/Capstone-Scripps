@@ -217,13 +217,21 @@ ui <- fluidPage(
                       <p style="text-align: center; font-weight: bold;">Click or hover on different parts of the visual to learn more about them!</p>
                     </div>
                     </body>'),
-              HTML('<center><img src="opening_infographic.png", height="710", usemap="#edna_map">',
+              HTML('<center><img src="opening-infographic.png", height="710", usemap="#edna_map">',
                    '<map name="edna_map">',
                    '<area shape="rect" coords="40,10,480,270" href="https://calcofi.org/sampling-info/ships/" title="CalCofi Ships">',
                    '<area shape="rect" coords="480,80,550,200" href="https://www.sciencedirect.com/science/article/pii/S0967064514002690" title="Visual Observers">',
+                   '<area shape="rect" coords="530,250,640,285" href="https://voicesinthesea.ucsd.edu/species/dolphins/bottlenose.html" title="Bottlenose Dolphin">',
+                   '<area shape="rect" coords="590,180,710,225" href="https://voicesinthesea.ucsd.edu/species/dolphins/common.html" title="Short-Beaked Common Dolphin">',
+                   '<area shape="rect" coords="650,250,745,280" href="https://voicesinthesea.ucsd.edu/species/dolphins/pacificWhiteSided.html" title="Pacific White-Sided Dolphin">',
+                   '<area shape="rect" coords="700,255,830,310" href="https://voicesinthesea.ucsd.edu/species/dolphins/rissos.html" title="Risso\'s Dolphin">',
                    '<area shape="rect" coords="50,250,200,587" href="https://calcofi.org/data/marine-ecosystem-data/e-dna/" title="CalCofi eDNA">',
-                   '<area shape="rect" coords="500,130,770,320" href="https://voicesinthesea.ucsd.edu/" title="Voices in the Sea">',
-                   '<area shape="rect" coords="300,380,920,680" href="https://voicesinthesea.ucsd.edu/" title="Voices in the Sea">',
+                   '<area shape="rect" coords="400,425,740,490" href="https://voicesinthesea.ucsd.edu/species/baleenWhales/blue.html" title="Blue Whale">',
+                   '<area shape="rect" coords="350,380,580,425" href="https://voicesinthesea.ucsd.edu/species/baleenWhales/minke.html" title="Minke Whale">',
+                   '<area shape="rect" coords="400,560,735,610" href="https://voicesinthesea.ucsd.edu/species/baleenWhales/fin.html" title="Fin Whale">',
+                   '<area shape="rect" coords="550,510,790,600" href="https://voicesinthesea.ucsd.edu/species/baleenWhales/gray.html" title="Gray Whale">',
+                   '<area shape="rect" coords="280,510,550,580" href="https://voicesinthesea.ucsd.edu/species/baleenWhales/humpback.html" title="Humpback Whale">',
+                   '<area shape="rect" coords="385,600,700,670" href="https://voicesinthesea.ucsd.edu/species/baleenWhales/sei.html" title="Sei Whale">',
                    '</map></center>'
                    )
               ),
