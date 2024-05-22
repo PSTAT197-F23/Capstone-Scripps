@@ -881,12 +881,12 @@ server <- function(input, output, session) {
       leafletProxy("mymap", session) %>%
         #addControl(html = html_legend, position = "bottomleft")
         #layerId = "edna_effort_legend"
-        # addLegend("bottomleft",
-        #           colors = "black",
-        #           labels = "eDNA Effort",
-        #           opacity = 1,
-        #           layerId = "edna_effort_legend"
-        # )
+        addLegend("bottomleft",
+                  colors = "black",
+                  labels = "eDNA Effort",
+                  opacity = 1,
+                  layerId = "edna_effort_legend"
+        ) %>%
         addControl(html = html_legend, position = "bottomleft", layerId = "edna_legend")
       
       # Add eDNA detection legend if it was displayed
@@ -1088,6 +1088,11 @@ server <- function(input, output, session) {
               lapply(htmltools::HTML), 
             group = "edna_detection"
           ) %>%
+          addLegend("bottomleft",
+                    colors = "black",
+                    labels = "eDNA Effort",
+                    opacity = 1,
+                    layerId = "edna_effort_legend") %>%
           # addLegend("bottomleft",
           #           colors = greenHelixIcon,
           #           labels = "eDNA Detection",
