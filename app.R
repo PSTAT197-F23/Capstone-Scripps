@@ -331,7 +331,7 @@ ui <- fluidPage(
                    
                    <br/>
                    <center>
-                   <img src='CC0808SB02_0815213000_second_60_to_120.png' height='300' width='750'>
+                   <img src='all_calls_w_axis.png' height='250' width='820'>
                    
                    <h6><em>Spectrogram with all identifiable calls present (blue whale A, B, and D calls / fin whale 20 hz and 40 hz calls)</em></h6>
                    </center>
