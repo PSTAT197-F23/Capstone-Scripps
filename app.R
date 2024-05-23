@@ -517,7 +517,7 @@ for i in range(len(matr_sub)):
                   DNA samples (eDNA) since 2014. Here we used metabarcoding assays to
                   detect cetacean species from water samples collected at 10, 20, or 40
                   meters. The ‘Display eDNA’ function will plot eDNA sampling effort as
-                  opaque black circles, and eDNA detections as blue flags. By selecting a
+                  opaque black circles, and eDNA detections as green dna helixes. By selecting a
                   detection on the map, more information about that specific detection
                   will pop up.</p>
                   <p><br /></p>
@@ -530,6 +530,18 @@ for i in range(len(matr_sub)):
                   hopes of making a positive impact on the world. As their project, seven
                   students from the program upgraded this Shiny app to implement new data,
                   improve functionality, and enhance user experience.</p>
+                  <p><br /></p>
+                  </div>
+                  <div id="ocean-observing-in-california" class="section level3">
+                  <h3><strong>Ocean Observing in California Conference</strong></h3>
+                  <h4>Celebrate the Past, Showcase the Present, Envision the Future</h4>
+                  <p>This conference celebrated the rich history of ocean observation, 
+                  marking the 75th anniversary of CalCOFI and CeNCOOS and the 20th 
+                  anniversary of SCCOOS. With a goal of sharing insights on the California 
+                  Current, showcasing successful collaborations between scientists and 
+                  data users, and strengthening relationships across the ocean community.</p>
+                  The poster can be accessed
+                  <a href="UCSB_DS_OOC_Poster.pdf">here.</a>
                   <p><br /></p>
                   </div>
                   <div id="co-authors" class="section level3">
