@@ -317,7 +317,10 @@ ui <- fluidPage(
                 mainPanel(
                   tags$style(type = "text/css", "#mymap {height: calc(100vh - 200px) !important;}"), #this map size only applies to the interactive map
                   tags$head(tags$script(src = jsfile)), #jsfile contains the easyprint function to download map with labels
-                  leafletOutput(outputId = "mymap", height="auto") #this map size is only applied to the downloaded map
+                  leafletOutput(outputId = "mymap", height="auto"), #this map size is only applied to the downloaded map
+                  selectInput("data_type", "Select Data Type:", 
+                              choices = c("Sightings" = "sightings", "eDNA" = "edna", "Acoustic" = "acoustic")),
+                  downloadButton("downloadData", "Download Data")
                   #Using height = 'auto' causes the inconsistency in the downloaded map size
                   #However, setting the height to be dynamic is the only way to capture the current window size.
               )
@@ -560,6 +563,24 @@ server <- function(input, output, session) {
   #output$myTable <- renderDT({ # for testing, dont REMOVE >:(
   #  insert data set
   #})
+  
+  # Define the download handler for multiple data types
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste(input$data_type, "data-", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      # Decide which dataset to download based on user input
+      if (input$data_type == "sightings") {
+        data_to_download <- obsFilter()  # Assuming this returns the filtered sightings data
+      } else if (input$data_type == "edna") {
+        data_to_download <- downloadEdnaDetectionFilter()  # Assuming this returns the filtered eDNA detection data
+      } else if (input$data_type == "acoustic") {
+        data_to_download <- downloadAcousticDetectionFilter()  # Assuming this returns the filtered eDNA detection data
+      }
+      write.csv(data_to_download, file, row.names = FALSE)
+    }
+  )
   
   
   observeEvent(input$resetZoom, {
@@ -944,6 +965,11 @@ server <- function(input, output, session) {
                                        & edna$Year >= input$years[1] 
                                        & edna$Year <= input$years[2])})
   
+  downloadEdnaDetectionFilter <- reactive({filter(edna, edna$Cruise %in% input$all_cruises 
+                                                  & edna$SpeciesName %in% input$all_species
+                                                  & edna$Year >= input$years[1] 
+                                                  & edna$Year <= input$years[2])})
+  
   
   ednaDetectionFilter <- reactive({
       data <- filter(edna, edna$Cruise %in% input$all_cruises 
@@ -1297,6 +1323,13 @@ server <- function(input, output, session) {
   
   ################################
   
+  downloadAcousticDetectionFilter <- reactive({
+    
+    filter(acoustic_detections, acoustic_detections$Cruise %in% input$all_cruises 
+                   & acoustic_detections$SpeciesName %in% input$all_species
+                   & acoustic_detections$Year >= input$years[1] 
+                   & acoustic_detections$Year <= input$years[2])
+  })
   
   acousticDetectionFilter2 <- reactive({
     
