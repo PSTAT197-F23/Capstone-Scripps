@@ -403,7 +403,16 @@ ui <- fluidPage(
                   efficiency and classification accuracy. The following is a small scale 
                   demonstration of the final pipeline with code and output examples:</p>
                   <h3><strong>Step 1: Vectorizing/Stacking the Images</strong></h3>
-                  <p>We first iterate through our csv file of annotations which contains the locations of all the spectrogram images (png files) in the user's computer along with their respective bounding boxes and classifications. Each image is converted into a NumPy array that consists of the image's pixel values dependent on color intensity. Higher values correspond to brighter colors and lower values correspond to darker colors. The arrays are then appended to a data frame. Finally, we apply numpy.vstack to this data frame to stack the sequence of input arrays vertically to make a single array. An example of an unmodified spectrogram from the original dataset is shown below.</p>
+                  <p>We first iterate through our csv file of annotations which contains 
+                  the locations of all the spectrogram images (png files) in the user's 
+                  computer along with their respective bounding boxes and classifications. 
+                  Each image is converted into a NumPy array that consists of the image's 
+                  pixel values dependent on color intensity. Higher values correspond to 
+                  brighter colors and lower values correspond to darker colors. The arrays 
+                  are then appended to a data frame. Finally, we apply numpy.vstack to this 
+                  data frame to stack the sequence of input arrays vertically to make a 
+                  single array. An example of an unmodified spectrogram from the original 
+                  dataset is shown below.</p>
                   <pre><code>
                   #annotations saved in 'unique_annotation' variable
                   #images navigated to via 'spectrogram_path'
@@ -502,7 +511,11 @@ ui <- fluidPage(
                   matrix_scaled = np.where(matrix_scaled < 0, 0, matrix_scaled)
                   </code></pre>
                   <h3><strong>Step 5: Background Subtraction on Reconstruction</strong></h3>
-                  <p>We lastly apply simple column-wise subtraction of the median value to these reconstructions which results in a much cleaner deletion of excess noise while maintaining the integrity of the whale calls as labeled for each observation. Below are a few examples of the finalized preprocessed images.</p>
+                  <p>We lastly apply simple column-wise subtraction of the median value to 
+                  these reconstructions which results in a much cleaner deletion of excess 
+                  noise while maintaining the integrity of the whale calls as labeled for 
+                  each observation. Below are a few examples of the finalized preprocessed 
+                  images.</p>
                   <pre><code>
                   matr_sub = np.zeros_like(matrix_scaled)
                   
@@ -527,7 +540,8 @@ ui <- fluidPage(
                   <center>
                   <figure>
                   <img src='step_5_image_comp.png' height='300' width='750'>
-                  <figcaption><em>Before and after preprocessing comparison of fin whale 40 Hz pulse</em><figcaption>
+                  <figcaption><em>Before and after preprocessing comparison of fin whale 
+                  40 Hz pulse</em><figcaption>
                   </figure>
                   </center>
                   <br/>
