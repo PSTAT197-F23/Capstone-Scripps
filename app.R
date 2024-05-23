@@ -367,11 +367,11 @@ ui <- fluidPage(
                   <div style='display: flex;'>
                   <figure style='margin-right: 20px;'>
                   <img src='blue_whale_B_call.png' height='200' width='450'>
-                  <figcaption><em>Blue Whale B Call</em></figcaption>
+                  <h6><em>Blue Whale B Call</em></h6>
                   </figure>
                   <figure>
                   <img src='fin_whale_pulse.png' height='200' width='450'>
-                  <figcaption><em>Fin Whale Pulse</em></figcaption>
+                  <h6><em>Fin Whale Pulse</em></h6>
                   </figure>
                   </div>
                   </center>
@@ -395,9 +395,10 @@ ui <- fluidPage(
                   shown below. These factors made it difficult for the model to distinguish 
                   between the actual calls and undesired visuals.</p>
                   <center>
-                  <img src='CC0711-SB13-071110-201000_second_120_to_180.png' height='300' width='750'>
-                  <h6><em>Noisy spectrogram containing fin whale 40 Hz pulse</em></h6>
+                  <img src='blue_whale_b_w_axis.png' height='250' width='820'>
+                  <h6><em>Noisy spectrogram containing blue whale B call</em></h6>
                   </center>
+                  <br/>
                   <p>The solution was to produce a preprocessing pipeline that would 
                   eliminate this noise, and consequently, increase both model runtime
                   efficiency and classification accuracy. The following is a small scale 
@@ -413,20 +414,19 @@ ui <- fluidPage(
                   data frame to stack the sequence of input arrays vertically to make a 
                   single array. An example of an unmodified spectrogram from the original 
                   dataset is shown below.</p>
-                  <pre><code>
-                  #annotations saved in 'unique_annotation' variable
-                  #images navigated to via 'spectrogram_path'
-
-                  for index, row in unique_annotation.iterrows():
-                      image = Image.open(row['spectrogram_path'])
-                      pixel_values = np.array(list(image.getdata()))
-                      data_matrix.append(pixel_values)
-                      
-                  original_data = np.vstack(data_matrix)</code></pre>
+<pre><code>  #annotations saved in 'unique_annotation' variable
+  #images navigated to via 'spectrogram_path'
+  
+  for index, row in unique_annotation.iterrows():
+      image = Image.open(row['spectrogram_path'])
+      pixel_values = np.array(list(image.getdata()))
+      data_matrix.append(pixel_values)
+      
+  original_data = np.vstack(data_matrix)</code></pre>
                   <center>
                   <figure>
-                  <img src='step_1_image_original.png' height='200' width='450'>
-                  <figcaption><em>Blue Whale B call (unprocessed)</em><figcaption>
+                  <img src='step_1_fin_whale_40_w_axis.png' height='250' width='820'>
+                  <h6><em>Fin whale 40 Hz pulse (unprocessed)</em><h6>
                   </figure>
                   </center>
                   <br/>
@@ -441,22 +441,20 @@ ui <- fluidPage(
                   features extracted from matrix T for a single spectrogram. In theory, 
                   combining those 10 separate components into one image would construct 
                   something very closely resembling the original observation.</p>
-                  <pre><code>
-                  U, S, T = np.linalg.svd(original_data, full_matrices=False)
-                  US = U*S
-
-                  svd_data = US @ T
-                  svd_data_scaled = scaler.inverse_transform(svd_data)
-
-                  for i in range(0, 10):
-                      one_face = T[i]
-                      plt.subplot(2, 5, i + 1)
-                      draw_img_single(one_face)
-                  </code></pre>
+<pre><code>  U, S, T = np.linalg.svd(original_data, full_matrices=False)
+  US = U*S
+  
+  svd_data = US @ T
+  svd_data_scaled = scaler.inverse_transform(svd_data)
+  
+  for i in range(0, 10):
+      one_face = T[i]
+      plt.subplot(2, 5, i + 1)
+      draw_img_single(one_face)</code></pre>
                   <center>
                   <figure>
                   <img src='step_2_image.png' height='200' width='450'>
-                  <figcaption><em>10 sub-spectrograms for one observation</em><figcaption>
+                  <h6><em>10 sub-spectrograms for one observation</em><h6>
                   </figure>
                   </center>
                   <br/>
@@ -470,28 +468,26 @@ ui <- fluidPage(
                   while minimizing the damage done to the signal pixel values, thereby 
                   allowing us to use the filtered principal components to reconstruct 
                   more manageable spectrogram observations.</p>
-                  <pre><code>
-                  for i in range(len(T)):
-                      feature = np.copy(T[i].reshape((141, 601)))
-                      feature = median_filter(feature, size = 3)
-                  
-                      for j in range(feature.shape[1]):
-                          column = feature[:, j]
-                          percentile_value = np.percentile(column, 10)
-                          feature[:, j] = column - percentile_value
-                          feature[:, j][feature[:, j] < 0] = 0
-                          
-                      signal_enhanced_features[i] = feature.flatten()
-                      
-                  for i in range(0, 10):
-                      one_face = signal_enhanced_features[i]
-                      plt.subplot(2, 5, i + 1)
-                      draw_img_single(one_face)
-                  </code></pre>
+<pre><code>  for i in range(len(T)):
+      feature = np.copy(T[i].reshape((141, 601)))
+      feature = median_filter(feature, size = 3)
+  
+      for j in range(feature.shape[1]):
+          column = feature[:, j]
+          percentile_value = np.percentile(column, 10)
+          feature[:, j] = column - percentile_value
+          feature[:, j][feature[:, j] < 0] = 0
+          
+      signal_enhanced_features[i] = feature.flatten()
+      
+  for i in range(0, 10):
+      one_face = signal_enhanced_features[i]
+      plt.subplot(2, 5, i + 1)
+      draw_img_single(one_face)</code></pre>
                   <center>
                   <figure>
                   <img src='step_3_image.png' height='200' width='450'>
-                  <figcaption><em>Signal enhanced features</em><figcaption>
+                  <h6><em>Signal enhanced features</em><h6>
                   </figure>
                   </center>
                   <br/>
@@ -504,53 +500,40 @@ ui <- fluidPage(
                   reconstructions contained minimal to no remnants of the undesirable 
                   vertical artifacts and much more uniformly distributed white noise 
                   with significantly fewer features for the model to have to analyze.</p>
-                  <pre><code>
-                  matrix = US[:, 0:150] @ signal_enhanced_features[0:150, :]
-                  matrix = US @ signal_enhanced_features
-                  matrix_scaled = scaler.inverse_transform(matrix)
-                  matrix_scaled = np.where(matrix_scaled < 0, 0, matrix_scaled)
-                  </code></pre>
+<pre><code>  matrix = US[:, 0:150] @ signal_enhanced_features[0:150, :]
+  matrix = US @ signal_enhanced_features
+  matrix_scaled = scaler.inverse_transform(matrix)
+  matrix_scaled = np.where(matrix_scaled < 0, 0, matrix_scaled)</code></pre>
                   <h3><strong>Step 5: Background Subtraction on Reconstruction</strong></h3>
                   <p>We lastly apply simple column-wise subtraction of the median value to 
                   these reconstructions which results in a much cleaner deletion of excess 
                   noise while maintaining the integrity of the whale calls as labeled for 
-                  each observation. Below are a few examples of the finalized preprocessed 
-                  images.</p>
-                  <pre><code>
-                  matr_sub = np.zeros_like(matrix_scaled)
-                  
-                  for i in range(len(matrix_scaled)):
-                      spec = np.copy(matrix_scaled[i].reshape((141, 601)))
-                  
-                      for j in range(spec.shape[1]):
-                          column = spec[:, j]
-                          percentile_value = np.percentile(column, 60)
-                          spec[:, j] = column - percentile_value
-                          spec[:, j][spec[:, j] < 0] = 0
-                  
-                      matr_sub[i] = spec.flatten()
-                  </code></pre>
+                  each observation. Below is an example of the finalized preprocessed 
+                  image of the fin whale 40 Hz pulse from step 1.</p>
+<pre><code>  matr_sub = np.zeros_like(matrix_scaled)
+    
+  for i in range(len(matrix_scaled)):
+      spec = np.copy(matrix_scaled[i].reshape((141, 601)))
+  
+      for j in range(spec.shape[1]):
+          column = spec[:, j]
+          percentile_value = np.percentile(column, 60)
+          spec[:, j] = column - percentile_value
+          spec[:, j][spec[:, j] < 0] = 0
+  
+      matr_sub[i] = spec.flatten()</code></pre>
                   <center>
                   <figure>
-                  <img src='step_5_image_final.png' height='200' width='450'>
-                  <figcaption><em>Blue Whale B call (preprocessed)</em><figcaption>
+                  <img src='step_5_image_comp_w_axes.png' height='480' width='820'>
+                  <h6><em>Before and after preprocessing comparison of fin whale 
+                  40 Hz pulse</em><h6>
                   </figure>
                   </center>
                   <br/>
-                  <center>
-                  <figure>
-                  <img src='step_5_image_comp.png' height='300' width='750'>
-                  <figcaption><em>Before and after preprocessing comparison of fin whale 
-                  40 Hz pulse</em><figcaption>
-                  </figure>
-                  </center>
-                  <br/>
-                  <pre><code>
-                  for i in range(len(matr_sub)):
-                      processed_image = matr_sub[i].reshape(141, 601)
-                      image = Image.fromarray(processed_image.astype(np.uint8), 'L')
-                      image.save(Path(directory_path) / Path(filenames[i]))
-                  </code></pre>
+<pre><code>  for i in range(len(matr_sub)):
+  processed_image = matr_sub[i].reshape(141, 601)
+  image = Image.fromarray(processed_image.astype(np.uint8), 'L')
+  image.save(Path(directory_path) / Path(filenames[i]))</code></pre>
                   <p>The final preprocessed arrays are converted back into images and 
                  saved to the directory path specified by the user, ready to be used 
                  for model training.</p>")),
