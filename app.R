@@ -866,11 +866,25 @@ server <- function(input, output, session) {
     iconWidth = 35, iconHeight = 35
   )
   
-  html_legend <- "<img src='https://cdn-icons-png.flaticon.com/512/922/922105.png'
+  edna_legend <- "<img src='https://cdn-icons-png.flaticon.com/512/922/922105.png'
   style='width:20px;height:20px;'> eDNA Detection"
   
   acoustic_legend <- "<img src='music-note-purple.png'
   style='width:20px;height:20px;'> Acoustic Detection"
+  
+  edna_effort_legend <- HTML(
+    '<div style="display: flex; align-items: center;">
+          <div style="width: 15px; height: 15px; border-radius: 50%; background: black; margin-right: 5px;"></div>
+          <div>eDNA Effort</div>
+        </div>'
+  )
+  
+  acoustic_effort_legend <- HTML(
+    '<div style="display: flex; align-items: center;">
+          <div style="width: 15px; height: 15px; border-radius: 50%; background: gray; margin-right: 5px;"></div>
+          <div>Acoustic Effort</div>
+        </div>'
+  )
   
   
   # alternate icon for eDNA efforts on map (gray)
@@ -911,15 +925,14 @@ server <- function(input, output, session) {
     if (input$edna > 0) {
       # Add eDNA effort legend if it was displayed
       leafletProxy("mymap", session) %>%
-        #addControl(html = html_legend, position = "bottomleft")
-        #layerId = "edna_effort_legend"
-        addLegend("bottomleft",
-                  colors = "black",
-                  labels = "eDNA Effort",
-                  opacity = 1,
-                  layerId = "edna_effort_legend"
-        ) %>%
-        addControl(html = html_legend, position = "bottomleft", layerId = "edna_legend")
+        # addLegend("bottomleft",
+        #           colors = "black",
+        #           labels = "eDNA Effort",
+        #           opacity = 1,
+        #           layerId = "edna_effort_legend"
+        # ) %>%
+        addControl(html = edna_effort_legend, position = "bottomleft", layerId = "edna_effort_legend") %>%
+        addControl(html = edna_legend, position = "bottomleft", layerId = "edna_legend")
       
       # Add eDNA detection legend if it was displayed
       # leafletProxy("mymap", session) %>%
@@ -936,12 +949,13 @@ server <- function(input, output, session) {
     if (input$acoustic > 0) {
       # Add acoustic effort legend if it was displayed
       leafletProxy("mymap", session) %>%
-        addLegend("topleft",
-                  colors = "gray",
-                  labels = "Acoustic Effort",
-                  opacity = 1,
-                  layerId = "acoustic_effort_legend"
-        )
+        # addLegend("topleft",
+        #           colors = "gray",
+        #           labels = "Acoustic Effort",
+        #           opacity = 1,
+        #           layerId = "acoustic_effort_legend"
+        # )
+        addControl(html = acoustic_effort_legend, position = "topleft", layerId = "acoustic_effort_legend")
       
       # Add acoustic detection legend if it was displayed
       leafletProxy("mymap", session) %>%
@@ -1062,25 +1076,27 @@ server <- function(input, output, session) {
             group = "edna"
           ) %>%
           clearControls() %>%
-          addLegend("bottomleft",
-                    colors = "black",
-                    labels = "eDNA Effort",
-                    opacity = 1,
-                    layerId = "edna_effort_legend"
-          ) %>%
-          addControl(html = html_legend, position = "bottomleft", layerId = "edna_legend")
+          # addLegend("bottomleft",
+          #           colors = "black",
+          #           labels = "eDNA Effort",
+          #           opacity = 1,
+          #           layerId = "edna_effort_legend"
+          # ) %>%
+          addControl(html = edna_effort_legend, position = "bottomleft", layerId = "edna_effort_legend") %>%
+          addControl(html = edna_legend, position = "bottomleft", layerId = "edna_legend")
       }
   
       # Check if acoustic legends are currently displayed
       if (input$acoustic > 0) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
-          addLegend("topleft",
-                    colors = "gray",
-                    labels = "Acoustic Effort",
-                    opacity = 1,
-                    layerId = "acoustic_effort_legend"
-          )
+          # addLegend("topleft",
+          #           colors = "gray",
+          #           labels = "Acoustic Effort",
+          #           opacity = 1,
+          #           layerId = "acoustic_effort_legend"
+          # )
+          addControl(html = acoustic_effort_legend, position = "topleft", layerId = "acoustic_effort_legend")
         
         # Add acoustic detection legend if it was displayed
         leafletProxy("mymap", session) %>%
@@ -1125,29 +1141,32 @@ server <- function(input, output, session) {
               lapply(htmltools::HTML), 
             group = "edna_detection"
           ) %>%
-          addLegend("bottomleft",
-                    colors = "black",
-                    labels = "eDNA Effort",
-                    opacity = 1,
-                    layerId = "edna_effort_legend") %>%
+          # addLegend("bottomleft",
+          #           colors = "black",
+          #           labels = "eDNA Effort",
+          #           opacity = 1,
+          #           layerId = "edna_effort_legend") %>%
           # addLegend("bottomleft",
           #           colors = greenHelixIcon,
           #           labels = "eDNA Detection",
           #           #opacity = 1,
           #           layerId = "edna_detection_legend"
           # )
-          addControl(html = html_legend, position = "bottomleft", layerId = "edna_legend")
+          addControl(html = edna_effort_legend, position = "bottomleft", layerId = "edna_effort_legend") %>%
+          
+          addControl(html = edna_legend, position = "bottomleft", layerId = "edna_legend")
       }
       # Check if acoustic legends are currently displayed
       if (input$acoustic > 0) {
         # Add acoustic effort legend if it was displayed
         leafletProxy("mymap", session) %>%
-          addLegend("topleft",
-                    colors = "gray",
-                    labels = "Acoustic Effort",
-                    opacity = 1,
-                    layerId = "acoustic_effort_legend"
-          )
+          # addLegend("topleft",
+          #           colors = "gray",
+          #           labels = "Acoustic Effort",
+          #           opacity = 1,
+          #           layerId = "acoustic_effort_legend"
+          # )
+          addControl(html = acoustic_effort_legend, position = "topleft", layerId = "acoustic_effort_legend")
         
         # Add acoustic detection legend if it was displayed
         leafletProxy("mymap", session) %>%
@@ -1226,34 +1245,37 @@ server <- function(input, output, session) {
             fillOpacity = 1,
             group = "acoustic"
           ) %>%
-          addLegend("topleft",
-                    
-                    colors = "gray",
-                    
-                    labels = "Acoustic Effort",
-                    opacity = 1,
-                    layerId = "acoustic_effort_legend"
-          )
+          # addLegend("topleft",
+          #           
+          #           colors = "gray",
+          #           
+          #           labels = "Acoustic Effort",
+          #           opacity = 1,
+          #           layerId = "acoustic_effort_legend"
+          # )
+          addControl(html = acoustic_effort_legend, position = "topleft", layerId = "acoustic_effort_legend")
       }
       if (input$edna > 0) {
         # Add eDNA effort legend if it was displayed
         leafletProxy("mymap", session) %>%
-          addLegend("bottomleft",
-                    colors = "black",
-                    labels = "eDNA Effort",
-                    opacity = 1,
-                    layerId = "edna_effort_legend"
-          )
+          # addLegend("bottomleft",
+          #           colors = "black",
+          #           labels = "eDNA Effort",
+          #           opacity = 1,
+          #           layerId = "edna_effort_legend"
+          # )
+          
         
         # Add eDNA detection legend if it was displayed
-        leafletProxy("mymap", session) %>%
+        #leafletProxy("mymap", session) %>%
           # addLegend("bottomleft",
           #           colors = c("url('https://cdn-icons-png.flaticon.com/512/922/922105.png')"),
           #           labels = "eDNA Detection",
           #           #opacity = 1,
           #           layerId = "edna_detection_legend"
           # ) # This might seem counter intuitive, but it is to 
-          addControl(html = html_legend, position = "bottomleft", layerId = "edna_legend")
+          addControl(html = edna_effort_legend, position = "bottomleft", layerId = "edna_effort_legend") %>%
+          addControl(html = edna_legend, position = "bottomleft", layerId = "edna_legend")
         # take care of the edge case where selecting all will clear eDNA legends.
       }
       if (input$sightings > 0) {
@@ -1294,12 +1316,13 @@ server <- function(input, output, session) {
       if (input$edna > 0) {
         # Add eDNA effort legend if it was displayed
         leafletProxy("mymap", session) %>%
-          addLegend("bottomleft",
-                    colors = "black",
-                    labels = "eDNA Effort",
-                    opacity = 1,
-                    layerId = "edna_effort_legend"
-          )
+          # addLegend("bottomleft",
+          #           colors = "black",
+          #           labels = "eDNA Effort",
+          #           opacity = 1,
+          #           layerId = "edna_effort_legend"
+          # )
+          addControl(html = edna_effort_legend, position = "bottomleft", layerId = "edna_effort_legend")
         
         # Add eDNA detection legend if it was displayed
         leafletProxy("mymap", session) %>%
@@ -1308,7 +1331,7 @@ server <- function(input, output, session) {
           #           labels = "eDNA Detection",
           #           opacity = 1,
           #           layerId = "edna_detection_legend")}
-          addControl(html = html_legend, position = "bottomleft", layerId = "edna_legend")}
+          addControl(html = edna_legend, position = "bottomleft", layerId = "edna_legend")}
       if (input$sightings > 0) {
         leafletProxy("mymap", session) %>%
           addLegend("topright", pal = pal, values = values, group="sightings", title="Cetacean visual sightings", layerId = "sightings_legend")}
