@@ -412,12 +412,17 @@ ui <- fluidPage(
                       tags$span(`aria-hidden` = "true", HTML("&times;")))),
                   tags$div(
                     class = "modal-body",
-                    tags$p("The Faster r-CNN ResNet-50 model is an object detection and classification model. The workflow starts with ResNet-50 
-                (a pretrained 50-layer CNN) extracting the high-level features from the training data. The Region Proposal Network (RPN) 
-                scans this feature map to propose candidate regions likely to contain the signals of interest. These proposed regions are converted 
-                into fixed-size feature maps through Region of Interest (ROI) pooling. Finally, the feature maps are processed to classify the object 
-                within each region and refine the bouding box coordinates which correspond to locations on the image that contain the whale calls. Our final 
-                output consists of bounding boxes with their associated class label and adjusted coordinates.")),
+                    tags$p("The Faster r-CNN ResNet-50 model is an object detection and 
+                    classification model. The workflow starts with ResNet-50 (a pretrained 
+                    50-layer CNN) extracting the high-level features from the training data. 
+                    The Region Proposal Network (RPN) scans this feature map to propose 
+                    candidate regions likely to contain the signals of interest. These 
+                    proposed regions are converted into fixed-size feature maps through 
+                    Region of Interest (ROI) pooling. Finally, the feature maps are processed 
+                    to classify the object within each region and refine the bouding box 
+                    coordinates which correspond to locations on the image that contain 
+                    the whale calls. Our final output consists of bounding boxes with 
+                    their associated class label and adjusted coordinates.")),
                   tags$div(
                     class = "modal-footer",
                     tags$button(
@@ -455,14 +460,16 @@ ui <- fluidPage(
                   <p>The solution was to produce a preprocessing pipeline that would 
                   eliminate this noise, and consequently, increase both model runtime
                   efficiency and classification accuracy. The following is a small scale 
-                  demonstration of the final preprocessing pipeline followed by the training of the Faster r-CNN ResNet-50 model with code and output examples:</p>
+                  demonstration of the final preprocessing pipeline followed by the training 
+                  of the Faster r-CNN ResNet-50 model with code and output examples:</p>
                   <br/>
                   <h2><strong>Step 1: Preprocessing</strong></h2>
                   <h3><strong>Step 1a: Organizing the Data</strong></h3>
-                  <p>We first iterate through our training data of spectrogram images to flatten each one into a 1-dimensional array that consists of the image's 
-                  pixel values dependent on color intensity. The arrays are then vertically stacked on 
-                  top of one another to create a single array
-                  containing all of the data. An example of an unmodified spectrogram from the original 
+                  <p>We first iterate through our training data of spectrogram images to 
+                  flatten each one into a 1-dimensional array that consists of the image's 
+                  pixel values dependent on color intensity. The arrays are then vertically 
+                  stacked on top of one another to create a single array containing all 
+                  of the data. An example of an unmodified spectrogram from the original 
                   dataset is shown below.</p>
 <pre><code>  #annotations saved in 'unique_annotation' variable
   #images navigated to via 'spectrogram_path'
@@ -481,12 +488,12 @@ ui <- fluidPage(
                   </center>
                   <br/>
                   <h3><strong>Step 1b: Principal Component Analysis (PCA)</strong></h3>
-                  <p>To denoise the spectrograms and cut down on computation time, we decided to perform PCA
-                  to the training set. Singular value decomposition was done
-                  to separate our array's covariance matrix into three sub-matrices 
+                  <p>To denoise the spectrograms and cut down on computation time, we 
+                  decided to perform PCA to the training set. Singular value decomposition 
+                  was done to separate our array's covariance matrix into three sub-matrices 
                   that together comprise the original data: U (eigenvector matrix), 
                   S (eigenvalue matrix), and T (feature matrix). Below is an example of a few 
-                  features extracted from matrix T for a single spectrogram. As seen below, the various signals In theory, 
+                  features extracted from matrix T for a single spectrogram. In theory, 
                   combining those 10 separate components would construct 
                   something very closely resembling the original observation.</p>
 <pre><code>  U, S, T = np.linalg.svd(original_data, full_matrices=False)
@@ -508,10 +515,12 @@ ui <- fluidPage(
                   <br/>
                   <h3><strong>Step 1c: Noise Reduction
                   </strong></h3>
-                  <p>With the artifacts and white noise now separated from the signals of interest, we performed a 
-                  column-wise background subtraction on the sub-component images along with median blurring for further noise reduction. 
-                  This removes the unwanted columns and messy noise from the spectrograms while accentuating the stronger, brighter whale calls. We can now use 
-                  these filtered principal components to reconstruct much cleaner spectrograms.</p>
+                  <p>With the artifacts and white noise now separated from the signals of 
+                  interest, we performed a column-wise background subtraction on the 
+                  sub-component images along with median blurring for further noise reduction. 
+                  This removes the unwanted columns and messy noise from the spectrograms 
+                  while accentuating the stronger, brighter whale calls. We can now use these 
+                  filtered principal components to reconstruct much cleaner spectrograms.</p>
 <pre><code>  for i in range(len(T)):
       feature = np.copy(T[i].reshape((141, 601)))
       feature = median_filter(feature, size = 3)
@@ -537,19 +546,21 @@ ui <- fluidPage(
                   <br/>
                   <h3><strong>Step 1d: Reconstruction</strong></h3>
                   <p>We reconstruct the full spectrogram images by combining the original 
-                  U and S matrices from Step 2 with the 'signal_enhanced_features' created 
-                  in Step 3. This time, however, we keep only the first 150 principal 
+                  U and S matrices from Step 1b with the 'signal_enhanced_features' created 
+                  in Step 1c. This time, however, we keep only the first 150 principal 
                   components since those were sufficient in creating reconstructions of the 
                   original images that resembled them almost perfectly. The procured 
-                  reconstructions contained almost no vertical artifacts and significantly fewer features for the model to have to analyze.</p>
+                  reconstructions contained almost no vertical artifacts and significantly 
+                  fewer features for the model to have to analyze.</p>
 <pre><code>  matrix = US[:, 0:150] @ signal_enhanced_features[0:150, :]
   matrix = US @ signal_enhanced_features
   matrix_scaled = scaler.inverse_transform(matrix)
   matrix_scaled = np.where(matrix_scaled < 0, 0, matrix_scaled)</code></pre>
                   <h3><strong>Step 1e: Noise Reduction on Reconstructions</strong></h3>
                   <p>We lastly apply another simple column-wise subtraction to 
-                  these reconstructions to give us our finalalized preprocessed images. Below is an example of the 
-                  image of the fin whale 40 Hz pulse from step 1 before and after preprocessing.</p>
+                  these reconstructions to give us our finalalized preprocessed images. 
+                  Below is an example of the image of the fin whale 40 Hz pulse from step 
+                  1a before and after preprocessing.</p>
 <pre><code>  matr_sub = np.zeros_like(matrix_scaled)
     
   for i in range(len(matrix_scaled)):
@@ -578,19 +589,24 @@ ui <- fluidPage(
                  saved to the directory path specified by the user, ready to be used 
                  for model training.</p>
                 <br/><h2><strong>Step 2: Training the Model</strong></h2>
-                <p>We first read our preprocessed spectrogram images into our data loader to be used as training data.</p>
+                <p>We first read our preprocessed spectrogram images into our data loader 
+                to be used as training data.</p>
 <pre><code>  train = DataLoader(AudioDetectionData(csv_file='../labeled_data/train_val_test_annotations/train.csv'),
       batch_size=16,
       shuffle = True,
       collate_fn = custom_collate, 
       pin_memory = True if torch.cuda.is_available() else False)</code></pre>
-                <p>We then use the torchvision package from PyTorch to create our pretrained Faster r-CNN model 
-                 architecture with the specified parameters below. The optimizer used for minimizing loss was Stochastic Gradient 
-                 Descent with a learning rate of 0.001, and the model will be trained for 20 epochs.</p>
+                <p>We then use the torchvision package from PyTorch to create our pretrained 
+                Faster r-CNN model architecture with the specified parameters below. The 
+                optimizer used for minimizing loss was Stochastic Gradient Descent with a 
+                learning rate of 0.001, and the model will be trained for 20 epochs.</p>
 <pre><code>  optimizer = torch.optim.SGD(model.parameters(), lr = 0.001, momentum = 0.9, weight_decay= 0.0005)
   num_epochs = 20</code></pre>
-               <p>With our model ready, we can finally start its training where it reiteratively learns how to correctly identify and label the whale calls in a given spectrogram. Training loss is logged after
-                 every epoch as a way to measure how well the model is fitting after each time the model's parameters are updated based on the loss function.</p>
+               <p>With our model ready, we can finally start its training where it 
+               reiteratively learns how to correctly identify and label the whale calls
+               in a given spectrogram. Training loss is logged after every epoch as a way
+               to measure how well the model is fitting after each time the model's 
+               parameters are updated based on the loss function.</p>
 <pre><code>  for epochs in range(num_epochs):
     model.train()
     epoch_train_loss  = 0
@@ -612,9 +628,9 @@ ui <- fluidPage(
         optimizer.step()
     print(f'training loss: {epoch_train_loss}')</code></pre>
            <p>Now that the model is trained, we can use our testing set to evaluate the
-                 performance of the model. The results from our testing data can be visualized
-                 through a precision-recall curve which describes how good our model is at classifying
-                 each call. Insert image below.</p>")),
+                 performance of the model. The results from our testing data can be 
+                 visualized through a precision-recall curve which describes how good 
+                 our model is at classifying each call. Insert image below.</p>")),
     tabItem(tabName = "moreinfo",
             HTML('<div id="calcofi-marine-mammal-visual-survey-data" class="section level3">
                   <h3><strong>CalCOFI Marine Mammal Visual Survey Data</strong></h3>
