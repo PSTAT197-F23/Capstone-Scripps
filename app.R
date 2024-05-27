@@ -368,21 +368,21 @@ ui <- fluidPage(
                   <figure style='margin-right: 20px;'>
                   <img src='blue_whale_B_call.png' height='200' width='450'>
                   <h6><em>Blue Whale B Call</em></h6>
+                  <div class='audio-controls'>
+                    <audio controls>
+                      <source src='ringtoneBlue.mp3' type='audio/mp3'>
+                    </audio>
+                  </div>
                   </figure>
                   <figure>
                   <img src='fin_whale_pulse.png' height='200' width='450'>
                   <h6><em>Fin Whale Pulse</em></h6>
-                  </figure>
+                  <div class='audio-controls'>
+                    <audio controls>
+                      <source src='ringtoneBlue.mp3' type='audio/mp3'>
+                    </audio>
                   </div>
-                  </center>
-                  <center>
-                  <div style='display: flex;'>
-                  <audio controls style='margin-left: 160px;'>
-                  <source src='ringtoneBlue.mp3' type='audio/mp3'>
-                  </audio>
-                  <audio controls style='margin-left: 180px;'>
-                  <source src='ringtoneFin.mp3' type='audio/mp3'>
-                  </audio>
+                  </figure>
                   </div>
                   </center>
                   <br/><br/><br/>"),
@@ -403,7 +403,7 @@ ui <- fluidPage(
                   class = "modal-content",
                   tags$div(
                     class = "modal-header",
-                    tags$h5(class = "modal-title", "Faster r-CNN ResNet-50 Model"),
+                    tags$h5(class = "modal-title", "How does the model work?"),
                     tags$button(
                       type = "button",
                       class = "close",
