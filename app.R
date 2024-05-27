@@ -630,7 +630,7 @@ ui <- fluidPage(
            <p>Now that the model is trained, we can use our testing set to evaluate the
                  performance of the model. The results from our testing data can be 
                  visualized through a precision-recall curve which describes how good 
-                 our model is at classifying each call. Insert image below.</p>")),
+                 our model is at classifying each call.</p>")),
     tabItem(tabName = "moreinfo",
             HTML('<div id="calcofi-marine-mammal-visual-survey-data" class="section level3">
                   <h3><strong>CalCOFI Marine Mammal Visual Survey Data</strong></h3>
