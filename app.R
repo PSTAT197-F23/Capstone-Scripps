@@ -390,7 +390,7 @@ ui <- fluidPage(
                   <br/><br/><br/>"),
                   fluidRow(column(6,HTML("<h2><strong>Faster r-CNN Deep Learning Model</strong></h2>")), #remove fluidRow code to move button under heading
                   # Add a button to trigger the modal
-            column(4,actionButton("show_modal", "How does the model work?", style="margin-top: 15px;"))),
+            column(4,actionButton("show_modal", "How Does the Model Work?", style="margin-top: 15px;"))),
             
             # Define the modal
             tags$div(
@@ -405,7 +405,7 @@ ui <- fluidPage(
                   class = "modal-content",
                   tags$div(
                     class = "modal-header",
-                    tags$h5(class = "modal-title", "How does the model work?"),
+                    tags$h5(class = "modal-title", "How Does the Model Work?"),
                     tags$button(
                       type = "button",
                       class = "close",
@@ -424,7 +424,10 @@ ui <- fluidPage(
                     to classify the object within each region and refine the bouding box 
                     coordinates which correspond to locations on the image that contain 
                     the whale calls. Our final output consists of bounding boxes with 
-                    their associated class label and adjusted coordinates.")),
+                    their associated class label and adjusted coordinates."),
+                    tags$div(class="text-center",
+                             tags$img(src='https://www.researchgate.net/publication/336243948/figure/fig3/AS:810083202109441@1570150294355/Our-Faster-R-CNN-framework-used-for-kidney-detection-as-the-first-stage-of-our-proposed.ppm', 
+                                      alt="Model Workflow", style="width: 70%; height: auto; margin-top:10px;"))),
                   tags$div(
                     class = "modal-footer",
                     tags$button(
