@@ -427,7 +427,8 @@ ui <- fluidPage(
                     their associated class label and adjusted coordinates."),
                     tags$div(class="text-center",
                              tags$img(src='https://www.researchgate.net/publication/336243948/figure/fig3/AS:810083202109441@1570150294355/Our-Faster-R-CNN-framework-used-for-kidney-detection-as-the-first-stage-of-our-proposed.ppm', 
-                                      alt="Model Workflow", style="width: 70%; height: auto; margin-top:10px;"))),
+                                      alt="Model Workflow", style="width: 70%; height: auto; margin-top:10px;"),
+                             tags$figcaption("Image from https://www.researchgate.net/figure/Our-Faster-R-CNN-framework-used-for-kidney-detection-as-the-first-stage-of-our-proposed_fig3_336243948", style = "text-align: center; font-style: italic;"))),
                   tags$div(
                     class = "modal-footer",
                     tags$button(
