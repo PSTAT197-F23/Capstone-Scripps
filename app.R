@@ -633,10 +633,14 @@ ui <- fluidPage(
         loss.backward()
         optimizer.step()
     print(f'training loss: {epoch_train_loss}')</code></pre>
-           <p>Now that the model is trained, we can use our testing set to evaluate the
-                 performance of the model. The results from our testing data can be 
-                 visualized through a precision-recall curve which describes how good 
-                 our model is at classifying each call.</p>")),
+                  <p>Now that the model is trained, we can use our testing set to evaluate the
+                  performance of the model. The results from our testing data can be 
+                  visualized through a precision-recall curve which describes how good 
+                  our model is at classifying each call.</p>
+                  <center>
+                  <img src='pr_curve_preprocessed_epoch_4.jpeg' height='400' width='500'>
+                  <h6><em>Precision-Recall curve of preprocessed data</em></h6>
+                  <center>")),
     tabItem(tabName = "moreinfo",
             HTML('<div id="calcofi-marine-mammal-visual-survey-data" class="section level3">
                   <h3><strong>CalCOFI Marine Mammal Visual Survey Data</strong></h3>
