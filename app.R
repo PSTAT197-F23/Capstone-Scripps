@@ -340,7 +340,7 @@ ui <- fluidPage(
                   ecology, and conservation.</p>
                   <br/>
                   <center>
-                  <img src='all_calls_w_axis.png' height='220' width='820'>
+                  <img src='all_calls_fixed.png' height='220' width='820'>
                   <h6><em>Spectrogram with all identifiable calls present (blue whale A, 
                   B, and D calls / fin whale 20 hz and 40 hz calls)</em></h6>
                   </center>
@@ -458,7 +458,7 @@ ui <- fluidPage(
                   shown below. These factors made it difficult for the model to distinguish 
                   between the actual calls and undesired visuals.</p>
                   <center>
-                  <img src='blue_whale_b_w_axis.png' height='220' width='820'>
+                  <img src='blue_whale_b_call_fixed.png' height='220' width='820'>
                   <h6><em>Noisy spectrogram containing blue whale B call</em></h6>
                   </center>
                   <br/>
@@ -487,7 +487,7 @@ ui <- fluidPage(
   original_data = np.vstack(data_matrix)</code></pre>
                   <center>
                   <figure>
-                  <img src='step_1_fin_whale_40_w_axis.png' height='220' width='820'>
+                  <img src='step_1_fin_whale_40_fixed.png' height='220' width='820'>
                   <h6><em>Fin whale 40 Hz pulse (unprocessed)</em><h6>
                   </figure>
                   </center>
@@ -580,7 +580,7 @@ ui <- fluidPage(
       matr_sub[i] = spec.flatten()</code></pre>
                   <center>
                   <figure>
-                  <img src='step_5_image_comp_w_axes.png' height='450' width='820'>
+                  <img src='step_5_comp_fixed.png' height='450' width='820'>
                   <h6><em>Before and after preprocessing comparison of fin whale 
                   40 Hz pulse</em><h6>
                   </figure>
