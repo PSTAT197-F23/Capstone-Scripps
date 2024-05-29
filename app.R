@@ -592,20 +592,35 @@ ui <- fluidPage(
   image = Image.fromarray(processed_image.astype(np.uint8), 'L')
   image.save(Path(directory_path) / Path(filenames[i]))</code></pre>
                   <p>The final preprocessed arrays are converted back into images and 
-                 saved to the directory path specified by the user, ready to be used 
-                 for model training.</p>
-                <br/><h2><strong>Step 2: Training the Model</strong></h2>
-                <p>We first read our preprocessed spectrogram images into our data loader 
-                to be used as training data.</p>
-<pre><code>  train = DataLoader(AudioDetectionData(csv_file='../labeled_data/train_val_test_annotations/train.csv'),
+                  saved to the directory path specified by the user, ready to be used 
+                  for model training.</p>
+                  <br/><h2><strong>Step 2: Training the Model</strong></h2>
+                  <p>We first read our preprocessed spectrogram images for training and 
+                  validation into our data loader.</p>
+<pre><code>  train_d1 = DataLoader(AudioDetectionData(csv_file='../labeled_data/train_val_test_annotations/train.csv'),
       batch_size=16,
       shuffle = True,
       collate_fn = custom_collate, 
+      pin_memory = True if torch.cuda.is_available() else False)
+      
+  val_d1 = DataLoader(AudioDetectionData(csv_file='../labeled_data/train_val_test_annotations/val.csv'),
+      batch_size=1,
+      shuffle = False,
+      collate_fn = custom_collate,
       pin_memory = True if torch.cuda.is_available() else False)</code></pre>
-                <p>We then use the torchvision package from PyTorch to create our pretrained 
-                Faster r-CNN model architecture with the specified parameters below. The 
-                optimizer used for minimizing loss was Stochastic Gradient Descent with a 
-                learning rate of 0.001, and the model will be trained for 20 epochs.</p>
+                  <p>Next we loaded the pre-trained Faster R-CNN model with a ResNet-50 
+                  backbone and a Feature Pyramid Network (fpn), adjusting the final 
+                  classification layer (box predictor) for the desired number of classes (5).<p>
+<pre><code>  model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+  num_classes = 6
+  in_features = model.roi_heads.box_predictor.cls_score.in_features
+
+  model.roi_heads.box_predictor = FastRCNNPredictor(in_features,num_classes)</code></pre>
+                  <p>We then use the torchvision package from PyTorch to create our 
+                  pretrained Faster r-CNN model architecture with the specified parameters 
+                  below. The optimizer used for minimizing loss was Stochastic Gradient 
+                  Descent with a learning rate of 0.001, and the model will be trained 
+                  for 20 epochs.</p>
 <pre><code>  optimizer = torch.optim.SGD(model.parameters(), lr = 0.001, momentum = 0.9, weight_decay= 0.0005)
   num_epochs = 20</code></pre>
                <p>With our model ready, we can finally start its training where it 
@@ -633,10 +648,15 @@ ui <- fluidPage(
         loss.backward()
         optimizer.step()
     print(f'training loss: {epoch_train_loss}')</code></pre>
-                  <p>Now that the model is trained, we can use our testing set to evaluate the
-                  performance of the model. The results from our testing data can be 
-                  visualized through a precision-recall curve which describes how good 
-                  our model is at classifying each call.</p>
+                  <p>Now that the model is trained, we can use our validation dataset to 
+                  evaluate the performance of the model using the mean Average Precision 
+                  (mAP) score.<p>
+<pre><code>  with torch.no_grad():
+      map_value = validation(val_d1, device, model)
+      print(f'Validation epoch {epochs} mAP: {map_value}')</code></pre>
+                  <p>The results from our testing data can be visualized through 
+                  a precision-recall curve which describes how good our model is at 
+                  classifying each call.</p>
                   <center>
                   <img src='pr_curve_preprocessed_epoch_4.jpeg' height='400' width='500'>
                   <h6><em>Precision-Recall curve of preprocessed data</em></h6>
