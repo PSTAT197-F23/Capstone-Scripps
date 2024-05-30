@@ -1,0 +1,236 @@
+---
+title: "acoustic-cleaning_v2.Rmd"
+output: html_document
+date: "2024-05-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+# Load the necessary library
+library(readxl)
+
+# Specify the path to the Excel file
+file_path <- "~/Documents/GitHub/Capstone-Scripps/data/CalCOFI data all cruises, calculations.xlsx"
+
+# Specify the sheet name or sheet index
+sheet_name <- "Everything"
+
+# Read the specific sheet from the Excel file
+acoustic_detections <- read_excel(path = file_path, sheet = sheet_name)
+
+```
+
+```{r}
+acoustic_detections_mod1 <- acoustic_detections
+
+# laod station data
+station <- read.csv("~/Documents/GitHub/Capstone-Scripps/data/CalCOFIStationOrder.csv")
+
+# subset station data
+station <- station[, c('Line','Sta','Lat..dec.','Lon..dec.')]
+
+# rename columns in station dataset
+names(station)[names(station) == "Sta"] <- "Station"
+names(station)[names(station) == "Lon..dec."] <- "Longitude"
+names(station)[names(station) == "Lat..dec."] <- "Latitude"
+
+# change data types in the acoustic_detections_mod1
+acoustic_detections_mod1$'CC Station' <-as.numeric(acoustic_detections_mod1$'CC Station')
+acoustic_detections_mod1$'CC Line' <- as.numeric(acoustic_detections_mod1$'CC Line')
+acoustic_detections_mod1$'Hour spans' <- as.numeric(acoustic_detections_mod1$'Hour spans')
+
+# rename columns in the acoustic_detections_mod1
+names(acoustic_detections_mod1)[names(acoustic_detections_mod1) == "Hour spans"] <- "hours"
+names(acoustic_detections_mod1)[names(acoustic_detections_mod1) == "CC Line"] <- "Line"
+names(acoustic_detections_mod1)[names(acoustic_detections_mod1) == "CC Station"] <- "Station"
+
+```
+
+```{r}
+station2 <- station
+
+#unique(acoustic_detections['Station'])
+#unique(station['Station'])
+
+# fixing line numbers for station2
+station2[station2['Line'] == 63.3, 'Line'] = 63
+
+station2[station2['Line'] == 66.7, 'Line'] = 67
+
+station2[station2['Line'] == 73.3, 'Line'] = 73
+
+station2[station2['Line'] == 76.7, 'Line'] = 77
+
+station2[station2['Line'] == 83.3, 'Line'] = 83
+
+station2[station2['Line'] == 87.7, 'Line'] = 87
+
+station2[station2['Line'] == 93.3, 'Line'] = 93
+
+
+```
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+# Calculate the sum of hours for each combination of Cruise, Year, Station, and Line
+# Original logic
+# iterate over each year, station, line, and cruise in the acoustic_detections_mod1 table
+#unique_years <- unique(acoustic_detections_mod1$Year)
+#unique_cruises <- unique(acoustic_detections_mod1$Cruise)
+#unique_station <- unique(acoustic_detections_mod1$Station)
+#unique_line <- unique(acoustic_detections_mod1$Line)
+#for (year in unique_years) {
+##  for (station in unique_station) {
+#    for (line in unique_line) {
+#      for (cruises in unique_cruises) {
+#        temp_query <- acoustic_detections_mod1 %>% filter(Line == line,
+#                                                          Cruise == cruises,
+#                                                          Year == year,
+#                                                          Station == station)
+#        # sum up the hours at the  query and store in the new data set table for effort
+#        hour_sum <-  nrow(temp_query) - 1
+#        acoustic_effort <- add_row(acoustic_effort, Cruise = cruises, Year = year, Station = station, Line = line, Effort = hour_sum)#
+#
+#      }
+#    }
+#  }
+#}
+
+# Calculate the sum of hours for each combination of Cruise, Year, Station, and Line
+acoustic_effort <- acoustic_detections_mod1 %>%
+  group_by(Cruise, Year, Station, Line) %>%
+  summarize(Effort = n(), .groups = 'drop')
+
+# CC1207OS, 2012, 80.0, 83
+# CC1207OS, 2012, 30.0, 90
+# CC1004MF, 2010
+```
+
+```{r}
+# subset columns
+acoustic_detections_mod2 <- acoustic_detections_mod1[, c('Year', 'Cruise', 'Season', 'Line', 'Station', 'Spp. Detected')]
+
+# rename columns
+names(acoustic_detections_mod2)[names(acoustic_detections_mod2) == "Spp. Detected"] <- "SpeciesName"
+
+# Split the SpeciesName column where multiple species are separated by a comma
+acoustic_detections_mod3 <- acoustic_detections_mod2 %>%
+  separate_rows(SpeciesName, sep = ",\\s*")
+
+# fix value errors
+acoustic_detections_mod3$SpeciesName <- gsub("Fin", "Fin whale", acoustic_detections_mod3$SpeciesName)
+
+acoustic_detections_mod3$SpeciesName <- gsub("Blue", "Blue whale", acoustic_detections_mod3$SpeciesName)
+
+acoustic_detections_mod3$SpeciesName <- gsub("Humpback", "Humpback whale", acoustic_detections_mod3$SpeciesName)
+
+acoustic_detections_mod3$SpeciesName <- gsub("FIn", "Fin whale", acoustic_detections_mod3$SpeciesName)
+
+acoustic_detections_mod3$Cruise <- gsub("[^0-9]+$", "", acoustic_detections_mod3$Cruise)
+
+acoustic_effort2 <- acoustic_effort
+acoustic_effort2$Cruise <- gsub("[^0-9]+$", "", acoustic_effort2$Cruise)
+```
+
+
+```{r}
+acoustic_detections_mod4 <- data.frame(Year = integer(),
+                                       Cruise = character(),
+                                       Season = character(),
+                                       Line = numeric(),
+                                       Station = numeric(),
+                                       SpeciesName = character(),
+                                       presence = character(),
+                                       effort = integer())
+
+
+
+  
+
+library(data.table)
+
+# Convert to data.tables
+setDT(acoustic_detections_mod3)
+setDT(acoustic_effort2)
+
+
+
+# Perform the join using data.table for better performance
+combined_data <- acoustic_detections_mod3[acoustic_effort2, on = .(Cruise, Line, Station, Year), nomatch = 0]
+
+# Continue with the existing code logic
+combined_data <- combined_data[!is.na(SpeciesName), ]
+
+
+for (line in unique(combined_data$Line)) {
+  for (station in unique(combined_data$Station)) {
+      for (year in unique(combined_data$Year)) {
+        for (cruise in unique(combined_data$Cruise)) {
+
+          
+          
+          # Filter combined data
+          filtered_data <- combined_data[Cruise == cruise & Line == line & Station == station & Year == year]
+          
+          #duration <- unique(filtered_data$Effort)
+          species_list <- filtered_data$SpeciesName
+          species_counts <- table(species_list)
+          season <- unique(filtered_data$Season)
+          
+          
+          # Initialize empty list to collect rows
+          rows_list <- list()
+          
+          # Iterate through unique species and build rows list
+          for (species in unique(species_list)) {
+            presence <- species_counts[species]
+            
+            
+            rows_list[[length(rows_list) + 1]] <- list(Year = year, Cruise = cruise, Season = season, Line = line, Station = station, SpeciesName = species, presence = presence)
+          }
+          
+          # Convert rows list to a data table
+          rows_data_table <- rbindlist(rows_list)
+          
+          # Append the rows_data_table to acoustic_detections_mod4
+          acoustic_detections_mod4 <- rbind(acoustic_detections_mod4, rows_data_table)
+      }
+    }
+  }
+}
+
+
+
+
+acoustic_detections_mod4 %>% filter(Line==77, Station==80, SpeciesName == "Fin whale")
+
+```
+
+```{r}
+write.csv(acoustic_detections_mod4, "~/Documents/GitHub/Capstone-Scripps/data/acoustic_data/acoustic_detections_v2.csv", row.names = FALSE)
+
+
+acoustic_effort3 <- merge(acoustic_effort2, station2, by = c("Line", "Station"))
+
+write.csv(acoustic_effort3, "~/Documents/GitHub/Capstone-Scripps/data/acoustic_data/acoustic_station_v2.csv", row.names = FALSE)
+
+acoustic_effort3 %>% filter(Line == 83, Station == 60)
+aggregate(presence ~ Line + Station + SpeciesName, data = acoustic_detections_mod4, FUN = sum)
+aggregate(effort ~ Line + Station, data = acoustic_detections_mod4, FUN = sum)
+```
+
+
+
+

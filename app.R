@@ -45,11 +45,12 @@ edna <- clean_edna(edna_raw)
 
 viz <- read.csv("data/whale_visual_data/transect.csv")
 
-acoustic_raw <- read.csv("data/acoustic_data/acoustic_detections.csv")
-acoustic_detections <- clean_acoustic(acoustic_raw)
+acoustic_raw2 <- read.csv("data/acoustic_data/acoustic_detections_v2.csv")
+acoustic_detections2 <- clean_acoustic(acoustic_raw2)
+acoustic_detections2 %>% select(-effort) # not needed
 
-station_acoustic_raw <- read.csv("data/acoustic_data/acoustic_station.csv") # station data for plotting acoustic detentions
-station_acoustic <- clean_acoustic(station_acoustic_raw)
+station_acoustic_raw2 <- read.csv("~/Documents/GitHub/Capstone-Scripps/data/acoustic_data/acoustic_station_v2.csv") # station data for plotting acoustic detentions
+station_acoustic2 <- clean_acoustic(station_acoustic_raw2)
 
 
 # create dataframes for checkboxes:
@@ -1529,22 +1530,22 @@ server <- function(input, output, session) {
     
     filter(acoustic_detections, acoustic_detections$Cruise %in% input$all_cruises 
                    & acoustic_detections$SpeciesName %in% input$all_species
-                   & acoustic_detections$Year >= input$years[1] 
+                   & acoustic_detections$Year >= input$years[1]
                    & acoustic_detections$Year <= input$years[2])
   })
   
   acousticDetectionFilter2 <- reactive({
     
-    data <- filter(acoustic_detections, acoustic_detections$Cruise %in% input$all_cruises 
-                   & acoustic_detections$SpeciesName %in% input$all_species
-                   & acoustic_detections$Year >= input$years[1] 
-                   & acoustic_detections$Year <= input$years[2])
+    data <- filter(acoustic_detections2, acoustic_detections2$Cruise %in% input$all_cruises
+                   & acoustic_detections2$SpeciesName %in% input$all_species
+                   & acoustic_detections2$Year >= input$years[1]
+                   & acoustic_detections2$Year <= input$years[2])
     
     
     if(nrow(data) == 0) {
-      temp <- data.frame(Line = character(), Station = character(), SpeciesName = character(), Duration = numeric())
+      temp <- data.frame(Line = character(), Station = character(), SpeciesName = character(), presence = numeric())
     } else {
-      temp <- aggregate(Duration ~ Line + Station + SpeciesName, data = data, FUN = sum)
+      temp <- aggregate(presence ~ Line + Station + SpeciesName, data = data, FUN = sum)
     }
     
     station_copy <- station
@@ -1572,13 +1573,18 @@ server <- function(input, output, session) {
     names(station_copy)[names(station_copy) == "Lon..dec."] <- "Longitude"
     names(station_copy)[names(station_copy) == "Lat..dec."] <- "Latitude"
     
+    temp_effort <- acousticEffortFilter2()[c("Station","Line","Effort")]
+    
     transform_data <- function(df) {
+      
+      df <- merge(df, temp_effort, by=c("Line","Station"))
       
       df_grouped <- df %>% group_by(Line, Station, Latitude, Longitude)
       
       df_transformed <- df_grouped %>%
         summarise(
-          Detections = list(map2(SpeciesName, Duration, ~c(.x, .y))),
+          #Detections = list(map2(SpeciesName, presence, ~c(.x, .y))),
+          Detections = list(pmap(list(SpeciesName, presence, sprintf("%.2f%%", presence / Effort * 100)), ~c(...))),
           .groups = 'drop' 
         )
       
@@ -1589,7 +1595,7 @@ server <- function(input, output, session) {
     rslt<- transform_data(merge(temp, station_copy, by = c("Station", "Line")))
     
     format_detection <- function(detection) {
-      paste(detection[1], ":", detection[2], "hours")
+      paste(detection[1], "- Presence (duration):", detection[2], "hours - Hourly Presence by Recording Effort:", detection[3])
     }
     
     rslt %>%
@@ -1597,8 +1603,8 @@ server <- function(input, output, session) {
       mutate(
         FormattedString = paste(
           sprintf("Line %d, Station %s", Line, Station), 
-          paste(sapply(Detections, format_detection), collapse = "\n"), 
-          sep = "\n" 
+          paste(sapply(Detections, format_detection), collapse = "\n\n"), 
+          sep = "\n\n" 
         )
       )
     
@@ -1607,9 +1613,9 @@ server <- function(input, output, session) {
   
   
   acousticEffortFilter2 <- reactive({
-    data <- filter(station_acoustic, station_acoustic$Cruise %in% input$all_cruises
-                   & station_acoustic$Year >= input$years[1] 
-                   & station_acoustic$Year <= input$years[2])
+    data <- filter(station_acoustic2, station_acoustic2$Cruise %in% input$all_cruises
+                   & station_acoustic2$Year >= input$years[1] 
+                   & station_acoustic2$Year <= input$years[2])
     
     if(nrow(data) == 0) {
       return(data.frame(Line = character(), Station = character(), Latitude = numeric(), 
