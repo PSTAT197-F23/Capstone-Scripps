@@ -49,7 +49,7 @@ acoustic_raw2 <- read.csv("data/acoustic_data/acoustic_detections_v2.csv")
 acoustic_detections2 <- clean_acoustic(acoustic_raw2)
 acoustic_detections2 %>% select(-effort) # not needed
 
-station_acoustic_raw2 <- read.csv("~/Documents/GitHub/Capstone-Scripps/data/acoustic_data/acoustic_station_v2.csv") # station data for plotting acoustic detentions
+station_acoustic_raw2 <- read.csv("data/acoustic_data/acoustic_station_v2.csv") # station data for plotting acoustic detentions
 station_acoustic2 <- clean_acoustic(station_acoustic_raw2)
 
 
