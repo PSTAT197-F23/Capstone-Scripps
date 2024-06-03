@@ -11,6 +11,7 @@ clean_whale <- function(dataset){
            Month = month.name[as.integer(substr(Cruise, 5, 6))]) %>%  # create Month col
     mutate(Cruise = paste(Month, Year)) %>%  # rename cruises
     mutate(Season = trimws(Season)) %>%   # trim whitespace for Season col
+    mutate(SpeciesName = str_replace_all(SpeciesName, " $", "")) %>%
     select(Cruise, Season, Year, DateTimeLocal, DecLat, DecLong, Best, Min, Max, Calf, 
            Species1, Species2, SpeciesName, SubOrder)
   return(cleaned)
