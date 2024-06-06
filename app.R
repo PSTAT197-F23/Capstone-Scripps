@@ -236,7 +236,7 @@ ui <- fluidPage(
                    )
               ),
       tabItem(tabName = "map",
-              # DTOutput("myTable"), for testing, dont remove plsssssssssssssss :)
+              #DTOutput("myTable"), # for testing, dont remove plsssssssssssssss :)
               h1("Interactive Species Map", 
                  style = "font-family: Arial, sans-serif; font-size: 36px; color: #333; font-weight: bold; text-align: center;"),
               sidebarLayout(
@@ -741,7 +741,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   #output$myTable <- renderDT({ # for testing, dont REMOVE >:(
-  #  insert data set
+  #  insert dataset
   #})
   
   # Define the download handler for multiple data types
